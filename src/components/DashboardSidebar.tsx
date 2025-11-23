@@ -1,15 +1,15 @@
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Volume2, 
-  Users, 
-  TrendingUp, 
-  BarChart3, 
-  Activity, 
-  UserCircle, 
-  FileBarChart, 
+import {
+  LayoutDashboard,
+  FileText,
+  Volume2,
+  Users,
+  TrendingUp,
+  BarChart3,
+  Activity,
+  UserCircle,
+  FileBarChart,
   Settings,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -25,7 +25,11 @@ import {
   useSidebar,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const menuSections = [
   {
@@ -35,14 +39,14 @@ const menuSections = [
       { name: "Survey Research", icon: FileText, path: "/survey-research" },
       { name: "Social Listening", icon: Volume2, path: "/social-listening" },
       { name: "Community Panel", icon: Users, path: "/community-panel" },
-    ]
+    ],
   },
   {
     title: "Distribution",
     items: [
       { name: "Channels", icon: TrendingUp, path: "/channels" },
       { name: "Campaigns", icon: Activity, path: "/campaigns" },
-    ]
+    ],
   },
   {
     title: "Analysis",
@@ -50,14 +54,14 @@ const menuSections = [
       { name: "Survey Analysis", icon: BarChart3, path: "/survey-analysis" },
       { name: "Social Insights", icon: BarChart3, path: "/social-insights" },
       { name: "Report", icon: FileBarChart, path: "/report" },
-    ]
+    ],
   },
   {
     title: "Audience",
     items: [
       { name: "Contacts", icon: UserCircle, path: "/contacts" },
       { name: "Audience Insights", icon: Users, path: "/audience-insights" },
-    ]
+    ],
   },
 ];
 
@@ -82,13 +86,19 @@ export function DashboardSidebar() {
           )}
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         {menuSections.map((section, idx) => {
-          const hasActiveItem = section.items.some(item => currentPath === item.path);
-          
+          const hasActiveItem = section.items.some(
+            (item) => currentPath === item.path
+          );
+
           return (
-            <Collapsible key={idx} defaultOpen={hasActiveItem || idx === 0} className="group/collapsible">
+            <Collapsible
+              key={idx}
+              defaultOpen={hasActiveItem || idx === 0}
+              className="group/collapsible"
+            >
               <SidebarGroup>
                 {!isCollapsed && (
                   <CollapsibleTrigger asChild>
@@ -103,11 +113,18 @@ export function DashboardSidebar() {
                     <SidebarMenu>
                       {section.items.map((item) => (
                         <SidebarMenuItem key={item.path}>
-                          <SidebarMenuButton asChild isActive={currentPath === item.path}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={currentPath === item.path}
+                            className="relative data-[active=true]:bg-blue-50 data-[active=true]:text-blue-600 transition-all hover:bg-transparent data-[active=true]:hover:bg-blue-50"
+                          >
                             <NavLink
                               to={item.path}
-                              className="flex items-center gap-3"
+                              className="flex items-center gap-3 w-full p-2"
                             >
+                              {currentPath === item.path && (
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 rounded" />
+                              )}
                               <item.icon className="w-4 h-4" />
                               <span>{item.name}</span>
                             </NavLink>
@@ -125,8 +142,18 @@ export function DashboardSidebar() {
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={currentPath === settingsItem.path}>
-                <NavLink to={settingsItem.path} className="flex items-center gap-3">
+              <SidebarMenuButton
+                asChild
+                isActive={currentPath === settingsItem.path}
+                className="relative data-[active=true]:bg-blue-50 data-[active=true]:text-blue-600 transition-all hover:bg-transparent data-[active=true]:hover:bg-blue-50"
+              >
+                <NavLink
+                  to={settingsItem.path}
+                  className="flex items-center gap-3 w-full p-2"
+                >
+                  {currentPath === settingsItem.path && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 rounded-r-full" />
+                  )}
                   <settingsItem.icon className="w-4 h-4" />
                   <span>{settingsItem.name}</span>
                 </NavLink>

@@ -1,147 +1,186 @@
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Pause, BarChart } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-
-const campaigns = [
-  { name: "Customer Satisfaction Q4", status: "active", sent: 3245, responses: 2156, completion: 66, startDate: "Nov 1, 2024", endDate: "Nov 30, 2024" },
-  { name: "Product Launch Survey", status: "active", sent: 1567, responses: 892, completion: 57, startDate: "Nov 10, 2024", endDate: "Dec 10, 2024" },
-  { name: "Employee Feedback", status: "paused", sent: 856, responses: 734, completion: 86, startDate: "Oct 15, 2024", endDate: "Nov 15, 2024" },
-  { name: "Market Research Initiative", status: "scheduled", sent: 0, responses: 0, completion: 0, startDate: "Dec 1, 2024", endDate: "Dec 31, 2024" },
-  { name: "Brand Awareness Study", status: "completed", sent: 5234, responses: 4987, completion: 95, startDate: "Sep 1, 2024", endDate: "Oct 31, 2024" },
-];
+import { Input } from "@/components/ui/input";
+import { Search, Plus, Users } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const Campaigns = () => {
+  const performanceData = [
+    {
+      channel: "Email",
+      sent: "1,340",
+      viewed: "1,278",
+      responses: "1,229",
+      conversion: "80%",
+      status: "Active",
+    },
+    {
+      channel: "SMS",
+      sent: "570",
+      viewed: "486",
+      responses: "476",
+      conversion: "76%",
+      status: "Active",
+    },
+    {
+      channel: "Whatsapp",
+      sent: "256",
+      viewed: "230",
+      responses: "212",
+      conversion: "88%",
+      status: "Active",
+    },
+    {
+      channel: "QR-Code",
+      sent: "0",
+      viewed: "195",
+      responses: "184",
+      conversion: "96%",
+      status: "Active",
+    },
+  ];
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <DashboardSidebar />
-        
+
         <SidebarInset className="flex-1 flex flex-col">
           <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
           <DashboardHeader />
-          
+
           <main className="flex-1 p-6 overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Campaigns</h1>
-                <p className="text-muted-foreground mt-1">Manage your distribution campaigns</p>
+            <div className="mb-8">
+              <h1 className="text-2xl font-semibold text-foreground mb-6">
+                Distribution Campaigns
+              </h1>
+
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search for survey"
+                    className="pl-9 bg-background"
+                  />
+                </div>
+                <Select defaultValue="survey1">
+                  <SelectTrigger className="w-full md:w-[200px]">
+                    <SelectValue placeholder="Select Survey" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="survey1">
+                      Customer Satisfaction Survey
+                    </SelectItem>
+                    <SelectItem value="survey2">Product Feedback</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Create Campaign
-              </Button>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">2</div>
-                  <p className="text-xs text-muted-foreground mt-1">Out of 5 total</p>
+              <Card className="mb-8">
+                <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h2 className="text-lg font-semibold text-foreground">
+                        Customer Satisfaction Survey
+                      </h2>
+                      <Badge
+                        variant="success"
+                        className="bg-green-100 text-green-700 hover:bg-green-200"
+                      >
+                        Active
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <Users className="w-4 h-4" />
+                        <span>1,520 Total Response</span>
+                      </div>
+                      <span>Response rate: 68%</span>
+                      <span>Created: 20/09/2025</span>
+                    </div>
+                  </div>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Channel
+                  </Button>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Total Sent</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">10,902</div>
-                  <p className="text-xs text-muted-foreground mt-1">All campaigns</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Total Responses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">8,769</div>
-                  <p className="text-xs text-muted-foreground mt-1">80% response rate</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Avg Completion</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">73%</div>
-                  <p className="text-xs text-muted-foreground mt-1">Across active campaigns</p>
-                </CardContent>
-              </Card>
-            </div>
 
-            <div className="grid gap-4">
-              {campaigns.map((campaign, idx) => (
-                <Card key={idx}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <CardTitle>{campaign.name}</CardTitle>
-                          <Badge variant={
-                            campaign.status === "active" ? "success" :
-                            campaign.status === "paused" ? "warning" :
-                            campaign.status === "scheduled" ? "secondary" :
-                            "secondary"
-                          }>
-                            {campaign.status}
-                          </Badge>
-                        </div>
-                        <CardDescription>
-                          {campaign.startDate} - {campaign.endDate}
-                        </CardDescription>
-                      </div>
-                      <div className="flex gap-2">
-                        {campaign.status === "active" && (
-                          <Button variant="outline" size="icon">
-                            <Pause className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {(campaign.status === "paused" || campaign.status === "scheduled") && (
-                          <Button variant="outline" size="icon">
-                            <Play className="w-4 h-4" />
-                          </Button>
-                        )}
-                        <Button variant="outline" size="icon">
-                          <BarChart className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-6 mb-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Sent</p>
-                        <p className="text-2xl font-bold">{campaign.sent.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Responses</p>
-                        <p className="text-2xl font-bold">{campaign.responses.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Completion</p>
-                        <p className="text-2xl font-bold">{campaign.completion}%</p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-muted-foreground">Progress</span>
-                        <span className="text-sm font-semibold">{campaign.completion}%</span>
-                      </div>
-                      <Progress value={campaign.completion} className="h-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-4">
+                  Distribution Performance
+                </h3>
+                <div className="rounded-md border bg-card">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="w-[200px]">Channel</TableHead>
+                        <TableHead className="text-center">Sent</TableHead>
+                        <TableHead className="text-center">Viewed</TableHead>
+                        <TableHead className="text-center">Responses</TableHead>
+                        <TableHead className="text-center">
+                          Conversion Rate
+                        </TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {performanceData.map((row, idx) => (
+                        <TableRow key={idx} className="even:bg-muted/50">
+                          <TableCell className="font-medium">
+                            {row.channel}
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {row.sent}
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {row.viewed}
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {row.responses}
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {row.conversion}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge
+                              variant="success"
+                              className="bg-green-100 text-green-700 hover:bg-green-200 font-normal"
+                            >
+                              {row.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </div>
           </main>
         </SidebarInset>
