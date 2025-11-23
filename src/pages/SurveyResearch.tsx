@@ -1,156 +1,273 @@
-import React from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { StatCard } from "@/components/StatCard";
+import { DonutMetricCard } from "@/components/DonutMetricCard";
+import { SurveyListItem, Survey } from "@/components/SurveyListItem";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Eye, Edit, BarChart2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Users,
+  TrendingUp,
+  CheckCircle2,
+  Globe2,
+  Search,
+  Plus,
+} from "lucide-react";
+
+const surveys: Survey[] = [
+  {
+    id: "1",
+    title: "Customer Satisfaction Survey",
+    status: "Active",
+    totalResponse: 1520,
+    responseRate: 68,
+    createdDate: "20/09/2025",
+  },
+  {
+    id: "2",
+    title: "Product Feedback Collection",
+    status: "Draft",
+    totalResponse: 0,
+    responseRate: 0,
+    createdDate: "22/09/2025",
+  },
+  {
+    id: "3",
+    title: "Employee Engagement Study",
+    status: "Closed",
+    totalResponse: 1520,
+    responseRate: 68,
+    createdDate: "20/09/2025",
+  },
+  {
+    id: "4",
+    title: "Product Market Survey",
+    status: "Closed",
+    totalResponse: 1520,
+    responseRate: 68,
+    createdDate: "20/09/2025",
+  },
+  {
+    id: "5",
+    title: "Useability Study",
+    status: "Closed",
+    totalResponse: 1490,
+    responseRate: 78,
+    createdDate: "19/09/2025",
+  },
+  {
+    id: "6",
+    title: "Customer Product Feedback",
+    status: "Closed",
+    totalResponse: 520,
+    responseRate: 58,
+    createdDate: "17/09/2025",
+  },
+  {
+    id: "7",
+    title: "Webinar Follow-Up Survey",
+    status: "Closed",
+    totalResponse: 1220,
+    responseRate: 82,
+    createdDate: "15/09/2025",
+  },
+  {
+    id: "8",
+    title: "Product Concept Testing",
+    status: "Closed",
+    totalResponse: 20,
+    responseRate: 38,
+    createdDate: "12/09/2025",
+  },
+  {
+    id: "9",
+    title: "Speaker and Session Rating",
+    status: "Closed",
+    totalResponse: 450,
+    responseRate: 58,
+    createdDate: "10/09/2025",
+  },
+  {
+    id: "10",
+    title: "Customer Product Feedback",
+    status: "Closed",
+    totalResponse: 620,
+    responseRate: 65,
+    createdDate: "6/09/2025",
+  },
+];
 
 const SurveyResearch = () => {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-[#F8FAFC]">
+      <div className="flex min-h-screen w-full bg-background">
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-white px-4 h-16 shadow-sm">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-
           <DashboardHeader />
 
-          <main className="flex-1 p-8 overflow-y-auto space-y-8">
-            {/* PAGE TITLE */}
-            <h3 className="text-2xl font-semibold text-slate-700">Customer Satisfaction Survey</h3>
+          <main className="flex-1 p-6 overflow-y-auto">
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-foreground mb-6">
+                Customer Satisfaction Survey
+              </h2>
 
-            {/* TOP METRICS GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="shadow-sm border rounded-2xl">
-                <CardHeader>
-                  <CardTitle>Total Responses</CardTitle>
-                  <CardDescription>Overall responses collected</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-4xl font-bold">1,500</p>
-                  <div className="mt-4 grid grid-cols-3 text-sm text-slate-600">
-                    <div>
-                      <p className="font-bold text-green-600">1,100</p>
-                      <p>Completed</p>
-                    </div>
-                    <div>
-                      <p className="font-bold text-orange-500">200</p>
-                      <p>In Progress</p>
-                    </div>
-                    <div>
-                      <p className="font-bold text-red-500">200</p>
-                      <p>Abandoned</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <StatCard
+                  title="Total Responses"
+                  value="1,500"
+                  icon={Users}
+                  iconBgColor="bg-purple-500/10"
+                  iconColor="text-purple-500"
+                  badges={[
+                    { label: "Completed", count: 1100, variant: "success" },
+                    { label: "In Progress", count: 200, variant: "warning" },
+                    { label: "Abandoned", count: 200, variant: "destructive" },
+                  ]}
+                />
 
-              <Card className="shadow-sm border rounded-2xl flex flex-col items-center justify-center text-center p-6">
-                <p className="text-slate-500 font-medium">Avg Response Rate</p>
-                <div className="text-5xl font-bold text-blue-600 my-4">72%</div>
-                <p className="text-slate-600">Total Invite Sent: 1,500</p>
-                <p className="text-slate-600">Total Responded: 1,300</p>
-              </Card>
+                <DonutMetricCard
+                  title="Avg Response Rate"
+                  icon={TrendingUp}
+                  percentage={72}
+                  chartColor="#3B82F6"
+                  iconBgColor="bg-orange-500/10"
+                  iconColor="text-orange-500"
+                  data={[
+                    { label: "Total Invite Sent", value: "1,500" },
+                    {
+                      label: "Total Responded",
+                      value: "1,300",
+                      color: "text-blue-500",
+                    },
+                  ]}
+                />
 
-              <Card className="shadow-sm border rounded-2xl flex flex-col items-center justify-center text-center p-6">
-                <p className="text-slate-500 font-medium">Completion Rate</p>
-                <div className="text-5xl font-bold text-green-600 my-4">80%</div>
-                <p className="text-slate-600">Completed: 1,300</p>
-                <p className="text-slate-600">Abandoned: 200</p>
-              </Card>
+                <DonutMetricCard
+                  title="Completion Rate"
+                  icon={CheckCircle2}
+                  percentage={80}
+                  chartColor="#22C55E"
+                  iconBgColor="bg-green-500/10"
+                  iconColor="text-green-500"
+                  data={[
+                    {
+                      label: "Completed",
+                      value: "1,300",
+                      color: "text-green-500",
+                    },
+                    { label: "Abandoned", value: "200", color: "text-red-500" },
+                  ]}
+                />
 
-              <Card className="shadow-sm border rounded-2xl">
-                <CardHeader>
-                  <CardTitle>Country Reach</CardTitle>
-                  <CardDescription>Total countries: 16</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-4 text-center text-sm text-slate-600">
-                    <div>
-                      <p className="font-bold text-slate-800">5</p>
-                      <p>Africa</p>
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-800">3</p>
-                      <p>Asia</p>
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-800">3</p>
-                      <p>Europe</p>
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-800">4</p>
-                      <p>America</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                <StatCard
+                  title="Country Reach"
+                  value="16"
+                  icon={Globe2}
+                  iconBgColor="bg-blue-500/10"
+                  iconColor="text-blue-500"
+                  badges={[
+                    { label: "Africa", count: 5, variant: "secondary" },
+                    { label: "Asia", count: 3, variant: "secondary" },
+                    { label: "Europe", count: 3, variant: "secondary" },
+                    { label: "America", count: 4, variant: "secondary" },
+                  ]}
+                />
+              </div>
             </div>
 
-            {/* SEARCH + FILTER BAR */}
-            <div className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border">
-              <div className="relative w-full max-w-md">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <Input placeholder="Search for survey" className="pl-10" />
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search for survey"
+                    className="pl-9 bg-background"
+                  />
+                </div>
+                <Select defaultValue="all">
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="All Surveys" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Surveys</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <select className="border rounded-lg px-3 py-2 text-slate-700 bg-white shadow-sm">
-                <option>All Surveys</option>
-                <option>Active</option>
-                <option>Closed</option>
-                <option>Draft</option>
-              </select>
-
-              <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 py-3">
-                <Plus className="w-4 h-4" /> Create Survey
+              <Button className="w-full sm:w-auto gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="w-4 h-4" />
+                Create Survey
               </Button>
             </div>
 
-            {/* SURVEY LIST */}
-            <div className="space-y-4">
-              {[1,2,3,4,5,6,7,8,9].map((i) => (
-                <Card key={i} className="border rounded-xl shadow-sm hover:shadow-md transition p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-semibold text-lg text-slate-800">Customer Satisfaction Survey</h3>
-                      <p className="text-sm text-slate-500 mt-1">1,320 Total Response • Response rate: 65% • Created: 20/09/2025</p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Button variant="outline" className="rounded-lg px-4">
-                        <Eye className="w-4 h-4 mr-2" /> View
-                      </Button>
-                      <Button variant="outline" className="rounded-lg px-4 border-blue-600 text-blue-600">
-                        <BarChart2 className="w-4 h-4 mr-2" /> Analytics
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
+            <div className="space-y-3 mb-8">
+              {surveys.map((survey) => (
+                <SurveyListItem key={survey.id} survey={survey} />
               ))}
             </div>
 
-            {/* PAGINATION */}
-            <div className="flex justify-center items-center gap-4 pt-6">
-              <Button variant="ghost">&lt;</Button>
-              <Button variant="outline" className="rounded-lg">1</Button>
-              <Button variant="ghost">2</Button>
-              <Button variant="ghost">3</Button>
-              <span className="text-slate-500">...</span>
-              <Button variant="ghost">50</Button>
-              <Button variant="ghost">&gt;</Button>
-            </div>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious href="#" />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#" isActive>
+                    1
+                  </PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#">2</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#">3</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#">50</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext href="#" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </main>
         </SidebarInset>
       </div>
     </SidebarProvider>
   );
-}
+};
 
 export default SurveyResearch;

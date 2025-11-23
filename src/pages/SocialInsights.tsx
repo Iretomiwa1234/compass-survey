@@ -1,188 +1,187 @@
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-
-const platformData = [
-  { platform: "Twitter", mentions: 1850, engagement: 12500 },
-  { platform: "Facebook", mentions: 1320, engagement: 8900 },
-  { platform: "Instagram", mentions: 2100, engagement: 15600 },
-  { platform: "LinkedIn", mentions: 890, engagement: 6700 },
-];
-
-const sentimentTrend = [
-  { date: "Nov 1", positive: 65, neutral: 25, negative: 10 },
-  { date: "Nov 8", positive: 70, neutral: 20, negative: 10 },
-  { date: "Nov 15", positive: 68, neutral: 22, negative: 10 },
-  { date: "Nov 22", positive: 72, neutral: 18, negative: 10 },
-];
-
-const topicDistribution = [
-  { name: "Product Features", value: 35, color: "hsl(var(--chart-1))" },
-  { name: "Customer Service", value: 25, color: "hsl(var(--chart-2))" },
-  { name: "Pricing", value: 20, color: "hsl(var(--chart-3))" },
-  { name: "User Experience", value: 15, color: "hsl(var(--chart-4))" },
-  { name: "Other", value: 5, color: "hsl(var(--chart-5))" },
-];
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Plus, Users } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const SocialInsights = () => {
+  const performanceData = [
+    {
+      channel: "Email",
+      sent: "1,340",
+      viewed: "1,278",
+      responses: "1,229",
+      conversion: "80%",
+      status: "Active",
+    },
+    {
+      channel: "SMS",
+      sent: "570",
+      viewed: "486",
+      responses: "476",
+      conversion: "76%",
+      status: "Active",
+    },
+    {
+      channel: "Whatsapp",
+      sent: "256",
+      viewed: "230",
+      responses: "212",
+      conversion: "88%",
+      status: "Active",
+    },
+    {
+      channel: "QR-Code",
+      sent: "0",
+      viewed: "195",
+      responses: "184",
+      conversion: "96%",
+      status: "Active",
+    },
+  ];
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <DashboardSidebar />
-        
+
         <SidebarInset className="flex-1 flex flex-col">
           <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
           <DashboardHeader />
-          
+
           <main className="flex-1 p-6 overflow-y-auto">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-foreground">Social Insights</h1>
-              <p className="text-muted-foreground mt-1">Analyze social media performance and trends</p>
+            <div className="mb-8">
+              <h1 className="text-2xl font-semibold text-foreground mb-6">
+                Social Insights
+              </h1>
+
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search for survey"
+                    className="pl-9 bg-background"
+                  />
+                </div>
+                <Select defaultValue="survey1">
+                  <SelectTrigger className="w-full md:w-[200px]">
+                    <SelectValue placeholder="Select Survey" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="survey1">
+                      Customer Satisfaction Survey
+                    </SelectItem>
+                    <SelectItem value="survey2">Product Feedback</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Card className="mb-8">
+                <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h2 className="text-lg font-semibold text-foreground">
+                        Customer Satisfaction Survey
+                      </h2>
+                      <Badge
+                        variant="success"
+                        className="bg-green-100 text-green-700 hover:bg-green-200"
+                      >
+                        Active
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <Users className="w-4 h-4" />
+                        <span>1,520 Total Response</span>
+                      </div>
+                      <span>Response rate: 68%</span>
+                      <span>Created: 20/09/2025</span>
+                    </div>
+                  </div>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Channel
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-4">
+                  Distribution Performance
+                </h3>
+                <div className="rounded-md border bg-card">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="w-[200px]">Channel</TableHead>
+                        <TableHead className="text-center">Sent</TableHead>
+                        <TableHead className="text-center">Viewed</TableHead>
+                        <TableHead className="text-center">Responses</TableHead>
+                        <TableHead className="text-center">
+                          Conversion Rate
+                        </TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {performanceData.map((row, idx) => (
+                        <TableRow key={idx} className="even:bg-muted/50">
+                          <TableCell className="font-medium">
+                            {row.channel}
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {row.sent}
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {row.viewed}
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {row.responses}
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {row.conversion}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge
+                              variant="success"
+                              className="bg-green-100 text-green-700 hover:bg-green-200 font-normal"
+                            >
+                              {row.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Total Mentions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">6,160</div>
-                  <p className="text-xs text-muted-foreground mt-1">+22% from last week</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Total Engagement</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">43,700</div>
-                  <p className="text-xs text-muted-foreground mt-1">+18% from last week</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Sentiment Score</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">+72</div>
-                  <p className="text-xs text-muted-foreground mt-1">Mostly positive</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Reach</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">245K</div>
-                  <p className="text-xs text-muted-foreground mt-1">Unique users reached</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Tabs defaultValue="platforms" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="platforms">Platform Analysis</TabsTrigger>
-                <TabsTrigger value="sentiment">Sentiment Trends</TabsTrigger>
-                <TabsTrigger value="topics">Topic Distribution</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="platforms" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Performance by Platform</CardTitle>
-                    <CardDescription>Mentions and engagement across social platforms</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={350}>
-                      <BarChart data={platformData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="platform" stroke="hsl(var(--muted-foreground))" />
-                        <YAxis stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip 
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px"
-                          }}
-                        />
-                        <Bar dataKey="mentions" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                        <Bar dataKey="engagement" fill="hsl(var(--chart-2))" radius={[8, 8, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="sentiment" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Sentiment Trend Over Time</CardTitle>
-                    <CardDescription>Weekly sentiment distribution</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={350}>
-                      <LineChart data={sentimentTrend}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-                        <YAxis stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip 
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px"
-                          }}
-                        />
-                        <Line type="monotone" dataKey="positive" stroke="#22c55e" strokeWidth={2} />
-                        <Line type="monotone" dataKey="neutral" stroke="#6b7280" strokeWidth={2} />
-                        <Line type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="topics" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Topic Distribution</CardTitle>
-                    <CardDescription>What people are talking about</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={350}>
-                      <PieChart>
-                        <Pie
-                          data={topicDistribution}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={120}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {topicDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px"
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
           </main>
         </SidebarInset>
       </div>
