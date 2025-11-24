@@ -1,13 +1,10 @@
+import { useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { StatCard } from "@/components/StatCard";
 import { DonutMetricCard } from "@/components/DonutMetricCard";
 import { SurveyListItem, Survey } from "@/components/SurveyListItem";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,7 +30,15 @@ import {
   Globe2,
   Search,
   Plus,
+  Sparkles,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const surveys: Survey[] = [
   {
@@ -119,6 +124,18 @@ const surveys: Survey[] = [
 ];
 
 const SurveyResearch = () => {
+  const [open, setOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateWithAI = () => {
+    setOpen(false);
+    setIsGenerating(true);
+    
+    setTimeout(() => {
+      setIsGenerating(false);
+    }, 15000);
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -224,7 +241,10 @@ const SurveyResearch = () => {
                 </Select>
               </div>
 
-              <Button className="w-full sm:w-auto gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+              <Button
+                onClick={() => setOpen(true)}
+                className="w-full sm:w-auto gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+              >
                 <Plus className="w-4 h-4" />
                 Create Survey
               </Button>
@@ -266,6 +286,67 @@ const SurveyResearch = () => {
           </main>
         </SidebarInset>
       </div>
+
+      {/* Create Survey Modal */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md p-6 rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Create Survey</DialogTitle>
+            <DialogDescription>
+              Let's start with some basic information about your survey.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Survey Title</label>
+              <Input placeholder="Customer feedback" className="mt-1" />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <textarea className="w-full border rounded-md p-2 mt-1 h-24" />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Target Audience</label>
+              <Select defaultValue="all">
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder="All Groups" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Groups</SelectItem>
+                  <SelectItem value="customers">Customers</SelectItem>
+                  <SelectItem value="employees">Employees</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button variant="outline">Create Manually</Button>
+              <Button
+                onClick={handleGenerateWithAI}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Generate with AI
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Generating Survey Loading Modal */}
+      <Dialog open={isGenerating} onOpenChange={setIsGenerating}>
+        <DialogContent className="max-w-md p-12">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div>
+              <DialogTitle className="text-lg mb-2">Create Survey</DialogTitle>
+              <p className="text-sm text-muted-foreground">Generating Survey</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
