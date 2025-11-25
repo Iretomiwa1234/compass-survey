@@ -1,20 +1,18 @@
+import { useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, MessageSquare, Share2, Plus, Settings } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-
-const channels = [
-  { name: "Email", icon: Mail, status: "active", sent: 15234, delivered: 14890, openRate: "68%", clickRate: "24%" },
-  { name: "SMS", icon: MessageSquare, status: "active", sent: 8456, delivered: 8423, openRate: "92%", clickRate: "35%" },
-  { name: "Social Media", icon: Share2, status: "active", sent: 23451, delivered: 23120, openRate: "45%", clickRate: "18%" },
-  { name: "Web Push", icon: MessageSquare, status: "inactive", sent: 0, delivered: 0, openRate: "0%", clickRate: "0%" },
-];
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Mail, MessageSquare, QrCode, Link2, Share2, Globe, Upload, Search } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Channels = () => {
+  const [activeTab, setActiveTab] = useState("email");
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -28,104 +26,379 @@ const Channels = () => {
           <DashboardHeader />
           
           <main className="flex-1 p-6 overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Distribution Channels</h1>
-                <p className="text-muted-foreground mt-1">Manage your communication channels</p>
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-foreground mb-6">
+                Customer Satisfaction Survey
+              </h2>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:flex-initial sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search for survey"
+                      className="pl-9"
+                    />
+                  </div>
+                  <Select defaultValue="customer-satisfaction">
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select Survey" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="customer-satisfaction">Customer Satisfaction</SelectItem>
+                      <SelectItem value="product-feedback">Product Feedback</SelectItem>
+                      <SelectItem value="employee-engagement">Employee Engagement</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Link2 className="w-4 h-4" />
+                    Link
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Share2 className="w-4 h-4" />
+                    Share
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Globe className="w-4 h-4" />
+                    Website
+                  </Button>
+                </div>
               </div>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Add Channel
-              </Button>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Active Channels</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">3</div>
-                  <p className="text-xs text-muted-foreground mt-1">Out of 4 channels</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Total Sent</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">47,141</div>
-                  <p className="text-xs text-muted-foreground mt-1">This month</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Avg Open Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">68%</div>
-                  <p className="text-xs text-muted-foreground mt-1">Across all channels</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Avg Click Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">26%</div>
-                  <p className="text-xs text-muted-foreground mt-1">Across all channels</p>
-                </CardContent>
-              </Card>
-            </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+                <TabsList>
+                  <TabsTrigger value="email" className="gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email
+                  </TabsTrigger>
+                  <TabsTrigger value="sms" className="gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    SMS
+                  </TabsTrigger>
+                  <TabsTrigger value="whatsapp" className="gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    WhatsApp
+                  </TabsTrigger>
+                  <TabsTrigger value="qrcode" className="gap-2">
+                    <QrCode className="w-4 h-4" />
+                    QR Code
+                  </TabsTrigger>
+                </TabsList>
 
-            <div className="grid gap-4">
-              {channels.map((channel, idx) => (
-                <Card key={idx}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-lg bg-primary/10">
-                          <channel.icon className="w-6 h-6 text-primary" />
-                        </div>
+                <TabsContent value="email" className="mt-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Email Campaign</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
                         <div>
-                          <CardTitle>{channel.name}</CardTitle>
-                          <CardDescription>
-                            <Badge variant={channel.status === "active" ? "success" : "secondary"}>
-                              {channel.status}
-                            </Badge>
-                          </CardDescription>
+                          <label className="text-sm font-medium mb-2 block">Subject</label>
+                          <Input 
+                            placeholder="Help Us with this Quick Survey - 2 Mins Max"
+                            defaultValue="Help Us with this Quick Survey - 2 Mins Max"
+                          />
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <Switch checked={channel.status === "active"} />
-                        <Button variant="outline" size="icon">
-                          <Settings className="w-4 h-4" />
+
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Email Message</label>
+                          <Textarea 
+                            placeholder="Enter your email message..."
+                            className="min-h-[180px]"
+                            defaultValue="Dear valued customer,&#10;&#10;Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.&#10;&#10;Thank you!"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Recipient List</label>
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder="Upload CSV or enter emails"
+                              className="flex-1"
+                            />
+                            <Button variant="outline" className="gap-2">
+                              <Upload className="w-4 h-4" />
+                              Upload
+                            </Button>
+                          </div>
+                        </div>
+
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                          <Mail className="w-4 h-4" />
+                          Send Email Campaign
                         </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-4 gap-6">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Sent</p>
-                        <p className="text-2xl font-bold">{channel.sent.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Delivered</p>
-                        <p className="text-2xl font-bold">{channel.delivered.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Open Rate</p>
-                        <p className="text-2xl font-bold">{channel.openRate}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Click Rate</p>
-                        <p className="text-2xl font-bold">{channel.clickRate}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Preview</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="font-semibold text-foreground mb-1">
+                              Customer Satisfaction Survey
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              customerservice@riddle.com
+                            </p>
+                          </div>
+
+                          <div className="border-t pt-4">
+                            <p className="text-sm text-foreground whitespace-pre-line">
+                              Dear valued customer,{'\n\n'}
+                              Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.{'\n\n'}
+                              Thank you!
+                            </p>
+                          </div>
+
+                          <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                            <Share2 className="w-4 h-4" />
+                            Go to survey
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="sms" className="mt-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    {/* LEFT PANEL — SMS FORM */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>SMS Campaign</CardTitle>
+                      </CardHeader>
+
+                      <CardContent className="space-y-6">
+
+                        {/* SMS Message */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">SMS Message</label>
+                          <Textarea
+                              className="min-h-[180px]"
+                              defaultValue={
+                              `Dear valued customer,
+
+                              Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.
+
+                              Link: Msurvey123.com/customerfeedback
+
+                              Thank you!`
+                              }
+                          />
+                        </div>
+
+                        {/* PHONE NUMBER INPUT OR UPLOAD */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Phone Numbers</label>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Upload CSV or enter numbers"
+                              className="flex-1"
+                            />
+                            <Button variant="outline" className="gap-2">
+                              <Upload className="w-4 h-4" />
+                              Upload
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* SEND BUTTON */}
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                          <MessageSquare className="w-4 h-4" />
+                          Send SMS Campaign
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    {/* RIGHT PANEL — PREVIEW */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Preview</CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <div className="border rounded-lg bg-green-50 p-4 text-sm leading-relaxed">
+                          <p className="text-foreground">Dear valued customer,</p>
+                          <p className="mt-3">
+                            Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.
+                          </p>
+                          <p className="mt-3 text-blue-600 underline">
+                            Msurvey123.com/customerfeedback
+                          </p>
+                          <p className="mt-3">Thank you!</p>
+
+                          <p className="text-xs text-muted-foreground mt-4">02:25 PM</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                  </div>
+                </TabsContent>
+
+
+                
+                <TabsContent value="whatsapp" className="mt-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    {/* LEFT PANEL — SMS FORM */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Whatsapp Campaign</CardTitle>
+                      </CardHeader>
+
+                      <CardContent className="space-y-6">
+
+                        {/* SMS Message */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Whatsapp Message</label>
+                          <Textarea
+                            className="min-h-[180px]"
+                            defaultValue={
+                                `Dear valued customer,
+
+                                Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.
+
+                                Thank you!`
+                            }
+                          />
+                        </div>
+
+                        {/* PHONE NUMBER INPUT OR UPLOAD */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Whatsapp Numbers</label>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Upload CSV or enter emailss"
+                              className="flex-1"
+                            />
+                            <Button variant="outline" className="gap-2">
+                              <Upload className="w-4 h-4" />
+                              Upload
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* SEND BUTTON */}
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                          <MessageSquare className="w-4 h-4" />
+                          Send Whatsapp Campaign
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    {/* RIGHT PANEL — PREVIEW */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Preview</CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <div className="border rounded-lg bg-green-50 p-4 text-sm leading-relaxed">
+                          <img src="/public/assets/Whatsapp Chat.png" alt="" />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="qrcode" className="mt-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    {/* LEFT — QR Code Settings */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>QR Code</CardTitle>
+                      </CardHeader>
+
+                      <CardContent className="space-y-5">
+
+                        {/* QR Code Style */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium block">
+                            QR Code Style
+                          </label>
+
+                          <Select defaultValue="branded">
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select Style" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              <SelectItem value="branded">Branded</SelectItem>
+                              <SelectItem value="classic">Classic</SelectItem>
+                              <SelectItem value="rounded">Rounded</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* CTA Text */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium block">
+                            Call to Action Text
+                          </label>
+
+                          <Input
+                            placeholder="Scan to share your feedback"
+                            defaultValue="Scan to share your feedback"
+                          />
+                        </div>
+
+                        {/* Generate QR Button */}
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                          <QrCode className="w-4 h-4" />
+                          Generate QR Code
+                        </Button>
+
+                        {/* Download Buttons */}
+                        <div className="flex gap-3">
+                          <Button variant="outline" className="flex-1 gap-2">
+                            Download PNG
+                          </Button>
+                          <Button variant="outline" className="flex-1 gap-2">
+                            Download SVG
+                          </Button>
+                        </div>
+
+                      </CardContent>
+                    </Card>
+
+                    {/* RIGHT — QR Code Preview */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>QR Code Preview</CardTitle>
+                      </CardHeader>
+
+                      <CardContent className="flex items-center justify-center py-10">
+                        <div className="flex flex-col items-center space-y-3">
+
+                          {/* Placeholder QR */}
+                          <div className="p-4 border rounded-lg bg-muted flex items-center justify-center">
+                            <QrCode className="w-30 h-30 text-foreground opacity-50" />
+                          </div>
+
+                          <p className="text-sm text-muted-foreground">
+                            Scan to share your feedback
+                          </p>
+
+                          <p className="text-xs text-muted-foreground">
+                            survey.link/abc123
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                  </div>
+                </TabsContent>
+
+              </Tabs>
             </div>
           </main>
         </SidebarInset>

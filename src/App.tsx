@@ -8,8 +8,8 @@ import SurveyResearch from "./pages/SurveyResearch";
 import SurveyAnalysis from "./pages/SurveyAnalysis";
 import SocialListening from "./pages/SocialListening";
 import CommunityPanel from "./pages/CommunityPanel";
-// import Channels from "./pages/Channelss";
-// import Campaigns from "./pages/Campaignss";
+import Channels from "./pages/Channels";
+import Campaigns from "./pages/Campaigns";
 // import SocialInsights from "./pages/SocialInsightss";
 // import Report from "./pages/Reports";
 // import Contacts from "./pages/Contactss";
@@ -31,9 +31,9 @@ const App = () => (
           <Route path="/survey-analysis" element={<SurveyAnalysis />} />
           <Route path="/social-listening" element={<SocialListening />} />
           <Route path="/community-panel" element={<CommunityPanel />} />
-          {/* <Route path="/channels" element={<Channels />} />
+          <Route path="/channels" element={<Channels />} />
           <Route path="/campaigns" element={<Campaigns />} />
-          <Route path="/social-insights" element={<SocialInsights />} />
+          {/* <Route path="/social-insights" element={<SocialInsights />} />
           <Route path="/report" element={<Report />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/audience-insights" element={<AudienceInsights />} />
