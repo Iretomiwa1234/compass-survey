@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import SurveyResearch from "./pages/SurveyResearch";
 import SurveyAnalysis from "./pages/SurveyAnalysis";
+import CreateSurvey from "./pages/CreateSurvey";
 import SocialListening from "./pages/SocialListening";
 import CommunityPanel from "./pages/CommunityPanel";
 import Channels from "./pages/Channels";
@@ -28,6 +29,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/survey-research" element={<SurveyResearch />} />
+          <Route path="/create-survey" element={<CreateSurvey />} />
           <Route path="/survey-analysis" element={<SurveyAnalysis />} />
           <Route path="/social-listening" element={<SocialListening />} />
           <Route path="/community-panel" element={<CommunityPanel />} />

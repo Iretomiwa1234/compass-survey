@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { StatCard } from "@/components/StatCard";
@@ -126,6 +127,7 @@ const surveys: Survey[] = [
 const SurveyResearch = () => {
   const [open, setOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const navigate = useNavigate();
 
   const handleGenerateWithAI = () => {
     setOpen(false);
@@ -133,7 +135,8 @@ const SurveyResearch = () => {
     
     setTimeout(() => {
       setIsGenerating(false);
-    }, 15000);
+      navigate("/create-survey");
+    }, 10000);
   };
 
   return (
@@ -323,9 +326,17 @@ const SurveyResearch = () => {
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline">Create Manually</Button>
               <Button
-                onClick={handleGenerateWithAI}
+                variant="outline"
+                onClick={() => navigate("/create-survey")}
+              >
+                Create Manually
+              </Button>
+              <Button
+                onClick={() => {
+                              handleGenerateWithAI();
+                              // navigate("/create-survey");
+                            }}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Generate with AI
@@ -339,7 +350,9 @@ const SurveyResearch = () => {
       <Dialog open={isGenerating} onOpenChange={setIsGenerating}>
         <DialogContent className="max-w-md p-12">
           <div className="flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+
             <div>
               <DialogTitle className="text-lg mb-2">Create Survey</DialogTitle>
               <p className="text-sm text-muted-foreground">Generating Survey</p>
@@ -347,6 +360,7 @@ const SurveyResearch = () => {
           </div>
         </DialogContent>
       </Dialog>
+
     </SidebarProvider>
   );
 };
