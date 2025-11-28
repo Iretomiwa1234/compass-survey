@@ -68,7 +68,7 @@ const SocialInsights = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
@@ -102,7 +102,7 @@ const SocialInsights = () => {
               </div>
 
               <Card className="mb-8">
-                <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
                       <h2 className="text-lg font-semibold text-foreground">

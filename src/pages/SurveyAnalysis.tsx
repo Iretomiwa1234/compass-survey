@@ -97,7 +97,7 @@ const SurveyAnalysis = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
+          <header className="2">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>

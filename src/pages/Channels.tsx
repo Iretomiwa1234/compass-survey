@@ -2,12 +2,31 @@ import { useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, MessageSquare, QrCode, Link2, Share2, Globe, Upload, Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Mail,
+  MessageSquare,
+  QrCode,
+  Link2,
+  Share2,
+  Globe,
+  Upload,
+  Search,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Channels = () => {
@@ -17,14 +36,14 @@ const Channels = () => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <DashboardSidebar />
-        
+
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
           <DashboardHeader />
-          
+
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-foreground mb-6">
@@ -35,40 +54,47 @@ const Channels = () => {
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                   <div className="relative flex-1 sm:flex-initial sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search for survey"
-                      className="pl-9"
-                    />
+                    <Input placeholder="Search for survey" className="pl-9" />
                   </div>
                   <Select defaultValue="customer-satisfaction">
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Select Survey" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="customer-satisfaction">Customer Satisfaction</SelectItem>
-                      <SelectItem value="product-feedback">Product Feedback</SelectItem>
-                      <SelectItem value="employee-engagement">Employee Engagement</SelectItem>
+                      <SelectItem value="customer-satisfaction">
+                        Customer Satisfaction
+                      </SelectItem>
+                      <SelectItem value="product-feedback">
+                        Product Feedback
+                      </SelectItem>
+                      <SelectItem value="employee-engagement">
+                        Employee Engagement
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" className="gap-2">
-                    <Link2 className="w-4 h-4" />
+                    <Link2 className="w-4 h-4 bg-[#EDF3FF] text-[#206AB5]" />
                     Link
                   </Button>
                   <Button variant="outline" size="sm" className="gap-2">
-                    <Share2 className="w-4 h-4" />
+                    <Share2 className="w-4 h-4 bg-[#EDF3FF] text-[#206AB5]" />
                     Share
                   </Button>
                   <Button variant="outline" size="sm" className="gap-2">
-                    <Globe className="w-4 h-4" />
+                    <Globe className="w-4 h-4 bg-[#EDF3FF] text-[#206AB5]" />
                     Website
                   </Button>
                 </div>
               </div>
 
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="mb-6"
+              >
                 <TabsList>
                   <TabsTrigger value="email" className="gap-2">
                     <Mail className="w-4 h-4" />
@@ -96,16 +122,20 @@ const Channels = () => {
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div>
-                          <label className="text-sm font-medium mb-2 block">Subject</label>
-                          <Input 
+                          <label className="text-sm font-medium mb-2 block">
+                            Subject
+                          </label>
+                          <Input
                             placeholder="Help Us with this Quick Survey - 2 Mins Max"
                             defaultValue="Help Us with this Quick Survey - 2 Mins Max"
                           />
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium mb-2 block">Email Message</label>
-                          <Textarea 
+                          <label className="text-sm font-medium mb-2 block">
+                            Email Message
+                          </label>
+                          <Textarea
                             placeholder="Enter your email message..."
                             className="min-h-[180px]"
                             defaultValue="Dear valued customer,&#10;&#10;Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.&#10;&#10;Thank you!"
@@ -113,9 +143,11 @@ const Channels = () => {
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium mb-2 block">Recipient List</label>
+                          <label className="text-sm font-medium mb-2 block">
+                            Recipient List
+                          </label>
                           <div className="flex gap-2">
-                            <Input 
+                            <Input
                               placeholder="Upload CSV or enter emails"
                               className="flex-1"
                             />
@@ -150,8 +182,10 @@ const Channels = () => {
 
                           <div className="border-t pt-4">
                             <p className="text-sm text-foreground whitespace-pre-line">
-                              Dear valued customer,{'\n\n'}
-                              Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.{'\n\n'}
+                              Dear valued customer,{"\n\n"}
+                              Your feedback is important to us. Please take a
+                              moment to complete this short survey about your
+                              recent experience.{"\n\n"}
                               Thank you!
                             </p>
                           </div>
@@ -168,7 +202,6 @@ const Channels = () => {
 
                 <TabsContent value="sms" className="mt-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
                     {/* LEFT PANEL — SMS FORM */}
                     <Card>
                       <CardHeader>
@@ -176,27 +209,28 @@ const Channels = () => {
                       </CardHeader>
 
                       <CardContent className="space-y-6">
-
                         {/* SMS Message */}
                         <div>
-                          <label className="text-sm font-medium mb-2 block">SMS Message</label>
+                          <label className="text-sm font-medium mb-2 block">
+                            SMS Message
+                          </label>
                           <Textarea
-                              className="min-h-[180px]"
-                              defaultValue={
-                              `Dear valued customer,
+                            className="min-h-[180px]"
+                            defaultValue={`Dear valued customer,
 
                               Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.
 
                               Link: Msurvey123.com/customerfeedback
 
-                              Thank you!`
-                              }
+                              Thank you!`}
                           />
                         </div>
 
                         {/* PHONE NUMBER INPUT OR UPLOAD */}
                         <div>
-                          <label className="text-sm font-medium mb-2 block">Phone Numbers</label>
+                          <label className="text-sm font-medium mb-2 block">
+                            Phone Numbers
+                          </label>
                           <div className="flex gap-2">
                             <Input
                               placeholder="Upload CSV or enter numbers"
@@ -225,28 +259,30 @@ const Channels = () => {
 
                       <CardContent>
                         <div className="border rounded-lg bg-green-50 p-4 text-sm leading-relaxed">
-                          <p className="text-foreground">Dear valued customer,</p>
+                          <p className="text-foreground">
+                            Dear valued customer,
+                          </p>
                           <p className="mt-3">
-                            Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.
+                            Your feedback is important to us. Please take a
+                            moment to complete this short survey about your
+                            recent experience.
                           </p>
                           <p className="mt-3 text-blue-600 underline">
                             Msurvey123.com/customerfeedback
                           </p>
                           <p className="mt-3">Thank you!</p>
 
-                          <p className="text-xs text-muted-foreground mt-4">02:25 PM</p>
+                          <p className="text-xs text-muted-foreground mt-4">
+                            02:25 PM
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
-
                   </div>
                 </TabsContent>
 
-
-                
                 <TabsContent value="whatsapp" className="mt-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
                     {/* LEFT PANEL — SMS FORM */}
                     <Card>
                       <CardHeader>
@@ -254,25 +290,26 @@ const Channels = () => {
                       </CardHeader>
 
                       <CardContent className="space-y-6">
-
                         {/* SMS Message */}
                         <div>
-                          <label className="text-sm font-medium mb-2 block">Whatsapp Message</label>
+                          <label className="text-sm font-medium mb-2 block">
+                            Whatsapp Message
+                          </label>
                           <Textarea
                             className="min-h-[180px]"
-                            defaultValue={
-                                `Dear valued customer,
+                            defaultValue={`Dear valued customer,
 
                                 Your feedback is important to us. Please take a moment to complete this short survey about your recent experience.
 
-                                Thank you!`
-                            }
+                                Thank you!`}
                           />
                         </div>
 
                         {/* PHONE NUMBER INPUT OR UPLOAD */}
                         <div>
-                          <label className="text-sm font-medium mb-2 block">Whatsapp Numbers</label>
+                          <label className="text-sm font-medium mb-2 block">
+                            Whatsapp Numbers
+                          </label>
                           <div className="flex gap-2">
                             <Input
                               placeholder="Upload CSV or enter emailss"
@@ -301,17 +338,15 @@ const Channels = () => {
 
                       <CardContent>
                         <div className="border rounded-lg bg-green-50 p-4 text-sm leading-relaxed">
-                          <img src="/public/assets/Whatsapp Chat.png" alt="" />
+                          <img src="/assets/Whatsapp Chat.png" alt="" />
                         </div>
                       </CardContent>
                     </Card>
-
                   </div>
                 </TabsContent>
 
                 <TabsContent value="qrcode" className="mt-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
                     {/* LEFT — QR Code Settings */}
                     <Card>
                       <CardHeader>
@@ -319,7 +354,6 @@ const Channels = () => {
                       </CardHeader>
 
                       <CardContent className="space-y-5">
-
                         {/* QR Code Style */}
                         <div className="space-y-2">
                           <label className="text-sm font-medium block">
@@ -366,7 +400,6 @@ const Channels = () => {
                             Download SVG
                           </Button>
                         </div>
-
                       </CardContent>
                     </Card>
 
@@ -378,7 +411,6 @@ const Channels = () => {
 
                       <CardContent className="flex items-center justify-center py-10">
                         <div className="flex flex-col items-center space-y-3">
-
                           {/* Placeholder QR */}
                           <div className="p-4 border rounded-lg bg-muted flex items-center justify-center">
                             <QrCode className="w-30 h-30 text-foreground opacity-50" />
@@ -394,10 +426,8 @@ const Channels = () => {
                         </div>
                       </CardContent>
                     </Card>
-
                   </div>
                 </TabsContent>
-
               </Tabs>
             </div>
           </main>

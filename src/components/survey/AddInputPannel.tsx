@@ -15,14 +15,14 @@ import {
   List,
   MapPin,
   Map,
-  ListOrdered
+  ListOrdered,
 } from "lucide-react";
 
 const AddInputPanel = () => {
   return (
-    <div className="w-80 border-r border-border bg-card p-4 overflow-y-auto h-[calc(100vh-var(--nav-height))]">
+    <div className="min-w-[300px] bg-card p-4 overflow-y-auto h-[calc(100vh-var(--nav-height))] rounded-lg w-[30%]">
       <h2 className="text-lg font-semibold mb-4">Add Input</h2>
-      
+
       <div className="space-y-6">
         <div>
           <h3 className="text-xs font-medium text-muted-foreground mb-3">

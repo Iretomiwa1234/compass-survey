@@ -9,12 +9,17 @@ interface InputTypeButtonProps {
   className?: string;
 }
 
-const InputTypeButton = ({ icon: Icon, label, onClick, className }: InputTypeButtonProps) => {
+const InputTypeButton = ({
+  icon: Icon,
+  label,
+  onClick,
+  className,
+}: InputTypeButtonProps) => {
   return (
     <Button
       variant="outline"
       className={cn(
-        "w-full justify-start gap-2 h-auto py-2.5 px-3 text-sm font-normal bg-card hover:bg-accent hover:text-accent-foreground border-border",
+        "w-full justify-start gap-2 h-auto py-2.5 px-3 text-xs font-normal bg-card hover:bg-accent hover:text-accent-foreground border-border",
         className
       )}
       onClick={onClick}

@@ -35,7 +35,6 @@ const menuSections = [
   {
     title: "Intelligence Hub",
     items: [
-      { name: "Dashboard", icon: LayoutDashboard, path: "/" },
       { name: "Survey Research", icon: FileText, path: "/survey-research" },
       { name: "Social Listening", icon: Volume2, path: "/social-listening" },
       { name: "Community Panel", icon: Users, path: "/community-panel" },
@@ -65,6 +64,7 @@ const menuSections = [
   },
 ];
 
+const dashboardItem = { name: "Dashboard", icon: LayoutDashboard, path: "/" };
 const settingsItem = { name: "Settings", icon: Settings, path: "/settings" };
 
 export function DashboardSidebar() {
@@ -79,7 +79,7 @@ export function DashboardSidebar() {
         <div className="p-4">
           {!isCollapsed ? (
             <>
-              <img src="/public/assets/Compass logo.png" alt="" />
+              <img src="/assets/Compass logo.png" alt="" />
             </>
           ) : (
             <h1 className="text-xl font-extrabold text-sidebar-primary">C</h1>
@@ -88,6 +88,29 @@ export function DashboardSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={currentPath === dashboardItem.path}
+                className="relative data-[active=true]:bg-blue-50 data-[active=true]:text-blue-600 transition-all hover:bg-transparent data-[active=true]:hover:bg-blue-50"
+              >
+                <NavLink
+                  to={dashboardItem.path}
+                  className="flex items-center gap-3 w-full p-2"
+                >
+                  {currentPath === dashboardItem.path && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 rounded-r-full" />
+                  )}
+                  <dashboardItem.icon className="w-4 h-4" />
+                  <span>{dashboardItem.name}</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
         {menuSections.map((section, idx) => {
           const hasActiveItem = section.items.some(
             (item) => currentPath === item.path

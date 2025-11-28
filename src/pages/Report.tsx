@@ -1,17 +1,57 @@
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileText, Calendar, Plus } from "lucide-react";
 
 const reports = [
-  { title: "Q4 2024 Customer Satisfaction Report", type: "Survey Analysis", date: "Nov 20, 2024", status: "completed", size: "2.4 MB" },
-  { title: "Social Media Performance - November", type: "Social Insights", date: "Nov 18, 2024", status: "completed", size: "1.8 MB" },
-  { title: "Campaign Effectiveness Report", type: "Campaign Analysis", date: "Nov 15, 2024", status: "completed", size: "3.1 MB" },
-  { title: "Community Panel Engagement", type: "Panel Metrics", date: "Nov 12, 2024", status: "completed", size: "1.5 MB" },
-  { title: "Monthly Executive Summary", type: "Executive Report", date: "Nov 1, 2024", status: "scheduled", size: "0 MB" },
+  {
+    title: "Q4 2024 Customer Satisfaction Report",
+    type: "Survey Analysis",
+    date: "Nov 20, 2024",
+    status: "completed",
+    size: "2.4 MB",
+  },
+  {
+    title: "Social Media Performance - November",
+    type: "Social Insights",
+    date: "Nov 18, 2024",
+    status: "completed",
+    size: "1.8 MB",
+  },
+  {
+    title: "Campaign Effectiveness Report",
+    type: "Campaign Analysis",
+    date: "Nov 15, 2024",
+    status: "completed",
+    size: "3.1 MB",
+  },
+  {
+    title: "Community Panel Engagement",
+    type: "Panel Metrics",
+    date: "Nov 12, 2024",
+    status: "completed",
+    size: "1.5 MB",
+  },
+  {
+    title: "Monthly Executive Summary",
+    type: "Executive Report",
+    date: "Nov 1, 2024",
+    status: "scheduled",
+    size: "0 MB",
+  },
 ];
 
 const Report = () => {
@@ -19,19 +59,21 @@ const Report = () => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <DashboardSidebar />
-        
+
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
           <DashboardHeader />
-          
+
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Reports</h1>
-                <p className="text-muted-foreground mt-1">Generate and download analysis reports</p>
+                <p className="text-muted-foreground mt-1">
+                  Generate and download analysis reports
+                </p>
               </div>
               <Button className="gap-2">
                 <Plus className="w-4 h-4" />
@@ -42,7 +84,9 @@ const Report = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Reports
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">24</div>
@@ -51,29 +95,41 @@ const Report = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    This Month
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">5</div>
-                  <p className="text-xs text-muted-foreground mt-1">+2 from last month</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    +2 from last month
+                  </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Scheduled
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">1</div>
-                  <p className="text-xs text-muted-foreground mt-1">Upcoming reports</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upcoming reports
+                  </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Downloaded</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Downloaded
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">18</div>
-                  <p className="text-xs text-muted-foreground mt-1">This month</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This month
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -81,12 +137,17 @@ const Report = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Recent Reports</CardTitle>
-                <CardDescription>Your generated analysis reports</CardDescription>
+                <CardDescription>
+                  Your generated analysis reports
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {reports.map((report, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                    >
                       <div className="flex items-center gap-4">
                         <div className="p-3 rounded-lg bg-primary/10">
                           <FileText className="w-6 h-6 text-primary" />
@@ -102,13 +163,21 @@ const Report = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <Badge variant={report.status === "completed" ? "success" : "warning"}>
+                          <Badge
+                            variant={
+                              report.status === "completed"
+                                ? "success"
+                                : "warning"
+                            }
+                          >
                             {report.status}
                           </Badge>
-                          <p className="text-xs text-muted-foreground mt-1">{report.size}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {report.size}
+                          </p>
                         </div>
                         {report.status === "completed" && (
                           <Button variant="outline" size="sm" className="gap-2">
