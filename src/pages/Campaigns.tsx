@@ -72,7 +72,7 @@ const Campaigns = () => {
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader />
+          <DashboardHeader headerTitle="Campaigns" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-8">
@@ -124,7 +124,7 @@ const Campaigns = () => {
                       <span>Created: 20/09/2025</span>
                     </div>
                   </div>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                  <Button className="bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
                     <Plus className="w-4 h-4" />
                     Add Channel
                   </Button>

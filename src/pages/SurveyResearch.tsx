@@ -257,7 +257,7 @@ const SurveyResearch = () => {
 
               <Button
                 onClick={() => setOpen(true)}
-                className="w-full sm:w-auto gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full sm:w-auto gap-2 bg-[#206AB5] hover:bg-[#185287] text-white"
               >
                 <Plus className="w-4 h-4" />
                 Create Survey

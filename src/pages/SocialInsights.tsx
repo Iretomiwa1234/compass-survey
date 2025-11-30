@@ -124,7 +124,7 @@ const SocialInsights = () => {
                       <span>Created: 20/09/2025</span>
                     </div>
                   </div>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                  <Button className="bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
                     <Plus className="w-4 h-4" />
                     Add Channel
                   </Button>

@@ -129,7 +129,7 @@ const Contacts = () => {
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader />
+          <DashboardHeader headerTitle="Contacts" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-8">
@@ -183,7 +183,7 @@ const Contacts = () => {
                     <Upload className="w-4 h-4" />
                     Export
                   </Button>
-                  <Button className="gap-2 flex-1 xl:flex-none bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button className="gap-2 flex-1 xl:flex-none bg-[#206AB5] hover:bg-[#185287] text-white">
                     <Plus className="w-4 h-4" />
                     Add Contact
                   </Button>

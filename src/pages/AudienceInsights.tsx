@@ -186,7 +186,7 @@ const AudienceInsights = () => {
                     <Upload className="w-4 h-4" />
                     Export
                   </Button>
-                  <Button className="gap-2 flex-1 xl:flex-none bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button className="gap-2 flex-1 xl:flex-none bg-[#206AB5] hover:bg-[#185287] text-white">
                     <Plus className="w-4 h-4" />
                     Add Contact
                   </Button>

@@ -1,7 +1,14 @@
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
 
 type DashboardHeaderProps = {
   headerTitle?: string;
@@ -50,20 +57,39 @@ export function DashboardHeader({
           <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
         </Button>
 
-        <div className="flex items-center gap-3 cursor-pointer">
-          <Avatar className="w-8 h-8 bg-primary/10">
-            <AvatarFallback className="text-primary text-sm">JD</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-foreground">
-              Jane Doe
-            </span>
-            <span className="text-xs text-muted-foreground">
-              janedoe@gmail.com
-            </span>
-          </div>
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-3 cursor-pointer">
+              <Avatar className="w-9 h-9 bg-primary/10">
+                <AvatarFallback className="text-primary text-sm">
+                  JD
+                </AvatarFallback>
+              </Avatar>
+              <div className="hidden sm:flex flex-col">
+                <span className="text-sm font-medium text-foreground">
+                  Jane Doe
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  janedoe@gmail.com
+                </span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent sideOffset={8}>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

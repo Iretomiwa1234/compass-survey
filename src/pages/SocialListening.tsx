@@ -91,13 +91,13 @@ const SocialListening = () => {
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader />
+          <DashboardHeader headerTitle="Social Listening" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-6">
-              <h1 className="text-xl font-semibold text-foreground mb-6">
+              {/* <h1 className="text-xl font-semibold text-foreground mb-6">
                 Social Listening
-              </h1>
+              </h1> */}
 
               <h2 className="text-lg font-semibold text-foreground mb-6">
                 Optimal Brand

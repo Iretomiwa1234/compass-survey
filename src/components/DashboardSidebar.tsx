@@ -101,7 +101,7 @@ export function DashboardSidebar() {
                   className="flex items-center gap-3 w-full p-2"
                 >
                   {currentPath === dashboardItem.path && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 rounded-r-full" />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#206AB5] rounded-r-full" />
                   )}
                   <dashboardItem.icon className="w-4 h-4" />
                   <span>{dashboardItem.name}</span>
@@ -146,7 +146,7 @@ export function DashboardSidebar() {
                               className="flex items-center gap-3 w-full p-2"
                             >
                               {currentPath === item.path && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 rounded" />
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#206AB5] rounded" />
                               )}
                               <item.icon className="w-4 h-4" />
                               <span>{item.name}</span>
@@ -175,7 +175,7 @@ export function DashboardSidebar() {
                   className="flex items-center gap-3 w-full p-2"
                 >
                   {currentPath === settingsItem.path && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 rounded-r-full" />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#206AB5] rounded-r-full" />
                   )}
                   <settingsItem.icon className="w-4 h-4" />
                   <span>{settingsItem.name}</span>

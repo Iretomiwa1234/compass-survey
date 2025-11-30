@@ -42,17 +42,16 @@ const Channels = () => {
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader />
+          <DashboardHeader headerTitle="Distribution Channels" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-foreground mb-6">
-                Customer Satisfaction Survey
-              </h2>
-
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <div className="relative flex-1 sm:flex-initial sm:w-64">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Customer Satisfaction Survey
+                </h2>
+                <div className="flex items-center gap-2">
+                  <div className="relative w-[280px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search for survey" className="pl-9" />
                   </div>
@@ -73,21 +72,33 @@ const Channels = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Link2 className="w-4 h-4 bg-[#EDF3FF] text-[#206AB5]" />
-                    Link
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Share2 className="w-4 h-4 bg-[#EDF3FF] text-[#206AB5]" />
-                    Share
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Globe className="w-4 h-4 bg-[#EDF3FF] text-[#206AB5]" />
-                    Website
-                  </Button>
-                </div>
+              <div className="flex items-center justify-end gap-2 mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 bg-white border border-border"
+                >
+                  <Link2 className="w-4 h-4 text-[#206AB5]" />
+                  Link
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 bg-white border border-border"
+                >
+                  <Share2 className="w-4 h-4 text-[#206AB5]" />
+                  Share
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 bg-white border border-border"
+                >
+                  <Globe className="w-4 h-4 text-[#206AB5]" />
+                  Website
+                </Button>
               </div>
 
               <Tabs
@@ -95,20 +106,32 @@ const Channels = () => {
                 onValueChange={setActiveTab}
                 className="mb-6"
               >
-                <TabsList>
-                  <TabsTrigger value="email" className="gap-2">
+                <TabsList className="bg-white p-2 rounded-md shadow-sm inline-flex">
+                  <TabsTrigger
+                    value="email"
+                    className="gap-2 px-4 py-2 rounded-md data-[state=active]:bg-[#206AB5] data-[state=active]:text-white"
+                  >
                     <Mail className="w-4 h-4" />
                     Email
                   </TabsTrigger>
-                  <TabsTrigger value="sms" className="gap-2">
+                  <TabsTrigger
+                    value="sms"
+                    className="gap-2 px-4 py-2 rounded-md data-[state=active]:bg-[#206AB5] data-[state=active]:text-white"
+                  >
                     <MessageSquare className="w-4 h-4" />
                     SMS
                   </TabsTrigger>
-                  <TabsTrigger value="whatsapp" className="gap-2">
+                  <TabsTrigger
+                    value="whatsapp"
+                    className="gap-2 px-4 py-2 rounded-md data-[state=active]:bg-[#206AB5] data-[state=active]:text-white"
+                  >
                     <MessageSquare className="w-4 h-4" />
                     WhatsApp
                   </TabsTrigger>
-                  <TabsTrigger value="qrcode" className="gap-2">
+                  <TabsTrigger
+                    value="qrcode"
+                    className="gap-2 px-4 py-2 rounded-md data-[state=active]:bg-[#206AB5] data-[state=active]:text-white"
+                  >
                     <QrCode className="w-4 h-4" />
                     QR Code
                   </TabsTrigger>
@@ -116,7 +139,7 @@ const Channels = () => {
 
                 <TabsContent value="email" className="mt-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card>
+                    <Card className="border border-border bg-white shadow-sm">
                       <CardHeader>
                         <CardTitle>Email Campaign</CardTitle>
                       </CardHeader>
@@ -158,14 +181,14 @@ const Channels = () => {
                           </div>
                         </div>
 
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
                           <Mail className="w-4 h-4" />
                           Send Email Campaign
                         </Button>
                       </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border border-border bg-white shadow-sm">
                       <CardHeader>
                         <CardTitle>Preview</CardTitle>
                       </CardHeader>
@@ -190,7 +213,7 @@ const Channels = () => {
                             </p>
                           </div>
 
-                          <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                          <Button className="bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
                             <Share2 className="w-4 h-4" />
                             Go to survey
                           </Button>
@@ -203,7 +226,7 @@ const Channels = () => {
                 <TabsContent value="sms" className="mt-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* LEFT PANEL — SMS FORM */}
-                    <Card>
+                    <Card className="border border-border bg-white shadow-sm">
                       <CardHeader>
                         <CardTitle>SMS Campaign</CardTitle>
                       </CardHeader>
@@ -244,7 +267,7 @@ const Channels = () => {
                         </div>
 
                         {/* SEND BUTTON */}
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
                           <MessageSquare className="w-4 h-4" />
                           Send SMS Campaign
                         </Button>
@@ -252,7 +275,7 @@ const Channels = () => {
                     </Card>
 
                     {/* RIGHT PANEL — PREVIEW */}
-                    <Card>
+                    <Card className="border border-border bg-white shadow-sm">
                       <CardHeader>
                         <CardTitle>Preview</CardTitle>
                       </CardHeader>
@@ -284,7 +307,7 @@ const Channels = () => {
                 <TabsContent value="whatsapp" className="mt-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* LEFT PANEL — SMS FORM */}
-                    <Card>
+                    <Card className="border border-border bg-white shadow-sm">
                       <CardHeader>
                         <CardTitle>Whatsapp Campaign</CardTitle>
                       </CardHeader>
@@ -323,7 +346,7 @@ const Channels = () => {
                         </div>
 
                         {/* SEND BUTTON */}
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
                           <MessageSquare className="w-4 h-4" />
                           Send Whatsapp Campaign
                         </Button>
@@ -331,7 +354,7 @@ const Channels = () => {
                     </Card>
 
                     {/* RIGHT PANEL — PREVIEW */}
-                    <Card>
+                    <Card className="border border-border bg-white shadow-sm">
                       <CardHeader>
                         <CardTitle>Preview</CardTitle>
                       </CardHeader>
@@ -348,7 +371,7 @@ const Channels = () => {
                 <TabsContent value="qrcode" className="mt-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* LEFT — QR Code Settings */}
-                    <Card>
+                    <Card className="border border-border bg-white shadow-sm">
                       <CardHeader>
                         <CardTitle>QR Code</CardTitle>
                       </CardHeader>
@@ -386,7 +409,7 @@ const Channels = () => {
                         </div>
 
                         {/* Generate QR Button */}
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
                           <QrCode className="w-4 h-4" />
                           Generate QR Code
                         </Button>
@@ -404,7 +427,7 @@ const Channels = () => {
                     </Card>
 
                     {/* RIGHT — QR Code Preview */}
-                    <Card>
+                    <Card className="border border-border bg-white shadow-sm">
                       <CardHeader>
                         <CardTitle>QR Code Preview</CardTitle>
                       </CardHeader>

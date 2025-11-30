@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AddInputPanel from "@/components/survey/AddInputPannel";
 import SurveyPreview from "@/components/survey/SurveyPreview";
 import EditInputPanel from "@/components/survey/EditInputPanel";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,35 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 
 const CreateSurvey = () => {
   const navigate = useNavigate();
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [questions, setQuestions] = useState<
+    Array<{
+      id: number;
+      label: string;
+      hint?: string;
+      defaultValue?: string;
+      required?: boolean;
+      type?: string;
+    }>
+  >([]);
+
+  const addQuestion = (label: string) => {
+    const id = Date.now();
+    const q = {
+      id,
+      label,
+      hint: "",
+      defaultValue: "",
+      required: false,
+      type: label,
+    };
+    setQuestions((s) => [...s, q]);
+    setSelectedId(id);
+  };
+
+  const updateQuestion = (id: number, patch: Partial<any>) => {
+    setQuestions((s) => s.map((q) => (q.id === id ? { ...q, ...patch } : q)));
+  };
 
   return (
     <SidebarProvider>
@@ -90,9 +120,18 @@ const CreateSurvey = () => {
             </div>
 
             <div className="flex flex-1 gap-2 overflow-hidden md:flex-row flex-col">
-              <AddInputPanel />
-              <SurveyPreview />
-              <EditInputPanel />
+              <AddInputPanel onSelect={(label) => addQuestion(label)} />
+              <SurveyPreview
+                onDropType={(label) => addQuestion(label)}
+                questions={questions}
+                onSelectQuestion={(id: number) => setSelectedId(id)}
+              />
+              <EditInputPanel
+                selected={questions.find((q) => q.id === selectedId) ?? null}
+                onUpdate={(patch: Partial<any>) =>
+                  selectedId && updateQuestion(selectedId, patch)
+                }
+              />
             </div>
           </div>
         </SidebarInset>
