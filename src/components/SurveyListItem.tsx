@@ -30,14 +30,14 @@ export const SurveyListItem = ({ survey }: SurveyListItemProps) => {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow border-[0.5px]">
       <CardContent className="p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground mb-1 truncate">
-              {survey.title}
-            </h3>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-6">
+              <h3 className="font-normal text-foreground mb-1 truncate">
+                {survey.title}
+              </h3>
               <span
                 className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
                   survey.status
@@ -45,6 +45,8 @@ export const SurveyListItem = ({ survey }: SurveyListItemProps) => {
               >
                 {survey.status}
               </span>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span>{survey.totalResponse} Total Response</span>
               <span>Response rate {survey.responseRate}%</span>
               <span>Created {survey.createdDate}</span>

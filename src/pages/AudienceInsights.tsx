@@ -128,7 +128,7 @@ const AudienceInsights = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
@@ -186,7 +186,7 @@ const AudienceInsights = () => {
                     <Upload className="w-4 h-4" />
                     Export
                   </Button>
-                  <Button className="gap-2 flex-1 xl:flex-none bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button className="gap-2 flex-1 xl:flex-none bg-[#206AB5] hover:bg-[#185287] text-white">
                     <Plus className="w-4 h-4" />
                     Add Contact
                   </Button>

@@ -68,11 +68,11 @@ const Campaigns = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader />
+          <DashboardHeader headerTitle="Campaigns" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-8">
@@ -102,10 +102,10 @@ const Campaigns = () => {
               </div>
 
               <Card className="mb-8">
-                <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-lg font-semibold text-foreground">
+                      <h2 className="text-md font-normal text-foreground">
                         Customer Satisfaction Survey
                       </h2>
                       <Badge
@@ -115,7 +115,7 @@ const Campaigns = () => {
                         Active
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <Users className="w-4 h-4" />
                         <span>1,520 Total Response</span>
@@ -124,7 +124,7 @@ const Campaigns = () => {
                       <span>Created: 20/09/2025</span>
                     </div>
                   </div>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                  <Button className="bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
                     <Plus className="w-4 h-4" />
                     Add Channel
                   </Button>

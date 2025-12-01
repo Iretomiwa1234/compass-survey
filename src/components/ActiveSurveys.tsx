@@ -62,7 +62,7 @@ export function ActiveSurveys() {
             key={idx}
             className="p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
           >
-            <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <h4 className="font-semibold text-foreground">

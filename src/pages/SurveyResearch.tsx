@@ -5,9 +5,14 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { StatCard } from "@/components/StatCard";
 import { DonutMetricCard } from "@/components/DonutMetricCard";
 import { SurveyListItem, Survey } from "@/components/SurveyListItem";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import StarIcon from "/assets/stars-01.svg?url";
 import {
   Select,
   SelectContent,
@@ -132,7 +137,7 @@ const SurveyResearch = () => {
   const handleGenerateWithAI = () => {
     setOpen(false);
     setIsGenerating(true);
-    
+
     setTimeout(() => {
       setIsGenerating(false);
       navigate("/create-survey");
@@ -145,11 +150,11 @@ const SurveyResearch = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader />
+          <DashboardHeader headerTitle="Surveys" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-6">
@@ -171,39 +176,45 @@ const SurveyResearch = () => {
                   ]}
                 />
 
-                <DonutMetricCard
-                  title="Avg Response Rate"
-                  icon={TrendingUp}
-                  percentage={72}
-                  chartColor="#3B82F6"
-                  iconBgColor="bg-orange-500/10"
-                  iconColor="text-orange-500"
-                  data={[
-                    { label: "Total Invite Sent", value: "1,500" },
-                    {
-                      label: "Total Responded",
-                      value: "1,300",
-                      color: "text-blue-500",
-                    },
-                  ]}
-                />
+                <div className="w-full grid grid-cols-1 xl:grid-cols-2 gap-6 xl:col-span-2">
+                  <DonutMetricCard
+                    title="Avg Response Rate"
+                    icon={TrendingUp}
+                    percentage={72}
+                    chartColor="#6A9CCE"
+                    iconBgColor="bg-orange-500/10"
+                    iconColor="text-orange-500"
+                    data={[
+                      { label: "Total Invite Sent", value: "1,500" },
+                      {
+                        label: "Total Responded",
+                        value: "1,300",
+                        color: "text-blue-500",
+                      },
+                    ]}
+                  />
 
-                <DonutMetricCard
-                  title="Completion Rate"
-                  icon={CheckCircle2}
-                  percentage={80}
-                  chartColor="#22C55E"
-                  iconBgColor="bg-green-500/10"
-                  iconColor="text-green-500"
-                  data={[
-                    {
-                      label: "Completed",
-                      value: "1,300",
-                      color: "text-green-500",
-                    },
-                    { label: "Abandoned", value: "200", color: "text-red-500" },
-                  ]}
-                />
+                  <DonutMetricCard
+                    title="Completion Rate"
+                    icon={CheckCircle2}
+                    percentage={80}
+                    chartColor="#22C55E"
+                    iconBgColor="bg-green-500/10"
+                    iconColor="text-green-500"
+                    data={[
+                      {
+                        label: "Completed",
+                        value: "1,300",
+                        color: "text-green-500",
+                      },
+                      {
+                        label: "Abandoned",
+                        value: "200",
+                        color: "text-red-500",
+                      },
+                    ]}
+                  />
+                </div>
 
                 <StatCard
                   title="Country Reach"
@@ -246,7 +257,7 @@ const SurveyResearch = () => {
 
               <Button
                 onClick={() => setOpen(true)}
-                className="w-full sm:w-auto gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full sm:w-auto gap-2 bg-[#206AB5] hover:bg-[#185287] text-white"
               >
                 <Plus className="w-4 h-4" />
                 Create Survey
@@ -327,19 +338,20 @@ const SurveyResearch = () => {
 
             <div className="flex justify-end gap-3 pt-4">
               <Button
-                variant="outline"
-                onClick={() => navigate("/create-survey")}
+                onClick={() => {
+                  handleGenerateWithAI();
+                  // navigate("/create-survey");
+                }}
+                className="bg-[#206AB5] hover:bg-[#123c67] text-white rounded-[8px] px-[10px] py-[16px]"
               >
-                Create Manually
+                <img src={StarIcon} alt="" /> Generate with AI
               </Button>
               <Button
-                onClick={() => {
-                              handleGenerateWithAI();
-                              // navigate("/create-survey");
-                            }}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                variant="outline"
+                onClick={() => navigate("/create-survey")}
+                className="bg-white border-[#D2E1F0] text-[#48556B] rounded-[8px] px-[10px] py-[16px]"
               >
-                Generate with AI
+                Create Manually
               </Button>
             </div>
           </div>
@@ -348,19 +360,24 @@ const SurveyResearch = () => {
 
       {/* Generating Survey Loading Modal */}
       <Dialog open={isGenerating} onOpenChange={setIsGenerating}>
-        <DialogContent className="max-w-md p-12">
+        <DialogContent className="max-w-md p-6">
           <div className="flex flex-col items-center justify-center text-center space-y-4">
-
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-
             <div>
-              <DialogTitle className="text-lg mb-2">Create Survey</DialogTitle>
-              <p className="text-sm text-muted-foreground">Generating Survey</p>
+              <DialogTitle className="text-lg mb-2 w-full text-left">
+                Create Survey
+              </DialogTitle>
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center justify-center w-16 h-16 border-2 border-[#206AB5] rounded-[8px]">
+                  <div className="bg-[#206AB5] h-12 w-12 [mask-image:url('/assets/stars-01.svg')] [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center]"></div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Generating Survey
+                </p>
+              </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-
     </SidebarProvider>
   );
 };

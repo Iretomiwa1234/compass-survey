@@ -36,16 +36,20 @@ export const DonutMetricCard = ({
           </div>
           <p className="text-sm font-medium text-foreground">{title}</p>
         </div>
-        
+
         <div className="flex items-center gap-6">
-          <div className="relative w-24 h-24">
-            <svg className="w-full h-full transform -rotate-90">
+          <div className="relative w-28 h-28">
+            <svg
+              className="w-full h-full transform -rotate-90 overflow-visible"
+              viewBox="0 0 96 96"
+              preserveAspectRatio="xMidYMid meet"
+            >
               <circle
                 cx="48"
                 cy="48"
                 r="45"
                 stroke="hsl(var(--muted))"
-                strokeWidth="8"
+                strokeWidth="10"
                 fill="none"
               />
               <circle
@@ -53,7 +57,7 @@ export const DonutMetricCard = ({
                 cy="48"
                 r="45"
                 stroke={chartColor}
-                strokeWidth="8"
+                strokeWidth="10"
                 fill="none"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
@@ -61,7 +65,9 @@ export const DonutMetricCard = ({
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-2xl font-bold text-foreground">{percentage}%</span>
+              <span className="text-2xl font-bold text-foreground">
+                {percentage}%
+              </span>
             </div>
           </div>
 
@@ -69,7 +75,11 @@ export const DonutMetricCard = ({
             {data.map((item, idx) => (
               <div key={idx}>
                 <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className={`text-sm font-semibold ${item.color || "text-foreground"}`}>
+                <p
+                  className={`text-sm font-semibold ${
+                    item.color || "text-foreground"
+                  }`}
+                >
                   {item.value}
                 </p>
               </div>

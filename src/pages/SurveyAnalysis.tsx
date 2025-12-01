@@ -97,11 +97,11 @@ const SurveyAnalysis = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader />
+          <DashboardHeader headerTitle="Analysis" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-6">
@@ -113,7 +113,7 @@ const SurveyAnalysis = () => {
                 <h2 className="text-lg font-medium">
                   Customer Satisfaction Survey
                 </h2>
-                <div className="flex gap-4 w-full md:w-auto">
+                <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
                   <div className="relative flex-1 md:w-64">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search for survey" className="pl-9" />
@@ -127,7 +127,7 @@ const SurveyAnalysis = () => {
                       <SelectItem value="survey2">Product Feedback</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                  <Button className="bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
                     <Download className="w-4 h-4" />
                     Export
                   </Button>
@@ -144,24 +144,30 @@ const SurveyAnalysis = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold mb-4">1,500</div>
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                      <div className="bg-green-50 p-1 rounded">
-                        <div className="font-semibold text-green-700">
+                    <div className="flex flex-wrap gap-2 text-center text-xs justify-between items-center">
+                      <div className="flex-1 min-w-0 max-w-[160px] bg-green-50 px-2 py-1 rounded flex flex-col items-center">
+                        <div className="text-[0.8em] font-semibold text-green-700">
                           Completed
                         </div>
-                        <div className="text-green-700">1,100</div>
+                        <div className="text-[0.8em] font-bold text-green-700">
+                          1,100
+                        </div>
                       </div>
-                      <div className="bg-orange-50 p-1 rounded">
-                        <div className="font-semibold text-orange-700">
+                      <div className="flex-1 min-w-0 max-w-[160px] bg-orange-50 px-2 py-1 rounded flex flex-col items-center">
+                        <div className="text-[0.8em] font-semibold text-orange-700">
                           In Progress
                         </div>
-                        <div className="text-orange-700">200</div>
+                        <div className="text-[0.8em] font-bold text-orange-700">
+                          200
+                        </div>
                       </div>
-                      <div className="bg-red-50 p-1 rounded">
-                        <div className="font-semibold text-red-700">
+                      <div className="flex-1 min-w-0 max-w-[160px] bg-red-50 px-2 py-1 rounded flex flex-col items-center">
+                        <div className="text-[0.8em] font-semibold text-red-700">
                           Abandoned
                         </div>
-                        <div className="text-red-700">200</div>
+                        <div className="text-[0.8em] font-bold text-red-700">
+                          200
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -174,8 +180,8 @@ const SurveyAnalysis = () => {
                       Avg Response Rate
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="flex items-center justify-between">
-                    <div className="relative w-20 h-20">
+                  <CardContent className="flex flex-col sm:flex-row items-center sm:justify-between gap-4">
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -221,8 +227,8 @@ const SurveyAnalysis = () => {
                       Completion Rate
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="flex items-center justify-between">
-                    <div className="relative w-20 h-20">
+                  <CardContent className="flex flex-col sm:flex-row items-center sm:justify-between gap-4">
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -266,24 +272,24 @@ const SurveyAnalysis = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold mb-4">16</div>
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                      <div className="bg-blue-50 p-1 rounded">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-xs">
+                      <div className="bg-blue-50 p-1 rounded flex flex-col items-center min-w-[56px]">
                         <div className="font-semibold text-blue-700">
                           Africa
                         </div>
                         <div className="text-blue-700">5</div>
                       </div>
-                      <div className="bg-blue-50 p-1 rounded">
+                      <div className="bg-blue-50 p-1 rounded flex flex-col items-center min-w-[56px]">
                         <div className="font-semibold text-blue-700">Asia</div>
                         <div className="text-blue-700">3</div>
                       </div>
-                      <div className="bg-blue-50 p-1 rounded">
+                      <div className="bg-blue-50 p-1 rounded flex flex-col items-center min-w-[56px]">
                         <div className="font-semibold text-blue-700">
                           Europe
                         </div>
                         <div className="text-blue-700">3</div>
                       </div>
-                      <div className="bg-blue-50 p-1 rounded">
+                      <div className="bg-blue-50 p-1 rounded flex flex-col items-center min-w-[56px]">
                         <div className="font-semibold text-blue-700">
                           America
                         </div>
@@ -300,7 +306,7 @@ const SurveyAnalysis = () => {
                     <CardTitle className="text-base">Response Trend</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[300px]">
+                    <div className="h-64 md:h-80 lg:h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={responseTrendData}>
                           <defs>
@@ -359,7 +365,7 @@ const SurveyAnalysis = () => {
                     <CardTitle className="text-base">Device Usage</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[200px] relative">
+                    <div className="h-48 sm:h-56 lg:h-[200px] relative">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -412,7 +418,7 @@ const SurveyAnalysis = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[300px]">
+                    <div className="h-64 md:h-80 lg:h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={countryData} barSize={6}>
                           <CartesianGrid
