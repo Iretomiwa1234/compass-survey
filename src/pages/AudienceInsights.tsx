@@ -1,14 +1,17 @@
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Download, Upload } from "lucide-react";
+import { Search, UserPlus, Upload, Download, Users, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -33,8 +36,60 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 const AudienceInsights = () => {
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [addContactModalOpen, setAddContactModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  
+
+  const handleImport = () => {
+    if (!importFile) {
+      toast.error("Please select a file to import");
+      return;
+    }
+    
+    toast.success("Contacts imported successfully");
+    setImportModalOpen(false);
+    setImportFile(null);
+  };
+
+  const handleExport = () => {
+  const headers = ['Date', 'Respondent', 'Channel', 'Status'];
+
+  const csvContent = [
+    headers.join(','),
+    ...insights.map(c =>
+      `"${c.date}","${c.respondent}","${c.channel}","${c.status}"`
+    )
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = `audience_export_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+  
+
+  const onSubmitContact = (data: any) => {
+    // Handle add contact logic here
+    console.log(data);
+    toast.success("Contact added successfully");
+    setAddContactModalOpen(false);
+    reset();
+  };
+
   const insights = [
     {
       date: "07/05/2016",
@@ -126,31 +181,31 @@ const AudienceInsights = () => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <DashboardSidebar />
-
+        
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
           <DashboardHeader />
 
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-6 overflow-y-auto mt-[var(--nav-height)]">
             <div className="mb-8">
-              <h1 className="text-2xl font-semibold text-foreground mb-6">
+              <h1 className="text-xl font-semibold text-foreground mb-6">
                 Audience Insights
               </h1>
 
-              <div className="flex flex-col xl:flex-row gap-4 mb-8 items-start xl:items-center justify-between">
-                <div className="flex flex-col md:flex-row gap-4 w-full xl:w-auto">
-                  <div className="relative w-full md:w-64">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <div className="flex flex-col lg:flex-row gap-3 mb-6 items-start lg:items-center">
+                <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search for Contact"
                       className="pl-9 bg-background"
                     />
                   </div>
                   <Select>
-                    <SelectTrigger className="w-full md:w-[140px]">
+                    <SelectTrigger className="w-full sm:w-[130px]">
                       <SelectValue placeholder="All Group" />
                     </SelectTrigger>
                     <SelectContent>
@@ -160,7 +215,7 @@ const AudienceInsights = () => {
                     </SelectContent>
                   </Select>
                   <Select>
-                    <SelectTrigger className="w-full md:w-[140px]">
+                    <SelectTrigger className="w-full sm:w-[130px]">
                       <SelectValue placeholder="All Tag" />
                     </SelectTrigger>
                     <SelectContent>
@@ -171,42 +226,47 @@ const AudienceInsights = () => {
                   </Select>
                 </div>
 
-                <div className="flex gap-2 w-full xl:w-auto">
+                <div className="flex gap-2 w-full lg:w-auto">
                   <Button
                     variant="outline"
-                    className="gap-2 flex-1 xl:flex-none text-blue-600 bg-blue-50 border-blue-100 hover:bg-blue-100"
+                    className="gap-2 flex-1 lg:flex-none text-primary border-primary/20 bg-primary/5 hover:bg-primary/10 hover:text-primary"
+                    onClick={() => setImportModalOpen(true)}
                   >
                     <Download className="w-4 h-4" />
                     Import
                   </Button>
                   <Button
                     variant="outline"
-                    className="gap-2 flex-1 xl:flex-none text-blue-600 bg-blue-50 border-blue-100 hover:bg-blue-100"
+                    className="gap-2 flex-1 lg:flex-none text-primary border-primary/20 bg-primary/5 hover:bg-primary/10 hover:text-primary"
+                    onClick={() => setExportModalOpen(true)}
                   >
                     <Upload className="w-4 h-4" />
                     Export
                   </Button>
-                  <Button className="gap-2 flex-1 xl:flex-none bg-[#206AB5] hover:bg-[#185287] text-white">
+                  <Button 
+                    className="gap-2 flex-1 lg:flex-none bg-primary hover:bg-primary/90 text-primary-foreground"
+                    onClick={() => setAddContactModalOpen(true)}
+                  >
                     <Plus className="w-4 h-4" />
                     Add Contact
                   </Button>
                 </div>
               </div>
 
-              <div className="rounded-md border bg-card mb-6">
+              <div className="rounded-lg border bg-card mb-6 overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="text-center">Date</TableHead>
-                      <TableHead className="text-center">Respondent</TableHead>
-                      <TableHead className="text-center">Channel</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-center">Action</TableHead>
+                    <TableRow className="border-b bg-background hover:bg-background">
+                      <TableHead className="text-center font-medium text-foreground">Date</TableHead>
+                      <TableHead className="text-center font-medium text-foreground">Respondent</TableHead>
+                      <TableHead className="text-center font-medium text-foreground">Channel</TableHead>
+                      <TableHead className="text-center font-medium text-foreground">Status</TableHead>
+                      <TableHead className="text-center font-medium text-foreground">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {insights.map((row, idx) => (
-                      <TableRow key={idx}>
+                      <TableRow key={idx} className="hover:bg-muted/30">
                         <TableCell className="text-center text-muted-foreground">
                           {row.date}
                         </TableCell>
@@ -217,25 +277,22 @@ const AudienceInsights = () => {
                           {row.channel}
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge
-                            variant={
-                              row.status === "Complete"
-                                ? "success"
-                                : "destructive"
-                            }
-                            className={`font-normal ${
-                              row.status === "Complete"
-                                ? "bg-green-100 text-green-700 hover:bg-green-200"
-                                : "bg-red-100 text-red-700 hover:bg-red-200"
-                            }`}
-                          >
-                            {row.status}
-                          </Badge>
+                          <div className="flex justify-center">
+                            <Badge
+                              className={`font-normal border-0 ${
+                                row.status === "Complete"
+                                  ? "bg-green-50 text-green-700 hover:bg-green-50"
+                                  : "bg-red-50 text-red-700 hover:bg-red-50"
+                              }`}
+                            >
+                              {row.status}
+                            </Badge>
+                          </div>
                         </TableCell>
                         <TableCell className="text-center">
                           <Button
                             variant="link"
-                            className="text-blue-600 h-auto p-0 font-semibold"
+                            className="text-primary h-auto p-0 font-medium hover:text-primary/80"
                           >
                             {row.action}
                           </Button>
@@ -246,37 +303,195 @@ const AudienceInsights = () => {
                 </Table>
               </div>
 
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious href="#" />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#" isActive>
-                      1
-                    </PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#">2</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#">3</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#">50</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              <div className="flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious href="#" />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink href="#" isActive>
+                        1
+                      </PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink href="#">2</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink href="#">3</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink href="#">50</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationNext href="#" />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
             </div>
           </main>
         </SidebarInset>
       </div>
+
+      {/* Import Modal */}
+      <Dialog open={importModalOpen} onOpenChange={setImportModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import Contacts</DialogTitle>
+            <DialogDescription>
+              Upload a CSV or Excel file to import your contacts
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Upload File</Label>
+              <div className="mt-2 flex items-center justify-center w-full">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Click to upload or drag and drop</p>
+                    <p className="text-xs text-muted-foreground">CSV or XLSX (MAX. 5MB)</p>
+                  </div>
+                  <input type="file" className="hidden" accept=".csv,.xlsx" />
+                </label>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+              <Button>Import</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Modal */}
+      <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Export Contacts</DialogTitle>
+            <DialogDescription>
+              Export your audience insights as a CSV file.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setExportModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleExport}>
+              Export
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+      {/* Add Contact Modal */}
+      <Dialog open={addContactModalOpen} onOpenChange={setAddContactModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Contact</DialogTitle>
+            <DialogDescription>
+              Fill in the details to add a new contact to your audience
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmitContact)} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                placeholder="Enter full name"
+                {...register("name", { required: "Name is required" })}
+              />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name.message as string}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="email@example.com"
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address",
+                  },
+                })}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message as string}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                {...register("phone")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="channel">Preferred Channel *</Label>
+              <Select {...register("channel", { required: "Channel is required" })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select channel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="sms">SMS</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="qr-code">QR Code</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.channel && (
+                <p className="text-sm text-destructive">{errors.channel.message as string}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="group">Group</Label>
+              <Select {...register("group")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vip">VIP Customers</SelectItem>
+                  <SelectItem value="marketing">Marketing List</SelectItem>
+                  <SelectItem value="general">General</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags</Label>
+              <Input
+                id="tags"
+                placeholder="Enter tags separated by commas"
+                {...register("tags")}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setAddContactModalOpen(false);
+                  reset();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Add Contact</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,8 +9,16 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Search, Plus, Users } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -61,6 +70,8 @@ const Campaigns = () => {
       status: "Active",
     },
   ];
+
+   const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <SidebarProvider>
@@ -124,10 +135,10 @@ const Campaigns = () => {
                       <span>Created: 20/09/2025</span>
                     </div>
                   </div>
-                  <Button className="bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add Channel
-                  </Button>
+                  <Button onClick={() => setCreateOpen(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Channel
+              </Button>
                 </CardContent>
               </Card>
 
@@ -185,6 +196,65 @@ const Campaigns = () => {
           </main>
         </SidebarInset>
       </div>
+
+      {/* Create Campaign Modal */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Campaign</DialogTitle>
+            <DialogDescription>
+              Set up a new campaign to distribute your surveys
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Campaign Name</Label>
+              <Input placeholder="Q1 Customer Feedback" className="mt-2" />
+            </div>
+            <div>
+              <Label>Survey</Label>
+              <Select defaultValue="satisfaction">
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="satisfaction">Customer Satisfaction Survey</SelectItem>
+                  <SelectItem value="product">Product Feedback Collection</SelectItem>
+                  <SelectItem value="employee">Employee Engagement Study</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Target Group</Label>
+              <Select defaultValue="all">
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Contacts</SelectItem>
+                  <SelectItem value="vip">VIP Customers</SelectItem>
+                  <SelectItem value="marketing">Marketing List</SelectItem>
+                  <SelectItem value="general">General</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Start Date</Label>
+                <Input type="date" className="mt-2" />
+              </div>
+              <div>
+                <Label>End Date</Label>
+                <Input type="date" className="mt-2" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button>Create Campaign</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };

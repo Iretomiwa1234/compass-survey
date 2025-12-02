@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +7,15 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Users,
@@ -15,6 +25,7 @@ import {
   TrendingUp,
   Smile,
   Award,
+  Plus
 } from "lucide-react";
 import {
   Pagination,
@@ -25,8 +36,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const SocialListening = () => {
+  const [createOpen, setCreateOpen] = useState(false);
   const monitorItems = [
     {
       title: "Optimal Brand",
@@ -366,22 +385,10 @@ const SocialListening = () => {
                 <h3 className="text-lg font-semibold text-foreground">
                   Projects
                 </h3>
-                <Button className="gap-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                    <path
-                      strokeLinecap="round"
-                      strokeWidth="2"
-                      d="M12 8v8M8 12h8"
-                    />
-                  </svg>
-                  Create new project
-                </Button>
+                <Button onClick={() => setCreateOpen(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Create New Project
+              </Button>
               </div>
 
               <div className="space-y-4 mb-8">
@@ -461,6 +468,65 @@ const SocialListening = () => {
           </main>
         </SidebarInset>
       </div>
+
+      {/* Create Campaign Modal */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Campaign</DialogTitle>
+            <DialogDescription>
+              Set up a new campaign to distribute your surveys
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Campaign Name</Label>
+              <Input placeholder="Q1 Customer Feedback" className="mt-2" />
+            </div>
+            <div>
+              <Label>Survey</Label>
+              <Select defaultValue="satisfaction">
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="satisfaction">Customer Satisfaction Survey</SelectItem>
+                  <SelectItem value="product">Product Feedback Collection</SelectItem>
+                  <SelectItem value="employee">Employee Engagement Study</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Target Group</Label>
+              <Select defaultValue="all">
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Contacts</SelectItem>
+                  <SelectItem value="vip">VIP Customers</SelectItem>
+                  <SelectItem value="marketing">Marketing List</SelectItem>
+                  <SelectItem value="general">General</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Start Date</Label>
+                <Input type="date" className="mt-2" />
+              </div>
+              <div>
+                <Label>End Date</Label>
+                <Input type="date" className="mt-2" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button>Create Campaign</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };

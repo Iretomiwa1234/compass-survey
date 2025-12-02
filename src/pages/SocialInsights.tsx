@@ -1,3 +1,16 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+import { Label } from "@/components/ui/label";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +40,108 @@ import {
 } from "@/components/ui/table";
 
 const SocialInsights = () => {
+
+  const [addContactModalOpen, setAddContactModalOpen] = useState(false);
+    
+  
+    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+
+
+  const onSubmitContact = (data: any) => {
+      // Handle add contact logic here
+      console.log(data);
+      toast.success("Contact added successfully");
+      setAddContactModalOpen(false);
+      reset();
+    };
+  
+    const insights = [
+      {
+        date: "07/05/2016",
+        respondent: "Ronald Richards",
+        channel: "Email",
+        status: "Complete",
+        action: "View",
+      },
+      {
+        date: "16/08/2013",
+        respondent: "Jerome Bell",
+        channel: "SMS",
+        status: "Complete",
+        action: "View",
+      },
+      {
+        date: "07/05/2016",
+        respondent: "Floyd Miles",
+        channel: "Whatsapp",
+        status: "Complete",
+        action: "View",
+      },
+      {
+        date: "16/08/2013",
+        respondent: "Brooklyn Simmons",
+        channel: "QR-Code",
+        status: "Complete",
+        action: "View",
+      },
+      {
+        date: "15/08/2017",
+        respondent: "Darlene Robertson",
+        channel: "Email",
+        status: "Incomplete",
+        action: "View",
+      },
+      {
+        date: "15/08/2017",
+        respondent: "Robert Fox",
+        channel: "SMS",
+        status: "Complete",
+        action: "View",
+      },
+      {
+        date: "07/05/2016",
+        respondent: "Guy Hawkins",
+        channel: "Whatsapp",
+        status: "Complete",
+        action: "View",
+      },
+      {
+        date: "16/08/2013",
+        respondent: "Savannah Nguyen",
+        channel: "QR-Code",
+        status: "Incomplete",
+        action: "View",
+      },
+      {
+        date: "18/09/2016",
+        respondent: "Kathryn Murphy",
+        channel: "Email",
+        status: "Complete",
+        action: "View",
+      },
+      {
+        date: "15/08/2017",
+        respondent: "Jacob Jones",
+        channel: "SMS",
+        status: "Incomplete",
+        action: "View",
+      },
+      {
+        date: "28/10/2012",
+        respondent: "Dianne Russell",
+        channel: "Whatsapp",
+        status: "Complete",
+        action: "View",
+      },
+      {
+        date: "12/06/2020",
+        respondent: "Jane Cooper",
+        channel: "QR-Code",
+        status: "Incomplete",
+        action: "View",
+      },
+    ];
+
   const performanceData = [
     {
       channel: "Email",
@@ -124,9 +239,12 @@ const SocialInsights = () => {
                       <span>Created: 20/09/2025</span>
                     </div>
                   </div>
-                  <Button className="bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
+                  <Button 
+                    className="gap-2 flex-1 lg:flex-none bg-primary hover:bg-primary/90 text-primary-foreground"
+                    onClick={() => setAddContactModalOpen(true)}
+                  >
                     <Plus className="w-4 h-4" />
-                    Add Channel
+                    Add Contact
                   </Button>
                 </CardContent>
               </Card>
@@ -185,6 +303,108 @@ const SocialInsights = () => {
           </main>
         </SidebarInset>
       </div>
+      {/* Add Contact Modal */}
+      <Dialog open={addContactModalOpen} onOpenChange={setAddContactModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Contact</DialogTitle>
+            <DialogDescription>
+              Fill in the details to add a new contact to your audience
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmitContact)} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                placeholder="Enter full name"
+                {...register("name", { required: "Name is required" })}
+              />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name.message as string}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="email@example.com"
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address",
+                  },
+                })}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message as string}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                {...register("phone")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="channel">Preferred Channel *</Label>
+              <Select {...register("channel", { required: "Channel is required" })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select channel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="sms">SMS</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="qr-code">QR Code</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.channel && (
+                <p className="text-sm text-destructive">{errors.channel.message as string}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="group">Group</Label>
+              <Select {...register("group")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vip">VIP Customers</SelectItem>
+                  <SelectItem value="marketing">Marketing List</SelectItem>
+                  <SelectItem value="general">General</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags</Label>
+              <Input
+                id="tags"
+                placeholder="Enter tags separated by commas"
+                {...register("tags")}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setAddContactModalOpen(false);
+                  reset();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Add Contact</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };

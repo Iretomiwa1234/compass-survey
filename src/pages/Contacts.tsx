@@ -42,9 +42,11 @@ const contacts = [
 ];
 
 const Contacts = () => {
-  const [importOpen, setImportOpen] = useState(false);
-  const [addContactOpen, setAddContactOpen] = useState(false);
-  const [newGroupOpen, setNewGroupOpen] = useState(false);
+    const [importOpen, setImportOpen] = useState(false);
+    const [addContactOpen, setAddContactOpen] = useState(false);
+    const [newGroupOpen, setNewGroupOpen] = useState(false);
+    const [exportModalOpen, setExportModalOpen] = useState(false); // FIXED
+
 
   const handleExport = () => {
     // Create CSV content
@@ -86,10 +88,12 @@ const Contacts = () => {
                   <Download className="w-4 h-4" />
                   Import
                 </Button>
-                <Button variant="outline" onClick={handleExport} className="gap-2">
+                
+                <Button variant="outline" onClick={() => setExportModalOpen(true)} className="gap-2">
                   <Upload className="w-4 h-4" />
                   Export
                 </Button>
+
                 <Button onClick={() => setAddContactOpen(true)}>
                   + Add Contact
                 </Button>
@@ -231,6 +235,28 @@ const Contacts = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Export Modal */}
+<Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
+  <DialogContent className="max-w-md">
+    <DialogHeader>
+      <DialogTitle>Export Contacts</DialogTitle>
+      <DialogDescription>
+        Export your audience insights as a CSV file.
+      </DialogDescription>
+    </DialogHeader>
+
+    <div className="flex justify-end gap-3 mt-6">
+      <Button variant="outline" onClick={() => setExportModalOpen(false)}>
+        Cancel
+      </Button>
+      <Button onClick={handleExport}>
+        Export
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+
+
 
       {/* Add Contact Modal */}
       <Dialog open={addContactOpen} onOpenChange={setAddContactOpen}>
@@ -252,22 +278,20 @@ const Contacts = () => {
             </div>
             <div>
               <Label>Phone</Label>
-              <Input placeholder="+1 555-0101" className="mt-2" />
+              <Input placeholder="+234 60876081" className="mt-2" />
             </div>
             <div>
-              <Label>Location</Label>
-              <Input placeholder="New York, NY" className="mt-2" />
+              <Label>Tag</Label>
+              <Input placeholder="your tag" className="mt-2" />
             </div>
             <div>
-              <Label>Segment</Label>
-              <Select defaultValue="smb">
+              <Select defaultValue="All Group">
                 <SelectTrigger className="mt-2">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="enterprise">Enterprise</SelectItem>
-                  <SelectItem value="mid-market">Mid-Market</SelectItem>
-                  <SelectItem value="smb">SMB</SelectItem>
+                  <SelectItem value="all_group">All Group</SelectItem>
+                  
                 </SelectContent>
               </Select>
             </div>
@@ -300,18 +324,7 @@ const Contacts = () => {
                 placeholder="Add a description for this group..."
               />
             </div>
-            <div>
-              <Label>Group Type</Label>
-              <Select defaultValue="manual">
-                <SelectTrigger className="mt-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="manual">Manual</SelectItem>
-                  <SelectItem value="dynamic">Dynamic (Auto-Update)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setNewGroupOpen(false)}>Cancel</Button>
               <Button>Create Group</Button>
