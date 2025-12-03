@@ -19,6 +19,12 @@ export function DashboardHeader({
   headerTitle,
   hideGreeting = false,
 }: DashboardHeaderProps) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    navigate("/auth");
+  };
+
   return (
     <header className="h-16 bg-[#F7FAFE] px-6 flex items-center justify-between sticky top-0 z-10">
       <div className="flex-1 max-w-xl">
@@ -34,7 +40,7 @@ export function DashboardHeader({
             </p>
           </div>
         ) : (
-          <h2 className="font-semBold text-xl text-[#48556B]">{headerTitle}</h2>
+          <h2 className="font-semibold text-xl text-[#48556B]">{headerTitle}</h2>
         )}
       </div>
 
@@ -78,11 +84,7 @@ export function DashboardHeader({
           </DropdownMenuTrigger>
 
           <DropdownMenuContent sideOffset={8}>
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-              }}
-            >
+            <DropdownMenuItem onSelect={handleLogout}>
               <div className="flex items-center gap-2">
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
