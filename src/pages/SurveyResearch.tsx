@@ -140,7 +140,7 @@ const SurveyResearch = () => {
 
     setTimeout(() => {
       setIsGenerating(false);
-      navigate("/create-survey");
+      navigate("/ai-survey");
     }, 10000);
   };
 

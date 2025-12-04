@@ -10,6 +10,7 @@ import SurveyResearch from "./pages/SurveyResearch";
 import SurveyAnalysis from "./pages/SurveyAnalysis";
 import CreateSurvey from "./pages/CreateSurvey";
 import SocialListening from "./pages/SocialListening";
+import AISurvey from "./pages/AiSurvey";
 // import CommunityPanel from "./pages/CommunityPanel";
 import Channels from "./pages/Channels";
 import Campaigns from "./pages/Campaigns";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/verification" element={<Verification />} />
           <Route path="/survey-research" element={<SurveyResearch />} />
           <Route path="/create-survey" element={<CreateSurvey />} />
+          <Route path="/ai-survey" element={<AISurvey />} />
           <Route path="/survey-analysis" element={<SurveyAnalysis />} />
           <Route path="/social-listening" element={<SocialListening />} />
           {/* <Route path="/community-panel" element={<CommunityPanel />} /> */}
