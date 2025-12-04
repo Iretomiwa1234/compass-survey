@@ -7,6 +7,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import maaLogo from "/assets/MAA-Logo.png?url";
 
 const Verification = () => {
   const navigate = useNavigate();
@@ -77,14 +78,12 @@ const Verification = () => {
         <div className="lg:w-[52%] p-6 sm:p-8 lg:p-10 xl:p-12 flex flex-col justify-center">
           {/* Logo */}
           <div className="text-center mb-6">
-            <img
-              src="/assets/MAA-Logo.png"
-              alt="MAA - Marketing Analytics Africa"
+            <img 
+              src={maaLogo} 
+              alt="MAA - Marketing Analytics Africa" 
               className="h-16 sm:h-20 mx-auto object-contain"
             />
-          </div>
-
-          <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-2">
+          </div>          <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-2">
             Verify your Account
           </h2>
           <p className="text-center text-sm text-gray-500 mb-8">

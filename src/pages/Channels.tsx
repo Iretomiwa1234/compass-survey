@@ -28,6 +28,7 @@ import {
   Search,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import whatsappChat from "/assets/Whatsapp Chat.png?url";
 
 const Channels = () => {
   const [activeTab, setActiveTab] = useState("email");
@@ -364,7 +365,7 @@ const Channels = () => {
 
                       <CardContent>
                         <div className="border rounded-lg bg-green-50 p-4 text-sm leading-relaxed">
-                          <img src="/assets/Whatsapp Chat.png" alt="" />
+                          <img src={whatsappChat} alt="" />
                         </div>
                       </CardContent>
                     </Card>

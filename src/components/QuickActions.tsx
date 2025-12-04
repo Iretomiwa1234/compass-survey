@@ -7,6 +7,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import editIcon from "/assets/edit-05.svg?url";
+import glassesIcon from "/assets/glasses-01.svg?url";
+import barChartIcon from "/assets/bar-line-chart.svg?url";
+import fileIcon from "/assets/file-07.svg?url";
+import starIcon from "/assets/star-icon.svg?url";
 
 // Pages where QuickActions should be hidden
 const hiddenRoutes = ["/auth", "/verification"];

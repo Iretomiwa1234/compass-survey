@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { User, Mail, Eye, EyeOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import maaLogo from "/assets/MAA-Logo.png?url";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -94,10 +95,10 @@ const Auth = () => {
         <div className="lg:w-[52%] p-6 sm:p-8 lg:p-10 xl:p-12 flex flex-col justify-center">
           {/* Logo */}
           <div className="text-center mb-6">
-            <img
-              src="/assets/MAA-Logo.png"
-              alt="MAA - Marketing Analytics Africa"
-              className="h-16 sm:h-10 mx-auto object-contain"
+            <img 
+              src={maaLogo} 
+              alt="MAA - Marketing Analytics Africa" 
+              className="h-16 sm:h-20 mx-auto object-contain"
             />
           </div>
 

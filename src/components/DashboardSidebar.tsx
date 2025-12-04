@@ -11,6 +11,7 @@ import {
   Settings,
   ChevronRight,
 } from "lucide-react";
+import compassLogo from "/assets/Compass-logo.png?url";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -79,7 +80,7 @@ export function DashboardSidebar() {
         <div className="p-4">
           {!isCollapsed ? (
             <>
-              <img src="/assets/Compass-logo.png" alt="" />
+              <img src={compassLogo} alt="" />
             </>
           ) : (
             <h1 className="text-xl font-extrabold text-sidebar-primary">C</h1>
