@@ -95,9 +95,9 @@ const Auth = () => {
         <div className="lg:w-[52%] p-6 sm:p-8 lg:p-10 xl:p-12 flex flex-col justify-center">
           {/* Logo */}
           <div className="text-center mb-6">
-            <img 
-              src={maaLogo} 
-              alt="MAA - Marketing Analytics Africa" 
+            <img
+              src={maaLogo}
+              alt="MAA - Marketing Analytics Africa"
               className="h-16 sm:h-20 mx-auto object-contain"
             />
           </div>
