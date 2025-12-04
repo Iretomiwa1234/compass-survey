@@ -62,7 +62,7 @@ export function StatCard({
                   className="flex flex-col items-center justify-center flex-1 gap-2 min-w-0"
                 >
                   <span
-                    className="text-xs font-medium px-2 py-1 rounded-md w-full text-center truncate"
+                    className="text-xs font-medium px-2 py-1 rounded-xl w-full text-center truncate"
                     style={{ backgroundColor: style.bg, color: style.text }}
                     title={badge.label}
                   >

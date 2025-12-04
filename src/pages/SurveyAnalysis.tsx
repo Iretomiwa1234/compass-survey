@@ -116,7 +116,7 @@ const SurveyAnalysis = () => {
             <SidebarTrigger />
             <div className="flex-1" />
           </header>
-          
+
           <DashboardHeader />
 
           <main className="flex-1 p-6 space-y-6 bg-background">
@@ -143,10 +143,15 @@ const SurveyAnalysis = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="survey1">Select Survey</SelectItem>
-                        <SelectItem value="survey2">Product Feedback</SelectItem>
+                        <SelectItem value="survey2">
+                          Product Feedback
+                        </SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button className="w-full sm:w-auto gap-2" onClick={() => setExportModalOpen(true)}>
+                    <Button
+                      className="w-full sm:w-auto gap-2"
+                      onClick={() => setExportModalOpen(true)}
+                    >
                       <Download className="w-4 h-4" />
                       Export
                     </Button>
@@ -166,16 +171,22 @@ const SurveyAnalysis = () => {
                 <CardContent>
                   <div className="text-3xl font-bold mb-4">1,500</div>
                   <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="bg-success/10 p-2 rounded text-center">
-                      <div className="font-semibold text-success">Completed</div>
+                    <div className="text-center">
+                      <div className="bg-success/10 p-1 rounded text-center font-semibold text-success text-[0.8em]">
+                        Completed
+                      </div>
                       <div className="text-success">1,100</div>
                     </div>
-                    <div className="bg-warning/10 p-2 rounded text-center">
-                      <div className="font-semibold text-warning">In Progress</div>
+                    <div className="text-center">
+                      <div className="bg-warning/10 p-1 rounded text-center text-warning text-[0.8em]">
+                        In Progress
+                      </div>
                       <div className="text-warning">200</div>
                     </div>
-                    <div className="bg-destructive/10 p-2 rounded text-center">
-                      <div className="font-semibold text-destructive">Abandoned</div>
+                    <div className="text-center">
+                      <div className="bg-destructive/10 p-1 rounded text-center text-destructive text-[0.8em]">
+                        Abandoned
+                      </div>
                       <div className="text-destructive">200</div>
                     </div>
                   </div>
@@ -214,11 +225,15 @@ const SurveyAnalysis = () => {
                   </div>
                   <div className="text-xs space-y-2">
                     <div>
-                      <div className="text-muted-foreground">Total Invite Sent</div>
+                      <div className="text-muted-foreground">
+                        Total Invite Sent
+                      </div>
                       <div className="font-bold">1,500</div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Total Responds</div>
+                      <div className="text-muted-foreground">
+                        Total Responds
+                      </div>
                       <div className="font-bold text-primary">1,300</div>
                     </div>
                   </div>
@@ -309,22 +324,46 @@ const SurveyAnalysis = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={responseTrendData}>
                         <defs>
-                          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                          <linearGradient
+                            id="colorValue"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="hsl(var(--primary))"
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="hsl(var(--primary))"
+                              stopOpacity={0}
+                            />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="hsl(var(--border))"
+                        />
                         <XAxis
                           dataKey="day"
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                          tick={{
+                            fontSize: 12,
+                            fill: "hsl(var(--muted-foreground))",
+                          }}
                         />
                         <YAxis
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                          tick={{
+                            fontSize: 12,
+                            fill: "hsl(var(--muted-foreground))",
+                          }}
                         />
                         <Tooltip />
                         <Area
@@ -370,7 +409,10 @@ const SurveyAnalysis = () => {
                   </div>
                   <div className="mt-6 space-y-3">
                     {deviceUsageData.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-sm">
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-sm"
+                      >
                         <div className="flex items-center gap-2">
                           <div
                             className="w-3 h-3 rounded-full"
@@ -389,26 +431,42 @@ const SurveyAnalysis = () => {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               <Card className="xl:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-base">Response By Country</CardTitle>
+                  <CardTitle className="text-base">
+                    Response By Country
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={countryData} barSize={8}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="hsl(var(--border))"
+                        />
                         <XAxis
                           dataKey="day"
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                          tick={{
+                            fontSize: 12,
+                            fill: "hsl(var(--muted-foreground))",
+                          }}
                         />
                         <YAxis
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                          tick={{
+                            fontSize: 12,
+                            fill: "hsl(var(--muted-foreground))",
+                          }}
                         />
                         <Tooltip />
-                        <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        <Bar
+                          dataKey="value"
+                          fill="hsl(var(--primary))"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -425,7 +483,9 @@ const SurveyAnalysis = () => {
                       <div key={idx}>
                         <div className="flex justify-between text-sm mb-2">
                           <span>{item.name}</span>
-                          <span className="text-primary font-medium">{item.value}</span>
+                          <span className="text-primary font-medium">
+                            {item.value}
+                          </span>
                         </div>
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
                           <div
@@ -482,7 +542,10 @@ const SurveyAnalysis = () => {
                     <h3 className="text-base font-semibold mb-6">Age</h3>
                     <div className="space-y-3">
                       {ageData.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 text-sm text-muted-foreground"
+                        >
                           <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
                           <span>{item.range}</span>
                         </div>
@@ -496,8 +559,13 @@ const SurveyAnalysis = () => {
                     </div>
                     <div className="space-y-4">
                       {ageData.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-4 text-sm">
-                          <div className="w-12 text-muted-foreground">{item.range.replace(" - ", "-")}</div>
+                        <div
+                          key={idx}
+                          className="flex items-center gap-4 text-sm"
+                        >
+                          <div className="w-12 text-muted-foreground">
+                            {item.range.replace(" - ", "-")}
+                          </div>
                           <div className="flex-1 h-3 bg-primary/10 rounded overflow-hidden relative">
                             <div
                               className="h-full bg-primary/60 rounded"
@@ -529,9 +597,7 @@ const SurveyAnalysis = () => {
             <Button variant="outline" onClick={() => setExportModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleExport}>
-              Export
-            </Button>
+            <Button onClick={handleExport}>Export</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

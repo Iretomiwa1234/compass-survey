@@ -20,6 +20,7 @@ import Contacts from "./pages/Contacts";
 import AudienceInsights from "./pages/AudienceInsights";
 // import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import { QuickActions } from "./components/QuickActions";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <QuickActions />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

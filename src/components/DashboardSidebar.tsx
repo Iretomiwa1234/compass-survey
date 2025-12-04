@@ -75,11 +75,11 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r">
-      <SidebarHeader className="border-b border-sidebar-border">
+      <SidebarHeader>
         <div className="p-4">
           {!isCollapsed ? (
             <>
-              <img src="/assets/Compass logo.png" alt="" />
+              <img src="/assets/Compass-logo.png" alt="" />
             </>
           ) : (
             <h1 className="text-xl font-extrabold text-sidebar-primary">C</h1>
@@ -94,16 +94,16 @@ export function DashboardSidebar() {
               <SidebarMenuButton
                 asChild
                 isActive={currentPath === dashboardItem.path}
-                className="relative data-[active=true]:bg-blue-50 data-[active=true]:text-blue-600 transition-all hover:bg-transparent data-[active=true]:hover:bg-blue-50"
+                className="relative transition-all hover:bg-sidebar-accent data-[active=true]:bg-transparent data-[active=true]:text-[#206AB5] data-[active=true]:font-medium"
               >
                 <NavLink
                   to={dashboardItem.path}
-                  className="flex items-center gap-3 w-full p-2"
+                  className="flex items-center gap-3 w-full py-2 px-4"
                 >
                   {currentPath === dashboardItem.path && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#206AB5] rounded-r-full" />
+                    <div className="absolute left-1 top-1/2 -translate-y-1/2 w-[4px] h-5 bg-[#206AB5] rounded-full" />
                   )}
-                  <dashboardItem.icon className="w-4 h-4" />
+                  <dashboardItem.icon className="w-5 h-5 text-inherit" />
                   <span>{dashboardItem.name}</span>
                 </NavLink>
               </SidebarMenuButton>
@@ -139,16 +139,16 @@ export function DashboardSidebar() {
                           <SidebarMenuButton
                             asChild
                             isActive={currentPath === item.path}
-                            className="relative data-[active=true]:bg-blue-50 data-[active=true]:text-blue-600 transition-all hover:bg-transparent data-[active=true]:hover:bg-blue-50"
+                            className="relative transition-all hover:bg-sidebar-accent data-[active=true]:bg-transparent data-[active=true]:text-[#206AB5] data-[active=true]:font-medium"
                           >
                             <NavLink
                               to={item.path}
-                              className="flex items-center gap-3 w-full p-2"
+                              className="flex items-center gap-3 w-full py-2 px-4"
                             >
                               {currentPath === item.path && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#206AB5] rounded" />
+                                <div className="absolute left-1 top-1/2 -translate-y-1/2 w-[4px] h-5 bg-[#206AB5] rounded-full" />
                               )}
-                              <item.icon className="w-4 h-4" />
+                              <item.icon className="w-5 h-5 text-inherit" />
                               <span>{item.name}</span>
                             </NavLink>
                           </SidebarMenuButton>
@@ -168,16 +168,16 @@ export function DashboardSidebar() {
               <SidebarMenuButton
                 asChild
                 isActive={currentPath === settingsItem.path}
-                className="relative data-[active=true]:bg-blue-50 data-[active=true]:text-blue-600 transition-all hover:bg-transparent data-[active=true]:hover:bg-blue-50"
+                className="relative transition-all hover:bg-sidebar-accent data-[active=true]:bg-transparent data-[active=true]:text-[#206AB5] data-[active=true]:font-medium"
               >
                 <NavLink
                   to={settingsItem.path}
-                  className="flex items-center gap-3 w-full p-2"
+                  className="flex items-center gap-3 w-full py-2 px-4"
                 >
                   {currentPath === settingsItem.path && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#206AB5] rounded-r-full" />
+                    <div className="absolute left-1 top-1/2 -translate-y-1/2 w-[4px] h-5 bg-[#206AB5] rounded-full" />
                   )}
-                  <settingsItem.icon className="w-4 h-4" />
+                  <settingsItem.icon className="w-5 h-5 text-inherit" />
                   <span>{settingsItem.name}</span>
                 </NavLink>
               </SidebarMenuButton>

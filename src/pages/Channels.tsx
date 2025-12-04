@@ -45,97 +45,100 @@ const Channels = () => {
           <DashboardHeader headerTitle="Distribution Channels" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-foreground">
-                  Customer Satisfaction Survey
-                </h2>
-                <div className="flex items-center gap-2">
-                  <div className="relative w-[280px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search for survey" className="pl-9" />
-                  </div>
-                  <Select defaultValue="customer-satisfaction">
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Survey" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="customer-satisfaction">
-                        Customer Satisfaction
-                      </SelectItem>
-                      <SelectItem value="product-feedback">
-                        Product Feedback
-                      </SelectItem>
-                      <SelectItem value="employee-engagement">
-                        Employee Engagement
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+            {/* Survey Selection Bar */}
+            <div className="bg-white rounded-lg p-4 mb-6 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-foreground">
+                Customer Satisfaction Survey
+              </h2>
+              <div className="flex items-center gap-3">
+                <div className="relative w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search for survey"
+                    className="pl-9 h-9 bg-[#F0F7FF] border-0"
+                  />
                 </div>
+                <Select defaultValue="customer-satisfaction">
+                  <SelectTrigger className="w-[150px] h-9 bg-white border border-gray-200">
+                    <SelectValue placeholder="Select Survey" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="customer-satisfaction">
+                      Select Survey
+                    </SelectItem>
+                    <SelectItem value="product-feedback">
+                      Product Feedback
+                    </SelectItem>
+                    <SelectItem value="employee-engagement">
+                      Employee Engagement
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
 
-              <div className="flex items-center justify-end gap-2 mb-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2 bg-white border border-border"
-                >
-                  <Link2 className="w-4 h-4 text-[#206AB5]" />
-                  Link
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2 bg-white border border-border"
-                >
-                  <Share2 className="w-4 h-4 text-[#206AB5]" />
-                  Share
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2 bg-white border border-border"
-                >
-                  <Globe className="w-4 h-4 text-[#206AB5]" />
-                  Website
-                </Button>
-              </div>
+            {/* Tabs and Action Buttons Row */}
+            <div className="mb-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <div className="flex items-center justify-between">
+                  <TabsList className="bg-transparent p-0 h-auto gap-1">
+                    <TabsTrigger
+                      value="email"
+                      className="gap-2 px-5 py-2.5 rounded-md bg-white border border-gray-200 text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Email
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="sms"
+                      className="gap-2 px-5 py-2.5 rounded-md bg-white border border-gray-200 text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      SMS
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="whatsapp"
+                      className="gap-2 px-5 py-2.5 rounded-md bg-white border border-gray-200 text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      WhatsApp
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="qrcode"
+                      className="gap-2 px-5 py-2.5 rounded-md bg-white border border-gray-200 text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
+                    >
+                      <QrCode className="w-4 h-4" />
+                      QR Code
+                    </TabsTrigger>
+                  </TabsList>
 
-              <Tabs
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="mb-6"
-              >
-                <TabsList className="bg-white p-2 rounded-md shadow-sm inline-flex">
-                  <TabsTrigger
-                    value="email"
-                    className="gap-2 px-4 py-2 rounded-md data-[state=active]:bg-[#206AB5] data-[state=active]:text-white"
-                  >
-                    <Mail className="w-4 h-4" />
-                    Email
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="sms"
-                    className="gap-2 px-4 py-2 rounded-md data-[state=active]:bg-[#206AB5] data-[state=active]:text-white"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    SMS
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="whatsapp"
-                    className="gap-2 px-4 py-2 rounded-md data-[state=active]:bg-[#206AB5] data-[state=active]:text-white"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    WhatsApp
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="qrcode"
-                    className="gap-2 px-4 py-2 rounded-md data-[state=active]:bg-[#206AB5] data-[state=active]:text-white"
-                  >
-                    <QrCode className="w-4 h-4" />
-                    QR Code
-                  </TabsTrigger>
-                </TabsList>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 h-9 px-4"
+                    >
+                      <Link2 className="w-4 h-4 text-[#206AB5]" />
+                      Link
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 h-9 px-4"
+                    >
+                      <Share2 className="w-4 h-4 text-[#206AB5]" />
+                      Share
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 h-9 px-4"
+                    >
+                      <Globe className="w-4 h-4 text-[#206AB5]" />
+                      Website
+                    </Button>
+                  </div>
+                </div>
 
                 <TabsContent value="email" className="mt-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -371,20 +374,22 @@ const Channels = () => {
                 <TabsContent value="qrcode" className="mt-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* LEFT — QR Code Settings */}
-                    <Card className="border border-border bg-white shadow-sm">
-                      <CardHeader>
-                        <CardTitle>QR Code</CardTitle>
+                    <Card className="border border-gray-200 bg-white shadow-sm">
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-base font-semibold">
+                          QR Code
+                        </CardTitle>
                       </CardHeader>
 
                       <CardContent className="space-y-5">
                         {/* QR Code Style */}
                         <div className="space-y-2">
-                          <label className="text-sm font-medium block">
+                          <label className="text-sm font-medium block text-gray-700">
                             QR Code Style
                           </label>
 
                           <Select defaultValue="branded">
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger className="w-full h-10 bg-white border border-gray-200">
                               <SelectValue placeholder="Select Style" />
                             </SelectTrigger>
 
@@ -398,28 +403,37 @@ const Channels = () => {
 
                         {/* CTA Text */}
                         <div className="space-y-2">
-                          <label className="text-sm font-medium block">
+                          <label className="text-sm font-medium block text-gray-700">
                             Call to Action Text
                           </label>
 
                           <Input
                             placeholder="Scan to share your feedback"
                             defaultValue="Scan to share your feedback"
+                            className="h-10 bg-white border border-gray-200"
                           />
                         </div>
 
                         {/* Generate QR Button */}
-                        <Button className="w-full bg-[#206AB5] hover:bg-[#185287] text-white gap-2">
+                        <Button className="w-full h-10 bg-[#206AB5] hover:bg-[#185287] text-white gap-2 font-medium">
                           <QrCode className="w-4 h-4" />
                           Generate QR Code
                         </Button>
 
                         {/* Download Buttons */}
                         <div className="flex gap-3">
-                          <Button variant="outline" className="flex-1 gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1 h-10 gap-2 border-[#206AB5] text-[#206AB5] hover:bg-[#206AB5]/5"
+                          >
+                            <Upload className="w-4 h-4" />
                             Download PNG
                           </Button>
-                          <Button variant="outline" className="flex-1 gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1 h-10 gap-2 border-[#206AB5] text-[#206AB5] hover:bg-[#206AB5]/5"
+                          >
+                            <Upload className="w-4 h-4" />
                             Download SVG
                           </Button>
                         </div>
@@ -427,23 +441,28 @@ const Channels = () => {
                     </Card>
 
                     {/* RIGHT — QR Code Preview */}
-                    <Card className="border border-border bg-white shadow-sm">
-                      <CardHeader>
-                        <CardTitle>QR Code Preview</CardTitle>
+                    <Card className="border border-gray-200 bg-white shadow-sm">
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-base font-semibold">
+                          QR Code Peview
+                        </CardTitle>
                       </CardHeader>
 
-                      <CardContent className="flex items-center justify-center py-10">
-                        <div className="flex flex-col items-center space-y-3">
-                          {/* Placeholder QR */}
-                          <div className="p-4 border rounded-lg bg-muted flex items-center justify-center">
-                            <QrCode className="w-30 h-30 text-foreground opacity-50" />
+                      <CardContent className="flex items-center justify-center py-12">
+                        <div className="flex flex-col items-center space-y-4">
+                          {/* QR Code Image */}
+                          <div className="p-2">
+                            <QrCode
+                              className="w-40 h-40 text-[#206AB5]"
+                              strokeWidth={1}
+                            />
                           </div>
 
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-gray-600">
                             Scan to share your feedback
                           </p>
 
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm text-gray-500">
                             survey.link/abc123
                           </p>
                         </div>

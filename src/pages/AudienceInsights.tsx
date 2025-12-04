@@ -1,6 +1,10 @@
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,40 +51,44 @@ const AudienceInsights = () => {
   const [addContactModalOpen, setAddContactModalOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
-  
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
 
   const handleImport = () => {
     if (!importFile) {
       toast.error("Please select a file to import");
       return;
     }
-    
+
     toast.success("Contacts imported successfully");
     setImportModalOpen(false);
     setImportFile(null);
   };
 
   const handleExport = () => {
-  const headers = ['Date', 'Respondent', 'Channel', 'Status'];
+    const headers = ["Date", "Respondent", "Channel", "Status"];
 
-  const csvContent = [
-    headers.join(','),
-    ...insights.map(c =>
-      `"${c.date}","${c.respondent}","${c.channel}","${c.status}"`
-    )
-  ].join('\n');
+    const csvContent = [
+      headers.join(","),
+      ...insights.map(
+        (c) => `"${c.date}","${c.respondent}","${c.channel}","${c.status}"`
+      ),
+    ].join("\n");
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.href = url;
-  link.download = `audience_export_${new Date().toISOString().split('T')[0]}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-};
-
-  
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = `audience_export_${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const onSubmitContact = (data: any) => {
     // Handle add contact logic here
@@ -177,11 +185,17 @@ const AudienceInsights = () => {
     },
   ];
 
+  function setImportOpen(open: boolean): void {
+    setImportModalOpen(open);
+    if (!open) {
+      setImportFile(null);
+    }
+  }
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <DashboardSidebar />
-        
+
         <SidebarInset className="flex-1 flex flex-col">
           <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
             <SidebarTrigger className="-ml-1" />
@@ -243,7 +257,7 @@ const AudienceInsights = () => {
                     <Upload className="w-4 h-4" />
                     Export
                   </Button>
-                  <Button 
+                  <Button
                     className="gap-2 flex-1 lg:flex-none bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => setAddContactModalOpen(true)}
                   >
@@ -257,11 +271,21 @@ const AudienceInsights = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b bg-background hover:bg-background">
-                      <TableHead className="text-center font-medium text-foreground">Date</TableHead>
-                      <TableHead className="text-center font-medium text-foreground">Respondent</TableHead>
-                      <TableHead className="text-center font-medium text-foreground">Channel</TableHead>
-                      <TableHead className="text-center font-medium text-foreground">Status</TableHead>
-                      <TableHead className="text-center font-medium text-foreground">Action</TableHead>
+                      <TableHead className="text-center font-medium text-foreground">
+                        Date
+                      </TableHead>
+                      <TableHead className="text-center font-medium text-foreground">
+                        Respondent
+                      </TableHead>
+                      <TableHead className="text-center font-medium text-foreground">
+                        Channel
+                      </TableHead>
+                      <TableHead className="text-center font-medium text-foreground">
+                        Status
+                      </TableHead>
+                      <TableHead className="text-center font-medium text-foreground">
+                        Action
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -353,15 +377,21 @@ const AudienceInsights = () => {
                 <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Click to upload or drag and drop</p>
-                    <p className="text-xs text-muted-foreground">CSV or XLSX (MAX. 5MB)</p>
+                    <p className="text-sm text-muted-foreground">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      CSV or XLSX (MAX. 5MB)
+                    </p>
                   </div>
                   <input type="file" className="hidden" accept=".csv,.xlsx" />
                 </label>
               </div>
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setImportOpen(false)}>
+                Cancel
+              </Button>
               <Button>Import</Button>
             </div>
           </div>
@@ -382,13 +412,10 @@ const AudienceInsights = () => {
             <Button variant="outline" onClick={() => setExportModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleExport}>
-              Export
-            </Button>
+            <Button onClick={handleExport}>Export</Button>
           </div>
         </DialogContent>
       </Dialog>
-
 
       {/* Add Contact Modal */}
       <Dialog open={addContactModalOpen} onOpenChange={setAddContactModalOpen}>
@@ -399,7 +426,10 @@ const AudienceInsights = () => {
               Fill in the details to add a new contact to your audience
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmitContact)} className="space-y-4 py-4">
+          <form
+            onSubmit={handleSubmit(onSubmitContact)}
+            className="space-y-4 py-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="name">Name *</Label>
               <Input
@@ -408,7 +438,9 @@ const AudienceInsights = () => {
                 {...register("name", { required: "Name is required" })}
               />
               {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message as string}</p>
+                <p className="text-sm text-destructive">
+                  {errors.name.message as string}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -426,7 +458,9 @@ const AudienceInsights = () => {
                 })}
               />
               {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message as string}</p>
+                <p className="text-sm text-destructive">
+                  {errors.email.message as string}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -440,7 +474,9 @@ const AudienceInsights = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="channel">Preferred Channel *</Label>
-              <Select {...register("channel", { required: "Channel is required" })}>
+              <Select
+                {...register("channel", { required: "Channel is required" })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select channel" />
                 </SelectTrigger>
@@ -452,7 +488,9 @@ const AudienceInsights = () => {
                 </SelectContent>
               </Select>
               {errors.channel && (
-                <p className="text-sm text-destructive">{errors.channel.message as string}</p>
+                <p className="text-sm text-destructive">
+                  {errors.channel.message as string}
+                </p>
               )}
             </div>
             <div className="space-y-2">

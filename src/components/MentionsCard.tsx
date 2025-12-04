@@ -12,7 +12,11 @@ export function MentionsCard() {
           <div className="p-2 rounded-lg bg-warning/10">
             <MessageSquare className="w-5 h-5 text-warning" />
           </div>
-          <Button variant="outline" size="sm" className="h-8">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 !border-none !text-[0.6em]"
+          >
             Optimal Brand
             <ChevronDown className="w-4 h-4 ml-2" />
           </Button>

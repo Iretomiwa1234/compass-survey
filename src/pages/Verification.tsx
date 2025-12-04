@@ -25,7 +25,7 @@ const Verification = () => {
     setIsVerifying(true);
     setTimeout(() => {
       navigate("/");
-    }, 10000);
+    }, 3000);
   };
 
   const handleResend = () => {
@@ -35,107 +35,136 @@ const Verification = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <div className="w-full max-w-5xl bg-card rounded-2xl shadow-lg overflow-hidden flex flex-col lg:flex-row">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 md:p-8">
+      <div className="w-full max-w-[1100px] bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col lg:flex-row min-h-[600px]">
         {/* Left Side - Blue gradient with diagonal stripes */}
-        <div className="relative lg:w-1/2 min-h-[300px] lg:min-h-[600px] bg-gradient-to-br from-[#7EB6E8] via-[#5A9BD4] to-[#4A8BC2] overflow-hidden">
-          <div 
+        <div className="relative lg:w-[48%] min-h-[280px] sm:min-h-[320px] lg:min-h-full bg-gradient-to-br from-[#8EC5E8] via-[#6AAFE0] to-[#5BA0D8] overflow-hidden">
+          <div
             className="absolute inset-0"
             style={{
               backgroundImage: `repeating-linear-gradient(
                 135deg,
                 transparent,
-                transparent 10px,
-                rgba(255, 255, 255, 0.05) 10px,
-                rgba(255, 255, 255, 0.05) 20px
+                transparent 8px,
+                rgba(255, 255, 255, 0.08) 8px,
+                rgba(255, 255, 255, 0.08) 16px
               )`,
             }}
           />
-          
-          <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6 max-w-md shadow-lg">
-              <h3 className="text-xl font-semibold text-foreground mb-4">
+
+          <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-8 lg:p-10">
+            <div className="bg-white rounded-lg p-5 sm:p-6 max-w-[380px] w-full shadow-lg">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">
                 Account Creation Survey
               </h3>
-              <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-                Welcome! 🎉 After signing up, you'll be able to create engaging surveys, share them across multiple channels, collect responses anywhere—even offline—and instantly turn feedback into real-time insights with smart analytics
+              <p className="text-gray-600 text-sm leading-relaxed mb-5">
+                Welcome! 🎉 After signing up, you'll be able to create engaging
+                surveys, share them across multiple channels, collect responses
+                anywhere—even offline—and instantly turn feedback into real-time
+                insights with smart analytics
               </p>
-              <p className="text-primary font-medium text-sm">
+              <a
+                href="#"
+                className="text-[#206AB5] font-medium text-sm hover:underline"
+              >
                 Fill the form to get started
-              </p>
+              </a>
             </div>
           </div>
         </div>
 
         {/* Right Side - Verification Form */}
-        <div className="lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-primary tracking-wider">MAA</h1>
-            <p className="text-xs text-muted-foreground tracking-widest">MARKETING ANALYTICS AFRICA</p>
+        <div className="lg:w-[52%] p-6 sm:p-8 lg:p-10 xl:p-12 flex flex-col justify-center">
+          {/* Logo */}
+          <div className="text-center mb-6">
+            <img
+              src="/assets/MAA-Logo.png"
+              alt="MAA - Marketing Analytics Africa"
+              className="h-16 sm:h-20 mx-auto object-contain"
+            />
           </div>
 
-          <h2 className="text-2xl font-semibold text-center text-foreground mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-2">
             Verify your Account
           </h2>
-          <p className="text-center text-sm text-muted-foreground mb-8">
+          <p className="text-center text-sm text-gray-500 mb-8">
             We've sent a 6-digit code to your mail. Enter it below to continue.
           </p>
 
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-md mx-auto w-full">
             <div>
-              <label className="text-sm text-muted-foreground block mb-3">
+              <label className="text-sm font-medium text-gray-700 block mb-3">
                 Enter Verification Code
               </label>
-              <div className="flex justify-center">
+              <div className="flex justify-start gap-2 sm:gap-3">
                 <InputOTP
                   maxLength={6}
                   value={otp}
                   onChange={(value) => setOtp(value)}
+                  className="gap-2 sm:gap-3"
                 >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} className="w-12 h-12 text-lg" />
-                    <InputOTPSlot index={1} className="w-12 h-12 text-lg" />
-                    <InputOTPSlot index={2} className="w-12 h-12 text-lg" />
-                    <InputOTPSlot index={3} className="w-12 h-12 text-lg" />
-                    <InputOTPSlot index={4} className="w-12 h-12 text-lg" />
-                    <InputOTPSlot index={5} className="w-12 h-12 text-lg" />
+                  <InputOTPGroup className="gap-2 sm:gap-3">
+                    <InputOTPSlot
+                      index={0}
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
+                    />
+                    <InputOTPSlot
+                      index={1}
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
+                    />
+                    <InputOTPSlot
+                      index={2}
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
+                    />
+                    <InputOTPSlot
+                      index={3}
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
+                    />
+                    <InputOTPSlot
+                      index={4}
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
+                    />
+                    <InputOTPSlot
+                      index={5}
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
+                    />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
             </div>
 
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-600">
               Didn't get code?{" "}
               <button
                 onClick={handleResend}
                 disabled={resendTimer > 0}
                 className={`font-medium ${
                   resendTimer > 0
-                    ? "text-muted-foreground cursor-not-allowed"
-                    : "text-primary hover:underline cursor-pointer"
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-[#206AB5] hover:underline cursor-pointer"
                 }`}
               >
                 Resend
               </button>
               {resendTimer > 0 && (
-                <span className="text-muted-foreground"> ({resendTimer}s)</span>
+                <span className="text-gray-500"> ({resendTimer}s)</span>
               )}
             </p>
 
             <Button
               onClick={handleVerify}
-              disabled={isVerifying}
-              className="w-full bg-[#6B9DC4] hover:bg-[#5A8BB4] text-white py-6"
+              disabled={isVerifying || otp.length < 6}
+              className="w-full h-12 bg-[#6A9FCA] hover:bg-[#5A8FBA] text-white text-base font-medium disabled:opacity-60"
             >
               {isVerifying && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Verify to continue
+              Verify and Continue
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground mt-6">
+            <p className="text-center text-sm text-gray-600 pt-2">
               Already Have an account?{" "}
               <button
                 onClick={() => navigate("/auth")}
-                className="text-primary font-semibold hover:underline"
+                className="text-[#206AB5] font-semibold hover:underline"
               >
                 LOGIN
               </button>
