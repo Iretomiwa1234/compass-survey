@@ -11,6 +11,7 @@ import SurveyAnalysis from "./pages/SurveyAnalysis";
 import CreateSurvey from "./pages/CreateSurvey";
 import SocialListening from "./pages/SocialListening";
 import AISurvey from "./pages/AiSurvey";
+import AIAssistant from "./pages/AIAssistant";
 // import CommunityPanel from "./pages/CommunityPanel";
 import Channels from "./pages/Channels";
 import Campaigns from "./pages/Campaigns";
@@ -33,6 +34,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/ai-assistant" element={<AIAssistant />} />
           <Route path="/verification" element={<Verification />} />
           <Route path="/survey-research" element={<SurveyResearch />} />
           <Route path="/create-survey" element={<CreateSurvey />} />
