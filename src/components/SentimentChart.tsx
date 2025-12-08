@@ -49,11 +49,13 @@ export function SentimentChart() {
                   outerRadius={60}
                   paddingAngle={2}
                   dataKey="value"
+                  cornerRadius={4}
                 >
                   {data.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[entry.name as keyof typeof COLORS]}
+                      stroke="transparent"
                     />
                   ))}
                 </Pie>

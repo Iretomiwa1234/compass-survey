@@ -9,7 +9,8 @@ import {
   UserCircle,
   FileBarChart,
   Settings,
-  ChevronRight,
+  Globe,
+  User,
 } from "lucide-react";
 import compassLogo from "/assets/Compass-logo.png?url";
 import { NavLink } from "@/components/NavLink";
@@ -26,19 +27,13 @@ import {
   useSidebar,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-
 const menuSections = [
   {
     title: "Intelligence Hub",
     items: [
       { name: "Survey Research", icon: FileText, path: "/survey-research" },
       { name: "Social Listening", icon: Volume2, path: "/social-listening" },
-      { name: "Community Panel", icon: Users, path: "/community-panel" },
+      { name: "Community Panel", icon: Globe, path: "/community-panel" },
     ],
   },
   {
@@ -59,7 +54,7 @@ const menuSections = [
   {
     title: "Audience",
     items: [
-      { name: "Contacts", icon: UserCircle, path: "/contacts" },
+      { name: "Contacts", icon: User, path: "/contacts" },
       { name: "Audience Insights", icon: Users, path: "/audience-insights" },
     ],
   },
@@ -75,37 +70,43 @@ export function DashboardSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar collapsible="icon" className="border-r border-[#E4E9F1] bg-white">
       <SidebarHeader>
-        <div className="p-4">
+        <div className="flex items-center px-3 py-5">
           {!isCollapsed ? (
-            <>
-              <img src={compassLogo} alt="" />
-            </>
+            <img src={compassLogo} alt="" className="w-28" />
           ) : (
-            <h1 className="text-xl font-extrabold text-sidebar-primary">C</h1>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E8F0FB] text-sm font-semibold text-[#1F6BB8]">
+              C
+            </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="pt-2">
         <SidebarGroup>
-          <SidebarMenu>
+          <SidebarMenu className="px-2">
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
                 isActive={currentPath === dashboardItem.path}
-                className="relative transition-all hover:bg-sidebar-accent data-[active=true]:bg-transparent data-[active=true]:text-[#206AB5] data-[active=true]:font-medium"
+                className="relative !h-auto gap-2 rounded-lg px-3 py-2.5 text-[13px] font-medium text-[#4A5567] transition-all hover:bg-[#F1F5FB] data-[active=true]:bg-transparent data-[active=true]:font-semibold data-[active=true]:text-[#1F6BB8]"
               >
                 <NavLink
                   to={dashboardItem.path}
-                  className="flex items-center gap-3 w-full py-2 px-4"
+                  className="flex w-full items-center gap-2"
                 >
                   {currentPath === dashboardItem.path && (
-                    <div className="absolute left-1 top-1/2 -translate-y-1/2 w-[4px] h-5 bg-[#206AB5] rounded-full" />
+                    <div className="absolute left-1 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-[#1F6BB8]" />
                   )}
-                  <dashboardItem.icon className="w-5 h-5 text-inherit" />
-                  <span>{dashboardItem.name}</span>
+                  <dashboardItem.icon
+                    className={`h-4 w-4 ${
+                      currentPath === dashboardItem.path
+                        ? "text-[#1F6BB8]"
+                        : "text-[#6B7287]"
+                    }`}
+                  />
+                  <span className="leading-[18px]">{dashboardItem.name}</span>
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -113,73 +114,72 @@ export function DashboardSidebar() {
         </SidebarGroup>
 
         {menuSections.map((section, idx) => {
-          const hasActiveItem = section.items.some(
-            (item) => currentPath === item.path
-          );
-
           return (
-            <Collapsible
-              key={idx}
-              defaultOpen={hasActiveItem || idx === 0}
-              className="group/collapsible"
-            >
-              <SidebarGroup>
-                {!isCollapsed && (
-                  <CollapsibleTrigger asChild>
-                    <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent rounded-md">
-                      <span>{section.title}</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 w-4 h-4" />
-                    </SidebarGroupLabel>
-                  </CollapsibleTrigger>
-                )}
-                <CollapsibleContent>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {section.items.map((item) => (
-                        <SidebarMenuItem key={item.path}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={currentPath === item.path}
-                            className="relative transition-all hover:bg-sidebar-accent data-[active=true]:bg-transparent data-[active=true]:text-[#206AB5] data-[active=true]:font-medium"
+            <SidebarGroup key={idx} className="px-2">
+              {!isCollapsed && (
+                <SidebarGroupLabel className="px-1 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#9AA4B5]">
+                  {section.title}
+                </SidebarGroupLabel>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-0.5">
+                  {section.items.map((item) => {
+                    const isActive = currentPath === item.path;
+
+                    return (
+                      <SidebarMenuItem key={item.path}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          className="relative !h-auto gap-2 rounded-lg px-3 py-2.5 text-[13px] font-medium text-[#4A5567] transition-all hover:bg-[#F1F5FB] data-[active=true]:bg-transparent data-[active=true]:font-semibold data-[active=true]:text-[#1F6BB8]"
+                        >
+                          <NavLink
+                            to={item.path}
+                            className="flex w-full items-center gap-2"
                           >
-                            <NavLink
-                              to={item.path}
-                              className="flex items-center gap-3 w-full py-2 px-4"
-                            >
-                              {currentPath === item.path && (
-                                <div className="absolute left-1 top-1/2 -translate-y-1/2 w-[4px] h-5 bg-[#206AB5] rounded-full" />
-                              )}
-                              <item.icon className="w-5 h-5 text-inherit" />
-                              <span>{item.name}</span>
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </SidebarGroup>
-            </Collapsible>
+                            {isActive && (
+                              <div className="absolute left-1 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-[#1F6BB8]" />
+                            )}
+                            <item.icon
+                              className={`h-4 w-4 ${
+                                isActive ? "text-[#1F6BB8]" : "text-[#6B7287]"
+                              }`}
+                            />
+                            <span className="leading-[18px]">{item.name}</span>
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
           );
         })}
 
-        <SidebarGroup>
-          <SidebarMenu>
+        <SidebarGroup className="mt-2 px-2">
+          <SidebarMenu className="gap-0.5">
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
                 isActive={currentPath === settingsItem.path}
-                className="relative transition-all hover:bg-sidebar-accent data-[active=true]:bg-transparent data-[active=true]:text-[#206AB5] data-[active=true]:font-medium"
+                className="relative !h-auto gap-2 rounded-lg px-3 py-2.5 text-[13px] font-medium text-[#4A5567] transition-all hover:bg-[#F1F5FB] data-[active=true]:bg-transparent data-[active=true]:font-semibold data-[active=true]:text-[#1F6BB8]"
               >
                 <NavLink
                   to={settingsItem.path}
-                  className="flex items-center gap-3 w-full py-2 px-4"
+                  className="flex w-full items-center gap-2"
                 >
                   {currentPath === settingsItem.path && (
-                    <div className="absolute left-1 top-1/2 -translate-y-1/2 w-[4px] h-5 bg-[#206AB5] rounded-full" />
+                    <div className="absolute left-1 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-[#1F6BB8]" />
                   )}
-                  <settingsItem.icon className="w-5 h-5 text-inherit" />
-                  <span>{settingsItem.name}</span>
+                  <settingsItem.icon
+                    className={`h-4 w-4 ${
+                      currentPath === settingsItem.path
+                        ? "text-[#1F6BB8]"
+                        : "text-[#6B7287]"
+                    }`}
+                  />
+                  <span className="leading-[18px]">{settingsItem.name}</span>
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -5,7 +5,12 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { StatCard } from "@/components/StatCard";
 import { DonutMetricCard } from "@/components/DonutMetricCard";
 import { SurveyListItem, Survey } from "@/components/SurveyListItem";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StarIcon from "/assets/stars-01.svg?url";
@@ -53,7 +58,8 @@ const surveys: Survey[] = [
     totalResponse: 1520,
     responseRate: 68,
     createdDate: "20/09/2025",
-    description: "Gather feedback on customer satisfaction with our products and services.",
+    description:
+      "Gather feedback on customer satisfaction with our products and services.",
     targetAudience: "Customers",
   },
   {
@@ -158,7 +164,7 @@ const SurveyResearch = () => {
   const handleGenerateWithAI = () => {
     setOpen(false);
     setIsGenerating(true);
-    
+
     setTimeout(() => {
       setIsGenerating(false);
       navigate("/ai-survey");
@@ -193,131 +199,152 @@ const SurveyResearch = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-[#F7FBFF]">
         <DashboardSidebar />
 
-        <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
+        <SidebarInset className="flex flex-1 flex-col bg-[#F7FBFF]">
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-[#F7FBFF] px-4">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
           <DashboardHeader headerTitle="Surveys" hideGreeting />
 
-          <main className="flex-1 p-6 overflow-y-auto">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-foreground mb-6">
-                Customer Satisfaction Survey
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                <StatCard
-                  title="Total Responses"
-                  value="1,500"
-                  icon={Users}
-                  iconBgColor="bg-purple-500/10"
-                  iconColor="text-purple-500"
-                  badges={[
-                    { label: "Completed", count: 1100, variant: "success" },
-                    { label: "In Progress", count: 200, variant: "warning" },
-                    { label: "Abandoned", count: 200, variant: "destructive" },
-                  ]}
-                />
-
-                <DonutMetricCard
-                  title="Avg Response Rate"
-                  icon={TrendingUp}
-                  percentage={72}
-                  chartColor="#3B82F6"
-                  iconBgColor="bg-orange-500/10"
-                  iconColor="text-orange-500"
-                  data={[
-                    { label: "Total Invite Sent", value: "1,500" },
-                    {
-                      label: "Total Responded",
-                      value: "1,300",
-                      color: "text-blue-500",
-                    },
-                  ]}
-                />
-
-                <DonutMetricCard
-                  title="Completion Rate"
-                  icon={CheckCircle2}
-                  percentage={80}
-                  chartColor="#22C55E"
-                  remainingColor="#EF4444"
-                  iconBgColor="bg-green-500/10"
-                  iconColor="text-green-500"
-                  data={[
-                    {
-                      label: "Completed",
-                      value: "1,300",
-                      color: "text-green-500",
-                    },
-                    { label: "Abandoned", value: "200", color: "text-red-500" },
-                  ]}
-                />
-
-                <StatCard
-                  title="Country Reach"
-                  value="16"
-                  icon={Globe2}
-                  iconBgColor="bg-blue-500/10"
-                  iconColor="text-blue-500"
-                  badges={[
-                    { label: "Africa", count: 5, variant: "secondary" },
-                    { label: "Asia", count: 3, variant: "secondary" },
-                    { label: "Europe", count: 3, variant: "secondary" },
-                    { label: "America", count: 4, variant: "secondary" },
-                  ]}
-                />
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div className="mb-4 sm:mb-6">
+              <div className="rounded-xl border border-[#dce8f5] bg-white px-4 py-4 shadow-sm sm:px-6 sm:py-5">
+                <h2 className="text-md font-semibold text-[#2b3a4f]">
+                  Customer Satisfaction Survey
+                </h2>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search for survey"
-                    className="pl-9 bg-background"
-                  />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <StatCard
+                title="Total Responses"
+                value="1,500"
+                icon={Users}
+                iconBgColor="bg-purple-500/10"
+                iconColor="text-purple-500"
+                badges={[
+                  { label: "Completed", count: 1100, variant: "success" },
+                  { label: "In Progress", count: 200, variant: "warning" },
+                  { label: "Abandoned", count: 200, variant: "destructive" },
+                ]}
+              />
+
+              <DonutMetricCard
+                title="Avg Response Rate"
+                icon={TrendingUp}
+                percentage={72}
+                chartColor="#4D7CB6"
+                iconBgColor="bg-amber-500/10"
+                iconColor="text-amber-500"
+                rotation={0}
+                data={[
+                  { label: "Total Invite Sent", value: "1,500" },
+                  {
+                    label: "Total Responds",
+                    value: "1,300",
+                    color: "text-blue-600",
+                  },
+                ]}
+              />
+
+              <DonutMetricCard
+                title="Completion Rate"
+                icon={CheckCircle2}
+                percentage={80}
+                chartColor="#60DE60"
+                secondaryChartColor="#F68181"
+                iconBgColor="bg-green-500/10"
+                iconColor="text-green-500"
+                showBackground={false}
+                data={[
+                  {
+                    label: "Completed",
+                    value: "1,300",
+                    color: "text-[#118C36]",
+                  },
+                  { label: "Abandoned", value: "200", color: "text-[#A12D2D]" },
+                ]}
+              />
+              <Card className="border-[#dce8f5] shadow-sm rounded-xl">
+                <CardContent className="p-5 md:p-6">
+                  <div className="mb-3 flex items-start justify-between gap-2">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10">
+                      <Globe2 className="h-4 w-4 text-blue-500" />
+                    </div>
+                  </div>
+                  <div className="mb-3 space-y-1">
+                    <p className="text-xs font-semibold text-[#5a6b80] sm:text-sm">
+                      Country Reach
+                    </p>
+                    <p className="text-xl font-black leading-tight text-[#0b1526] sm:text-2xl">
+                      16
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    {["Africa", "Asia", "Europe", "America"].map(
+                      (region, idx) => (
+                        <div key={region} className="space-y-1">
+                          <span className="block max-w-[88px] truncate rounded-full bg-[#EEF2F8] px-3 py-[6px] text-[11px] font-semibold text-[#65758B] mx-auto">
+                            {region}
+                          </span>
+                          <span className="block text-base font-black text-[#65758B]">
+                            {[5, 3, 3, 4][idx]}
+                          </span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="mt-6 rounded-xl border border-[#dce8f5] bg-white p-4 shadow-sm sm:p-5">
+              <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
+                <div className="flex w-full items-center gap-4 sm:w-auto">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search for survey"
+                      className="pl-9 bg-background"
+                    />
+                  </div>
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="All Surveys" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Surveys</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="All Surveys" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Surveys</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                  </SelectContent>
-                </Select>
+
+                <Button
+                  onClick={() => setOpen(true)}
+                  className="w-full gap-2 bg-[#206AB5] text-white hover:bg-[#185287] sm:w-auto"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Survey
+                </Button>
               </div>
 
-              <Button
-                onClick={() => setOpen(true)}
-                className="w-full sm:w-auto gap-2 bg-[#206AB5] hover:bg-[#185287] text-white"
-              >
-                <Plus className="w-4 h-4" />
-                Create Survey
-              </Button>
+              <div className="mb-8 space-y-3">
+                {surveys.map((survey) => (
+                  <SurveyListItem
+                    key={survey.id}
+                    survey={survey}
+                    onView={handleView}
+                    onAnalytics={handleAnalytics}
+                    onEdit={handleEdit}
+                  />
+                ))}
+              </div>
             </div>
-
-            <div className="space-y-3 mb-8">
-              {surveys.map((survey) => (
-                <SurveyListItem 
-                  key={survey.id} 
-                  survey={survey}
-                  onView={handleView}
-                  onAnalytics={handleAnalytics}
-                  onEdit={handleEdit}
-                />
-              ))}
-            </div>
-
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
@@ -367,8 +394,8 @@ const SurveyResearch = () => {
 
             <div>
               <Label>Description</Label>
-              <textarea 
-                className="w-full border rounded-md p-2 mt-2 h-24 bg-background text-foreground" 
+              <textarea
+                className="w-full border rounded-md p-2 mt-2 h-24 bg-background text-foreground"
                 placeholder="Describe your survey..."
               />
             </div>
@@ -441,7 +468,9 @@ const SurveyResearch = () => {
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">Description</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Description
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {selectedSurvey.description || "No description available"}
                   </p>
@@ -451,7 +480,9 @@ const SurveyResearch = () => {
               <div className="flex items-start gap-3">
                 <Target className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">Target Audience</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Target Audience
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {selectedSurvey.targetAudience || "All Groups"}
                   </p>
@@ -461,9 +492,12 @@ const SurveyResearch = () => {
               <div className="flex items-start gap-3">
                 <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">Total Responses</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Total Responses
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    {selectedSurvey.totalResponse.toLocaleString()} responses ({selectedSurvey.responseRate}% response rate)
+                    {selectedSurvey.totalResponse.toLocaleString()} responses (
+                    {selectedSurvey.responseRate}% response rate)
                   </p>
                 </div>
               </div>
@@ -471,8 +505,12 @@ const SurveyResearch = () => {
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">Created Date</p>
-                  <p className="text-sm text-muted-foreground">{selectedSurvey.createdDate}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Created Date
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedSurvey.createdDate}
+                  </p>
                 </div>
               </div>
 

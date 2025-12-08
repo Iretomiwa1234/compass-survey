@@ -21,11 +21,11 @@ interface StatCardProps {
 }
 
 const badgeStyles: Record<string, { bg: string; text: string }> = {
-  success: { bg: "#DFFFE1", text: "#2F8035" },
-  warning: { bg: "#FFEDDD", text: "#80522A" },
-  destructive: { bg: "#FCD9D9", text: "#792121" },
-  secondary: { bg: "#F1F5F9", text: "#64748B" },
-  default: { bg: "#F1F5F9", text: "#64748B" },
+  success: { bg: "#E8F8EB", text: "#118C36" },
+  warning: { bg: "#F8E8D9", text: "#8C5A22" },
+  destructive: { bg: "#F8DCDC", text: "#A12D2D" },
+  secondary: { bg: "#EEF2F8", text: "#65758B" },
+  default: { bg: "#EEF2F8", text: "#65758B" },
   outline: { bg: "transparent", text: "currentColor" },
 };
 
@@ -38,41 +38,43 @@ export function StatCard({
   iconColor = "text-primary",
 }: StatCardProps) {
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4 gap-2">
-          <div className={`p-2 rounded-lg ${iconBgColor || "bg-primary/10"}`}>
-            <Icon className={`w-5 h-5 ${iconColor}`} />
+    <Card className="border-[#dce8f5] shadow-sm rounded-xl">
+      <CardContent className="p-5 md:p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <div className="flex items-center justify-center">
+            <Icon className={`h-5 w-5 ${iconColor}`} />
           </div>
+          <p className="text-sm font-semibold text-[#5a6b80]">{title}</p>
         </div>
 
-        <div className="space-y-1 mb-6">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-3xl font-bold text-foreground">{value}</p>
+        <div className="mb-4">
+          <p className="text-2xl font-black leading-tight text-[#0b1526]">
+            {value}
+          </p>
         </div>
 
         {badges && badges.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex gap-4 overflow-hidden">
             {badges.map((badge, idx) => {
               const style =
                 badgeStyles[badge.variant || "default"] || badgeStyles.default;
               return (
                 <div
-                  key={idx}
-                  className="flex flex-col items-center justify-center flex-1 gap-2 min-w-0"
+                  key={`${badge.label}-${idx}`}
+                  className="flex flex-col items-center flex-1 min-w-0"
                 >
                   <span
-                    className="text-xs font-medium px-2 py-1 rounded-xl w-full text-center truncate"
+                    className="block w-full truncate rounded-full px-3 py-[6px] text-[11px] font-semibold leading-4 text-center"
                     style={{ backgroundColor: style.bg, color: style.text }}
                     title={badge.label}
                   >
                     {badge.label}
                   </span>
                   <span
-                    className="text-xl font-bold"
+                    className="mt-2 text-base font-black sm:text-lg text-center"
                     style={{ color: style.text }}
                   >
-                    {badge.count}
+                    {badge.count.toLocaleString()}
                   </span>
                 </div>
               );
