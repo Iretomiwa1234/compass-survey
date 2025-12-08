@@ -33,7 +33,9 @@ import {
   Globe2,
   Search,
   Plus,
-  Sparkles,
+  Calendar,
+  Target,
+  FileText,
 } from "lucide-react";
 import {
   Dialog,
@@ -51,6 +53,8 @@ const surveys: Survey[] = [
     totalResponse: 1520,
     responseRate: 68,
     createdDate: "20/09/2025",
+    description: "Gather feedback on customer satisfaction with our products and services.",
+    targetAudience: "Customers",
   },
   {
     id: "2",
@@ -59,6 +63,8 @@ const surveys: Survey[] = [
     totalResponse: 0,
     responseRate: 0,
     createdDate: "22/09/2025",
+    description: "Collect feedback on new product features and improvements.",
+    targetAudience: "All Groups",
   },
   {
     id: "3",
@@ -67,6 +73,8 @@ const surveys: Survey[] = [
     totalResponse: 1520,
     responseRate: 68,
     createdDate: "20/09/2025",
+    description: "Measure employee engagement and satisfaction levels.",
+    targetAudience: "Employees",
   },
   {
     id: "4",
@@ -75,6 +83,8 @@ const surveys: Survey[] = [
     totalResponse: 1520,
     responseRate: 68,
     createdDate: "20/09/2025",
+    description: "Analyze market trends and product positioning.",
+    targetAudience: "Customers",
   },
   {
     id: "5",
@@ -83,6 +93,8 @@ const surveys: Survey[] = [
     totalResponse: 1490,
     responseRate: 78,
     createdDate: "19/09/2025",
+    description: "Test user experience and interface usability.",
+    targetAudience: "All Groups",
   },
   {
     id: "6",
@@ -91,6 +103,8 @@ const surveys: Survey[] = [
     totalResponse: 520,
     responseRate: 58,
     createdDate: "17/09/2025",
+    description: "Gather customer opinions on product quality.",
+    targetAudience: "Customers",
   },
   {
     id: "7",
@@ -99,6 +113,8 @@ const surveys: Survey[] = [
     totalResponse: 1220,
     responseRate: 82,
     createdDate: "15/09/2025",
+    description: "Collect feedback from webinar attendees.",
+    targetAudience: "All Groups",
   },
   {
     id: "8",
@@ -107,6 +123,8 @@ const surveys: Survey[] = [
     totalResponse: 20,
     responseRate: 38,
     createdDate: "12/09/2025",
+    description: "Test new product concepts with target audience.",
+    targetAudience: "Customers",
   },
   {
     id: "9",
@@ -115,6 +133,8 @@ const surveys: Survey[] = [
     totalResponse: 450,
     responseRate: 58,
     createdDate: "10/09/2025",
+    description: "Rate conference speakers and sessions.",
+    targetAudience: "All Groups",
   },
   {
     id: "10",
@@ -123,12 +143,16 @@ const surveys: Survey[] = [
     totalResponse: 620,
     responseRate: 65,
     createdDate: "6/09/2025",
+    description: "Ongoing customer feedback collection.",
+    targetAudience: "Customers",
   },
 ];
 
 const SurveyResearch = () => {
   const [open, setOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
   const navigate = useNavigate();
 
   const handleGenerateWithAI = () => {
@@ -142,7 +166,8 @@ const SurveyResearch = () => {
   };
 
   const handleView = (survey: Survey) => {
-    console.log("View survey:", survey.id);
+    setSelectedSurvey(survey);
+    setViewModalOpen(true);
   };
 
   const handleAnalytics = (survey: Survey) => {
@@ -151,6 +176,19 @@ const SurveyResearch = () => {
 
   const handleEdit = (survey: Survey) => {
     navigate("/create-survey");
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "active":
+        return "bg-green-100 text-green-600 border-green-200";
+      case "draft":
+        return "bg-orange-100 text-orange-600 border-orange-200";
+      case "closed":
+        return "bg-gray-100 text-gray-600 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-600 border-gray-200";
+    }
   };
 
   return (
@@ -378,6 +416,85 @@ const SurveyResearch = () => {
               <p className="text-sm text-muted-foreground">Generating Survey</p>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+      {/* Survey Details View Modal */}
+      <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedSurvey?.title}
+              {selectedSurvey && (
+                <span
+                  className={`px-2.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(
+                    selectedSurvey.status
+                  )}`}
+                >
+                  {selectedSurvey.status}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedSurvey && (
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <FileText className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Description</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedSurvey.description || "No description available"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Target className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Target Audience</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedSurvey.targetAudience || "All Groups"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Total Responses</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedSurvey.totalResponse.toLocaleString()} responses ({selectedSurvey.responseRate}% response rate)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Created Date</p>
+                  <p className="text-sm text-muted-foreground">{selectedSurvey.createdDate}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => setViewModalOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  className="bg-[#206AB5] hover:bg-[#185287] text-white"
+                  onClick={() => {
+                    setViewModalOpen(false);
+                    navigate("/survey-analysis");
+                  }}
+                >
+                  View Analytics
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </SidebarProvider>
