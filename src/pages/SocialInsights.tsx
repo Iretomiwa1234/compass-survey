@@ -314,34 +314,17 @@ const SocialInsights = () => {
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmitContact)} className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">Channels *</Label>
               <Input
                 id="name"
-                placeholder="Enter full name"
-                {...register("name", { required: "Name is required" })}
+                placeholder="Enter Channel"
+                {...register("name", { required: "Channel is required" })}
               />
               {errors.name && (
                 <p className="text-sm text-destructive">{errors.name.message as string}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@example.com"
-                {...register("email", {
-                  required: "Email is required",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Invalid email address",
-                  },
-                })}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message as string}</p>
-              )}
-            </div>
+
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
               <Input
@@ -352,43 +335,23 @@ const SocialInsights = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="channel">Preferred Channel *</Label>
-              <Select {...register("channel", { required: "Channel is required" })}>
+              <Label htmlFor="channel">Status *</Label>
+              <Select {...register("status", { required: "status is required" })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select channel" />
+                  <SelectValue placeholder="Select Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="sms">SMS</SelectItem>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  <SelectItem value="qr-code">QR Code</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="progress">In-Progress</SelectItem>
+                  <SelectItem value="disabled">Disabled</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.channel && (
+              {errors.status && (
                 <p className="text-sm text-destructive">{errors.channel.message as string}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="group">Group</Label>
-              <Select {...register("group")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select group" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="vip">VIP Customers</SelectItem>
-                  <SelectItem value="marketing">Marketing List</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tags">Tags</Label>
-              <Input
-                id="tags"
-                placeholder="Enter tags separated by commas"
-                {...register("tags")}
-              />
-            </div>
+           
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"
