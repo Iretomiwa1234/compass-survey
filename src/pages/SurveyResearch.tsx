@@ -301,7 +301,7 @@ const SurveyResearch = () => {
               </Card>
             </div>
             <div className="mt-6 rounded-xl border border-[#dce8f5] bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
+              <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row">
                 <div className="flex w-full items-center gap-4 sm:w-auto">
                   <div className="relative w-full sm:w-64">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -313,7 +313,10 @@ const SurveyResearch = () => {
                   </div>
                   <Select defaultValue="all">
                     <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="All Surveys" />
+                      <SelectValue
+                        placeholder="All Surveys"
+                        className="!text-[0.4em]"
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Surveys</SelectItem>
@@ -326,7 +329,7 @@ const SurveyResearch = () => {
 
                 <Button
                   onClick={() => setOpen(true)}
-                  className="w-full gap-2 bg-[#206AB5] text-white hover:bg-[#185287] sm:w-auto"
+                  className="w-full gap-2 bg-[#206AB5] text-white !text-xs !py-1 hover:bg-[#185287] sm:w-auto"
                 >
                   <Plus className="h-4 w-4" />
                   Create Survey

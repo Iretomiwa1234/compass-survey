@@ -179,7 +179,7 @@ const SurveyAnalysis = () => {
                     </div>
                     <div className="text-center">
                       <div className="bg-warning/10 p-1 rounded text-center text-warning text-[0.8em]">
-                        In Progress
+                        Progress
                       </div>
                       <div className="text-warning">200</div>
                     </div>
