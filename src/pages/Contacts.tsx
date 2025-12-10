@@ -291,14 +291,12 @@ const Contacts = () => {
                           key={idx}
                           className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
                         >
-                          <td className="p-4 font-medium text-gray-900">
+                          <td className="p-4 font-normal text-gray-900">
                             {contact.name}
                           </td>
                           <td className="p-4 text-gray-600">{contact.email}</td>
                           <td className="p-4 text-gray-600">{contact.phone}</td>
-                          <td className="p-4 text-[#206AB5]">
-                            {contact.group}
-                          </td>
+                          <td className="p-4">{contact.group}</td>
                           <td className="p-4 text-gray-600">{contact.tag}</td>
                           <td className="p-4">
                             <Badge className="bg-green-100 text-green-700 hover:bg-green-100 font-medium px-3 py-0.5 rounded-full">
