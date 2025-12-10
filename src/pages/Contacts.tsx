@@ -161,16 +161,16 @@ const Contacts = () => {
           <DashboardHeader headerTitle="Contacts" />
 
           <main className="flex-1 p-6 overflow-y-auto">
-            <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="flex flex-wrap items-center gap-3 mb-6 bg-white p-3 rounded-md">
               <div className="relative flex-1 min-w-[180px] max-w-[280px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Search for Contact"
-                  className="pl-10 bg-[#F0F7FF] border-0 h-9"
+                  className="pl-10 bg-white border border-[#6A9CCE] h-9"
                 />
               </div>
               <Select defaultValue="all-group">
-                <SelectTrigger className="w-[140px] bg-[#F0F7FF] border-0 h-9">
+                <SelectTrigger className="w-[140px] bg-white border border-[#6A9CCE] h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -181,7 +181,7 @@ const Contacts = () => {
                 </SelectContent>
               </Select>
               <Select defaultValue="all-tag">
-                <SelectTrigger className="w-[120px] bg-[#F0F7FF] border-0 h-9">
+                <SelectTrigger className="w-[120px] bg-white border border-[#6A9CCE] h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -239,11 +239,11 @@ const Contacts = () => {
                     key={idx}
                     className="border border-gray-200 rounded-lg p-5 hover:shadow-sm transition-shadow"
                   >
-                    <div className="flex justify-between items-center mb-3">
+                    <div className="flex gap-4 items-center mb-3">
                       <h3 className="font-semibold text-base text-foreground">
                         {group.name}
                       </h3>
-                      <span className="text-2xl font-bold text-foreground">
+                      <span className="text-xs font-bold text-[#6C6C6C] bg-[#F2F2F2] py-1 px-2 rounded-full">
                         {group.count}
                       </span>
                     </div>

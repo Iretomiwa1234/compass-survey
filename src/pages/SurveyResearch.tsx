@@ -2,10 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { StatCard } from "@/components/StatCard";
-import { DonutMetricCard } from "@/components/DonutMetricCard";
+import { SurveyStatsOverview } from "@/components/SurveyStatsOverview";
 import { SurveyListItem, Survey } from "@/components/SurveyListItem";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card"; // Keep for later use
 import {
   SidebarProvider,
   SidebarInset,
@@ -31,17 +30,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Users,
-  TrendingUp,
-  CheckCircle2,
-  Globe2,
-  Search,
-  Plus,
-  Calendar,
-  Target,
-  FileText,
-} from "lucide-react";
+import { Search, Plus, Calendar, Target, FileText, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -218,88 +207,7 @@ const SurveyResearch = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              <StatCard
-                title="Total Responses"
-                value="1,500"
-                icon={Users}
-                iconBgColor="bg-purple-500/10"
-                iconColor="text-purple-500"
-                badges={[
-                  { label: "Completed", count: 1100, variant: "success" },
-                  { label: "In Progress", count: 200, variant: "warning" },
-                  { label: "Abandoned", count: 200, variant: "destructive" },
-                ]}
-              />
-
-              <DonutMetricCard
-                title="Avg Response Rate"
-                icon={TrendingUp}
-                percentage={72}
-                chartColor="#4D7CB6"
-                iconBgColor="bg-amber-500/10"
-                iconColor="text-amber-500"
-                rotation={0}
-                data={[
-                  { label: "Total Invite Sent", value: "1,500" },
-                  {
-                    label: "Total Responds",
-                    value: "1,300",
-                    color: "text-blue-600",
-                  },
-                ]}
-              />
-
-              <DonutMetricCard
-                title="Completion Rate"
-                icon={CheckCircle2}
-                percentage={80}
-                chartColor="#60DE60"
-                secondaryChartColor="#F68181"
-                iconBgColor="bg-green-500/10"
-                iconColor="text-green-500"
-                showBackground={false}
-                data={[
-                  {
-                    label: "Completed",
-                    value: "1,300",
-                    color: "text-[#118C36]",
-                  },
-                  { label: "Abandoned", value: "200", color: "text-[#A12D2D]" },
-                ]}
-              />
-              <Card className="border-[#dce8f5] shadow-sm rounded-xl">
-                <CardContent className="p-5 md:p-6">
-                  <div className="mb-3 flex items-start justify-between gap-2">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10">
-                      <Globe2 className="h-4 w-4 text-blue-500" />
-                    </div>
-                  </div>
-                  <div className="mb-3 space-y-1">
-                    <p className="text-xs font-semibold text-[#5a6b80] sm:text-sm">
-                      Country Reach
-                    </p>
-                    <p className="text-xl font-black leading-tight text-[#0b1526] sm:text-2xl">
-                      16
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    {["Africa", "Asia", "Europe", "America"].map(
-                      (region, idx) => (
-                        <div key={region} className="space-y-1">
-                          <span className="block max-w-[88px] truncate rounded-full bg-[#EEF2F8] px-3 py-[6px] text-[11px] font-semibold text-[#65758B] mx-auto">
-                            {region}
-                          </span>
-                          <span className="block text-base font-black text-[#65758B]">
-                            {[5, 3, 3, 4][idx]}
-                          </span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <SurveyStatsOverview variant="research" />
             <div className="mt-6 rounded-xl border border-[#dce8f5] bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row">
                 <div className="flex w-full items-center gap-4 sm:w-auto">

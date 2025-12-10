@@ -416,7 +416,7 @@ const Channels = () => {
                                 }
                               />
                               {emailFileName && (
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded text-xs">
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#206AB5]/10 px-2 py-0.5 rounded text-xs">
                                   <span className="text-primary">
                                     {emailFileName}
                                   </span>
@@ -447,7 +447,7 @@ const Channels = () => {
                           </div>
                         </div>
 
-                        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2">
                           <Mail className="w-4 h-4" />
                           Send Email Campaign
                         </Button>
@@ -479,7 +479,7 @@ const Channels = () => {
                             </p>
                           </div>
 
-                          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                          <Button className="bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2">
                             <Share2 className="w-4 h-4" />
                             Go to survey
                           </Button>
@@ -525,7 +525,7 @@ Thank you!`}
                                 onChange={(e) => setSmsNumbers(e.target.value)}
                               />
                               {smsFileName && (
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded text-xs">
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#206AB5]/10 px-2 py-0.5 rounded text-xs">
                                   <span className="text-primary">
                                     {smsFileName}
                                   </span>
@@ -556,7 +556,7 @@ Thank you!`}
                           </div>
                         </div>
 
-                        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2">
                           <MessageSquare className="w-4 h-4" />
                           Send SMS Campaign
                         </Button>
@@ -628,7 +628,7 @@ Thank you!`}
                                 }
                               />
                               {whatsappFileName && (
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded text-xs">
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#206AB5]/10 px-2 py-0.5 rounded text-xs">
                                   <span className="text-primary">
                                     {whatsappFileName}
                                   </span>
@@ -659,7 +659,7 @@ Thank you!`}
                           </div>
                         </div>
 
-                        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2">
                           <MessageSquare className="w-4 h-4" />
                           Send Whatsapp Campaign
                         </Button>
@@ -722,7 +722,7 @@ Thank you!`}
 
                         <Button
                           onClick={handleGenerateQR}
-                          className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-medium"
+                          className="w-full h-10 bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2 font-medium"
                         >
                           <QrCode className="w-4 h-4" />
                           Generate QR Code
@@ -732,7 +732,7 @@ Thank you!`}
                           <Button
                             variant="outline"
                             onClick={() => handleDownloadQR("png")}
-                            className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-primary/5"
+                            className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-[#206AB5]/5"
                           >
                             <Download className="w-4 h-4" />
                             Download PNG
@@ -740,7 +740,7 @@ Thank you!`}
                           <Button
                             variant="outline"
                             onClick={() => handleDownloadQR("svg")}
-                            className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-primary/5"
+                            className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-[#206AB5]/5"
                           >
                             <Download className="w-4 h-4" />
                             Download SVG

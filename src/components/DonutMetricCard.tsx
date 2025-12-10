@@ -11,6 +11,7 @@ interface DonutMetricCardProps {
   iconColor: string;
   rotation?: number;
   showBackground?: boolean;
+  cornerRadius?: number;
   data: Array<{
     label: string;
     value: string;
@@ -18,7 +19,7 @@ interface DonutMetricCardProps {
   }>;
 }
 
-export const DonutMetricCard = ({
+export function DonutMetricCard({
   title,
   icon: Icon,
   percentage,
@@ -28,13 +29,15 @@ export const DonutMetricCard = ({
   iconColor,
   rotation = -360,
   showBackground = true,
+  cornerRadius = 7,
   data,
-}: DonutMetricCardProps) => {
+}: DonutMetricCardProps) {
+  const strokeWidth = 14;
   const circumference = 2 * Math.PI * 45;
   const clampedPct = Math.max(0, Math.min(100, percentage));
 
   // Small gap between segments when secondary color exists
-  const gapAngle = secondaryChartColor ? 20 : 0;
+  const gapAngle = secondaryChartColor ? 50 : 0;
   const gapLength = (gapAngle / 360) * circumference;
 
   // Calculate lengths
@@ -44,7 +47,8 @@ export const DonutMetricCard = ({
     ? Math.max(0, circumference - primaryLength - gapLength)
     : 0;
 
-  const primaryRotation = rotation;
+  // shift primary start by half the gap so the reserved gap is split evenly
+  const primaryRotation = rotation + gapAngle / 2;
 
   // Map primary length to degrees
   const primaryAngleDegrees = (primaryLength / circumference) * 360;
@@ -75,7 +79,7 @@ export const DonutMetricCard = ({
                   cy="48"
                   r="45"
                   stroke="#dfe7f2"
-                  strokeWidth="14"
+                  strokeWidth={strokeWidth}
                   fill="none"
                   transform={`rotate(${rotation} 48 48)`}
                 />
@@ -85,14 +89,14 @@ export const DonutMetricCard = ({
                 cy="48"
                 r="45"
                 stroke={chartColor}
-                strokeWidth="14"
+                strokeWidth={strokeWidth}
                 fill="none"
                 strokeDasharray={`${Math.max(
                   0,
                   primaryLength
                 )} ${circumference}`}
                 strokeDashoffset="0"
-                strokeLinecap="round"
+                strokeLinecap="butt"
                 transform={`rotate(${primaryRotation} 48 48)`}
               />
               {secondaryChartColor && secondaryLength > 0 && (
@@ -101,17 +105,75 @@ export const DonutMetricCard = ({
                   cy="48"
                   r="45"
                   stroke={secondaryChartColor}
-                  strokeWidth="14"
+                  strokeWidth={strokeWidth}
                   fill="none"
                   strokeDasharray={`${Math.max(
                     0,
                     secondaryLength
                   )} ${circumference}`}
                   strokeDashoffset="0"
-                  strokeLinecap="round"
+                  strokeLinecap="butt"
                   transform={`rotate(${secondaryRotation} 48 48)`}
                 />
               )}
+
+              {/* small custom end-caps when cornerRadius > 0 (drawn on top of arcs) */}
+              {cornerRadius > 0 &&
+                primaryLength > 0 &&
+                (() => {
+                  const cx = 48;
+                  const cy = 48;
+                  const r = 45;
+                  const toRad = (d: number) => (d * Math.PI) / 180;
+                  const startDeg = primaryRotation;
+                  const endDeg =
+                    primaryRotation + (primaryLength / circumference) * 360;
+                  const capped = Math.min(cornerRadius, strokeWidth / 2);
+                  const sx = cx + r * Math.cos(toRad(startDeg));
+                  const sy = cy + r * Math.sin(toRad(startDeg));
+                  const ex = cx + r * Math.cos(toRad(endDeg));
+                  const ey = cy + r * Math.sin(toRad(endDeg));
+                  return (
+                    <>
+                      <circle cx={sx} cy={sy} r={capped} fill={chartColor} />
+                      <circle cx={ex} cy={ey} r={capped} fill={chartColor} />
+                    </>
+                  );
+                })()}
+
+              {cornerRadius > 0 &&
+                secondaryChartColor &&
+                secondaryLength > 0 &&
+                (() => {
+                  const cx = 48;
+                  const cy = 48;
+                  const r = 45;
+                  const toRad = (d: number) => (d * Math.PI) / 180;
+                  const startDeg = secondaryRotation;
+                  const endDeg =
+                    secondaryRotation + (secondaryLength / circumference) * 360;
+                  const capped = Math.min(cornerRadius, strokeWidth / 2);
+                  const sx = cx + r * Math.cos(toRad(startDeg));
+                  const sy = cy + r * Math.sin(toRad(startDeg));
+                  const ex = cx + r * Math.cos(toRad(endDeg));
+                  const ey = cy + r * Math.sin(toRad(endDeg));
+                  return (
+                    <>
+                      <circle
+                        cx={sx}
+                        cy={sy}
+                        r={capped}
+                        fill={secondaryChartColor}
+                      />
+                      <circle
+                        cx={ex}
+                        cy={ey}
+                        r={capped}
+                        fill={secondaryChartColor}
+                      />
+                    </>
+                  );
+                })()}
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-3xl font-bold text-[#0b1526]">
@@ -140,4 +202,4 @@ export const DonutMetricCard = ({
       </CardContent>
     </Card>
   );
-};
+}

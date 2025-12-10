@@ -26,7 +26,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Play, Save, Send, ChevronDown, CalendarIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Play,
+  Save,
+  Send,
+  ChevronDown,
+  CalendarIcon,
+} from "lucide-react";
 
 const AiSurvey = () => {
   const navigate = useNavigate();
@@ -69,7 +76,9 @@ const AiSurvey = () => {
 
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Play className="w-4 h-4" />
-                <span className="font-medium text-foreground">{surveyTitle}</span>
+                <span className="font-medium text-foreground">
+                  {surveyTitle}
+                </span>
               </div>
 
               <div className="flex items-center gap-3">
@@ -81,9 +90,9 @@ const AiSurvey = () => {
                   Save
                   <ChevronDown className="w-4 h-4" />
                 </Button>
-                <Button 
+                <Button
                   onClick={() => setPublishOpen(true)}
-                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="gap-2 bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground"
                 >
                   <Send className="w-4 h-4" />
                   Publish
@@ -104,7 +113,10 @@ const AiSurvey = () => {
                 {/* Survey Description */}
                 <div className="p-6 border-b border-border">
                   <p className="text-muted-foreground">
-                    Help us make our product better for you! Share your honest thoughts about what you like, what could be improved, and any features you'd love to see in the future. Your feedback will guide our next updates.
+                    Help us make our product better for you! Share your honest
+                    thoughts about what you like, what could be improved, and
+                    any features you'd love to see in the future. Your feedback
+                    will guide our next updates.
                   </p>
                 </div>
 
@@ -139,31 +151,46 @@ const AiSurvey = () => {
                   <RadioGroup className="mt-4 space-y-3">
                     <div className="flex items-center space-x-3">
                       <RadioGroupItem value="18-24" id="age-18-24" />
-                      <Label htmlFor="age-18-24" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="age-18-24"
+                        className="font-normal cursor-pointer"
+                      >
                         18 - 24
                       </Label>
                     </div>
                     <div className="flex items-center space-x-3">
                       <RadioGroupItem value="25-34" id="age-25-34" />
-                      <Label htmlFor="age-25-34" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="age-25-34"
+                        className="font-normal cursor-pointer"
+                      >
                         25 - 34
                       </Label>
                     </div>
                     <div className="flex items-center space-x-3">
                       <RadioGroupItem value="35-44" id="age-35-44" />
-                      <Label htmlFor="age-35-44" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="age-35-44"
+                        className="font-normal cursor-pointer"
+                      >
                         35 - 44
                       </Label>
                     </div>
                     <div className="flex items-center space-x-3">
                       <RadioGroupItem value="45-64" id="age-45-64" />
-                      <Label htmlFor="age-45-64" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="age-45-64"
+                        className="font-normal cursor-pointer"
+                      >
                         45 - 64
                       </Label>
                     </div>
                     <div className="flex items-center space-x-3">
                       <RadioGroupItem value="65+" id="age-65+" />
-                      <Label htmlFor="age-65+" className="font-normal cursor-pointer">
+                      <Label
+                        htmlFor="age-65+"
+                        className="font-normal cursor-pointer"
+                      >
                         65+
                       </Label>
                     </div>
@@ -172,7 +199,8 @@ const AiSurvey = () => {
 
                 <div className="p-6 border-b border-border">
                   <Label className="text-sm font-medium text-foreground">
-                    State or Residence <span className="text-destructive">*</span>
+                    State or Residence{" "}
+                    <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     type="text"
@@ -204,7 +232,9 @@ const AiSurvey = () => {
                   <SelectValue placeholder="Select restriction" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="public">Public (everyone with link)</SelectItem>
+                  <SelectItem value="public">
+                    Public (everyone with link)
+                  </SelectItem>
                   <SelectItem value="private">Private (invite only)</SelectItem>
                   <SelectItem value="password">Password protected</SelectItem>
                 </SelectContent>
@@ -212,7 +242,9 @@ const AiSurvey = () => {
             </div>
 
             <div>
-              <Label className="text-sm font-medium">Limit Number of Responses</Label>
+              <Label className="text-sm font-medium">
+                Limit Number of Responses
+              </Label>
               <Select value={responseLimit} onValueChange={setResponseLimit}>
                 <SelectTrigger className="w-full mt-2">
                   <SelectValue placeholder="Select limit" />
@@ -249,7 +281,9 @@ const AiSurvey = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Allow editing after submission</Label>
+              <Label className="text-sm font-medium">
+                Allow editing after submission
+              </Label>
               <Switch
                 checked={allowEditing}
                 onCheckedChange={setAllowEditing}
@@ -259,7 +293,7 @@ const AiSurvey = () => {
             <div className="flex justify-center pt-4">
               <Button
                 onClick={handleContinueDistribution}
-                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="gap-2 bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground"
               >
                 <Send className="w-4 h-4" />
                 Continue to Distribution

@@ -149,7 +149,7 @@ const Report = () => {
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-lg bg-primary/10">
+                        <div className="p-3 rounded-lg bg-[#206AB5]/10">
                           <FileText className="w-6 h-6 text-primary" />
                         </div>
                         <div>

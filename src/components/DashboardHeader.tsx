@@ -40,7 +40,9 @@ export function DashboardHeader({
             </p>
           </div>
         ) : (
-          <h2 className="font-semibold text-xl text-[#48556B]">{headerTitle}</h2>
+          <h2 className="font-semibold text-xl text-[#48556B]">
+            {headerTitle}
+          </h2>
         )}
       </div>
 
@@ -60,13 +62,13 @@ export function DashboardHeader({
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
+          <span className="absolute top-1 right-1 w-2 h-2 bg-[#206AB5] rounded-full"></span>
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-3 cursor-pointer">
-              <Avatar className="w-9 h-9 bg-primary/10">
+              <Avatar className="w-9 h-9 bg-[#206AB5]/10">
                 <AvatarFallback className="text-primary text-sm">
                   JD
                 </AvatarFallback>
