@@ -509,35 +509,7 @@ const AudienceInsights = () => {
                 </p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@example.com"
-                {...register("email", {
-                  required: "Email is required",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Invalid email address",
-                  },
-                })}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">
-                  {errors.email.message as string}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
-                {...register("phone")}
-              />
-            </div>
+          
             <div className="space-y-2">
               <Label htmlFor="channel">Preferred Channel *</Label>
               <Select
@@ -559,27 +531,7 @@ const AudienceInsights = () => {
                 </p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="group">Group</Label>
-              <Select {...register("group")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select group" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="vip">VIP Customers</SelectItem>
-                  <SelectItem value="marketing">Marketing List</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tags">Tags</Label>
-              <Input
-                id="tags"
-                placeholder="Enter tags separated by commas"
-                {...register("tags")}
-              />
-            </div>
+
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"
