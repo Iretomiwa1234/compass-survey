@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -45,10 +46,20 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+interface InsightRow {
+  date: string;
+  respondent: string;
+  channel: string;
+  status: string;
+  action: string;
+}
+
 const AudienceInsights = () => {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [addContactModalOpen, setAddContactModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<InsightRow | null>(null);
   const [importFile, setImportFile] = useState<File | null>(null);
 
   const {
@@ -91,14 +102,18 @@ const AudienceInsights = () => {
   };
 
   const onSubmitContact = (data: any) => {
-    // Handle add contact logic here
     console.log(data);
     toast.success("Contact added successfully");
     setAddContactModalOpen(false);
     reset();
   };
 
-  const insights = [
+  const handleViewRow = (row: InsightRow) => {
+    setSelectedRow(row);
+    setViewModalOpen(true);
+  };
+
+  const insights: InsightRow[] = [
     {
       date: "07/05/2016",
       respondent: "Ronald Richards",
@@ -191,6 +206,7 @@ const AudienceInsights = () => {
       setImportFile(null);
     }
   }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -317,6 +333,7 @@ const AudienceInsights = () => {
                           <Button
                             variant="link"
                             className="text-primary h-auto p-0 font-medium hover:text-primary/80"
+                            onClick={() => handleViewRow(row)}
                           >
                             {row.action}
                           </Button>
@@ -360,6 +377,55 @@ const AudienceInsights = () => {
           </main>
         </SidebarInset>
       </div>
+
+      {/* View Row Modal */}
+      <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Respondent Details</DialogTitle>
+            <DialogDescription>
+              View the details of this survey respondent.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedRow && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground text-sm">Date</Label>
+                  <p className="font-medium">{selectedRow.date}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground text-sm">Status</Label>
+                  <div className="mt-1">
+                    <Badge
+                      className={`font-normal border-0 ${
+                        selectedRow.status === "Complete"
+                          ? "bg-green-50 text-green-700"
+                          : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      {selectedRow.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-sm">Respondent</Label>
+                <p className="font-medium">{selectedRow.respondent}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-sm">Channel</Label>
+                <p className="font-medium">{selectedRow.channel}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewModalOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Import Modal */}
       <Dialog open={importModalOpen} onOpenChange={setImportModalOpen}>
@@ -535,3 +601,4 @@ const AudienceInsights = () => {
 };
 
 export default AudienceInsights;
+
