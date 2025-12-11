@@ -159,7 +159,7 @@ const CommunityPanel = () => {
                     >
                       <div className="flex items-center gap-4">
                         <Avatar>
-                          <AvatarFallback className="bg-primary text-primary-foreground">
+                          <AvatarFallback className="bg-[#206AB5] text-primary-foreground">
                             {member.name
                               .split(" ")
                               .map((n) => n[0])

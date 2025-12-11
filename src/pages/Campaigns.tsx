@@ -71,7 +71,7 @@ const Campaigns = () => {
     },
   ];
 
-   const [createOpen, setCreateOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <SidebarProvider>
@@ -83,113 +83,121 @@ const Campaigns = () => {
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader headerTitle="Campaigns" hideGreeting />
+          <DashboardHeader headerTitle="Distribution Campaigns" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-8">
-              <h1 className="text-2xl font-semibold text-foreground mb-6">
-                Distribution Campaigns
-              </h1>
+              <div className="rounded-xl flex items-center justify-between border border-[#dce8f5] bg-white px-2 py-2 shadow-sm sm:px-3 sm:py-3 mb-6">
+                <h2 className="text-md font-normal text-[#2b3a4f]">
+                  Customer Satisfaction Survey
+                </h2>
 
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search for survey"
-                    className="pl-9 bg-background"
-                  />
-                </div>
-                <Select defaultValue="survey1">
-                  <SelectTrigger className="w-full md:w-[200px]">
-                    <SelectValue placeholder="Select Survey" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="survey1">
-                      Customer Satisfaction Survey
-                    </SelectItem>
-                    <SelectItem value="survey2">Product Feedback</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Card className="mb-8">
-                <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-md font-normal text-foreground">
-                        Customer Satisfaction Survey
-                      </h2>
-                      <Badge
-                        variant="success"
-                        className="bg-green-100 text-green-700 hover:bg-green-200"
-                      >
-                        Active
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-4 h-4" />
-                        <span>1,520 Total Response</span>
-                      </div>
-                      <span>Response rate: 68%</span>
-                      <span>Created: 20/09/2025</span>
-                    </div>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search for survey"
+                      className="pl-9 bg-background"
+                    />
                   </div>
-                  <Button onClick={() => setCreateOpen(true)} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Add Channel
-              </Button>
-                </CardContent>
-              </Card>
+                  <Select defaultValue="survey1">
+                    <SelectTrigger className="w-full md:w-[200px]">
+                      <SelectValue placeholder="Select Survey" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="survey1">
+                        Customer Satisfaction Survey
+                      </SelectItem>
+                      <SelectItem value="survey2">Product Feedback</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg">
+                <Card className="mb-8 ">
+                  <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h2 className="text-md font-normal text-foreground">
+                          Customer Satisfaction Survey
+                        </h2>
+                        <Badge
+                          variant="success"
+                          className="bg-green-100 text-green-700 hover:bg-green-200"
+                        >
+                          Active
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="w-4 h-4" />
+                          <span>1,520 Total Response</span>
+                        </div>
+                        <span>Response rate: 68%</span>
+                        <span>Created: 20/09/2025</span>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => setCreateOpen(true)}
+                      className="gap-2 bg-[#206AB5]"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Channel
+                    </Button>
+                  </CardContent>
+                </Card>
 
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                  Distribution Performance
-                </h3>
-                <div className="rounded-md border bg-card">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="w-[200px]">Channel</TableHead>
-                        <TableHead className="text-center">Sent</TableHead>
-                        <TableHead className="text-center">Viewed</TableHead>
-                        <TableHead className="text-center">Responses</TableHead>
-                        <TableHead className="text-center">
-                          Conversion Rate
-                        </TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {performanceData.map((row, idx) => (
-                        <TableRow key={idx} className="even:bg-muted/50">
-                          <TableCell className="font-medium">
-                            {row.channel}
-                          </TableCell>
-                          <TableCell className="text-center text-muted-foreground">
-                            {row.sent}
-                          </TableCell>
-                          <TableCell className="text-center text-muted-foreground">
-                            {row.viewed}
-                          </TableCell>
-                          <TableCell className="text-center text-muted-foreground">
-                            {row.responses}
-                          </TableCell>
-                          <TableCell className="text-center text-muted-foreground">
-                            {row.conversion}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge
-                              variant="success"
-                              className="bg-green-100 text-green-700 hover:bg-green-200 font-normal"
-                            >
-                              {row.status}
-                            </Badge>
-                          </TableCell>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
+                    Distribution Performance
+                  </h3>
+                  <div className="rounded-md border bg-card">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="w-[200px]">Channel</TableHead>
+                          <TableHead className="text-center">Sent</TableHead>
+                          <TableHead className="text-center">Viewed</TableHead>
+                          <TableHead className="text-center">
+                            Responses
+                          </TableHead>
+                          <TableHead className="text-center">
+                            Conversion Rate
+                          </TableHead>
+                          <TableHead className="text-center">Status</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {performanceData.map((row, idx) => (
+                          <TableRow key={idx} className="even:bg-muted/50">
+                            <TableCell className="font-medium">
+                              {row.channel}
+                            </TableCell>
+                            <TableCell className="text-center text-muted-foreground">
+                              {row.sent}
+                            </TableCell>
+                            <TableCell className="text-center text-muted-foreground">
+                              {row.viewed}
+                            </TableCell>
+                            <TableCell className="text-center text-muted-foreground">
+                              {row.responses}
+                            </TableCell>
+                            <TableCell className="text-center text-muted-foreground">
+                              {row.conversion}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge
+                                variant="success"
+                                className="bg-green-100 text-green-700 hover:bg-green-200 font-normal"
+                              >
+                                {row.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -218,9 +226,15 @@ const Campaigns = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="satisfaction">Customer Satisfaction Survey</SelectItem>
-                  <SelectItem value="product">Product Feedback Collection</SelectItem>
-                  <SelectItem value="employee">Employee Engagement Study</SelectItem>
+                  <SelectItem value="satisfaction">
+                    Customer Satisfaction Survey
+                  </SelectItem>
+                  <SelectItem value="product">
+                    Product Feedback Collection
+                  </SelectItem>
+                  <SelectItem value="employee">
+                    Employee Engagement Study
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -249,7 +263,9 @@ const Campaigns = () => {
               </div>
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>
+                Cancel
+              </Button>
               <Button>Create Campaign</Button>
             </div>
           </div>

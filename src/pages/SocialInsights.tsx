@@ -40,107 +40,110 @@ import {
 } from "@/components/ui/table";
 
 const SocialInsights = () => {
-
   const [addContactModalOpen, setAddContactModalOpen] = useState(false);
-    
-  
-    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm();
 
   const onSubmitContact = (data: any) => {
-      // Handle add contact logic here
-      console.log(data);
-      toast.success("Contact added successfully");
-      setAddContactModalOpen(false);
-      reset();
-    };
-  
-    const insights = [
-      {
-        date: "07/05/2016",
-        respondent: "Ronald Richards",
-        channel: "Email",
-        status: "Complete",
-        action: "View",
-      },
-      {
-        date: "16/08/2013",
-        respondent: "Jerome Bell",
-        channel: "SMS",
-        status: "Complete",
-        action: "View",
-      },
-      {
-        date: "07/05/2016",
-        respondent: "Floyd Miles",
-        channel: "Whatsapp",
-        status: "Complete",
-        action: "View",
-      },
-      {
-        date: "16/08/2013",
-        respondent: "Brooklyn Simmons",
-        channel: "QR-Code",
-        status: "Complete",
-        action: "View",
-      },
-      {
-        date: "15/08/2017",
-        respondent: "Darlene Robertson",
-        channel: "Email",
-        status: "Incomplete",
-        action: "View",
-      },
-      {
-        date: "15/08/2017",
-        respondent: "Robert Fox",
-        channel: "SMS",
-        status: "Complete",
-        action: "View",
-      },
-      {
-        date: "07/05/2016",
-        respondent: "Guy Hawkins",
-        channel: "Whatsapp",
-        status: "Complete",
-        action: "View",
-      },
-      {
-        date: "16/08/2013",
-        respondent: "Savannah Nguyen",
-        channel: "QR-Code",
-        status: "Incomplete",
-        action: "View",
-      },
-      {
-        date: "18/09/2016",
-        respondent: "Kathryn Murphy",
-        channel: "Email",
-        status: "Complete",
-        action: "View",
-      },
-      {
-        date: "15/08/2017",
-        respondent: "Jacob Jones",
-        channel: "SMS",
-        status: "Incomplete",
-        action: "View",
-      },
-      {
-        date: "28/10/2012",
-        respondent: "Dianne Russell",
-        channel: "Whatsapp",
-        status: "Complete",
-        action: "View",
-      },
-      {
-        date: "12/06/2020",
-        respondent: "Jane Cooper",
-        channel: "QR-Code",
-        status: "Incomplete",
-        action: "View",
-      },
-    ];
+    // Handle add contact logic here
+    console.log(data);
+    toast.success("Contact added successfully");
+    setAddContactModalOpen(false);
+    reset();
+  };
+
+  const insights = [
+    {
+      date: "07/05/2016",
+      respondent: "Ronald Richards",
+      channel: "Email",
+      status: "Complete",
+      action: "View",
+    },
+    {
+      date: "16/08/2013",
+      respondent: "Jerome Bell",
+      channel: "SMS",
+      status: "Complete",
+      action: "View",
+    },
+    {
+      date: "07/05/2016",
+      respondent: "Floyd Miles",
+      channel: "Whatsapp",
+      status: "Complete",
+      action: "View",
+    },
+    {
+      date: "16/08/2013",
+      respondent: "Brooklyn Simmons",
+      channel: "QR-Code",
+      status: "Complete",
+      action: "View",
+    },
+    {
+      date: "15/08/2017",
+      respondent: "Darlene Robertson",
+      channel: "Email",
+      status: "Incomplete",
+      action: "View",
+    },
+    {
+      date: "15/08/2017",
+      respondent: "Robert Fox",
+      channel: "SMS",
+      status: "Complete",
+      action: "View",
+    },
+    {
+      date: "07/05/2016",
+      respondent: "Guy Hawkins",
+      channel: "Whatsapp",
+      status: "Complete",
+      action: "View",
+    },
+    {
+      date: "16/08/2013",
+      respondent: "Savannah Nguyen",
+      channel: "QR-Code",
+      status: "Incomplete",
+      action: "View",
+    },
+    {
+      date: "18/09/2016",
+      respondent: "Kathryn Murphy",
+      channel: "Email",
+      status: "Complete",
+      action: "View",
+    },
+    {
+      date: "15/08/2017",
+      respondent: "Jacob Jones",
+      channel: "SMS",
+      status: "Incomplete",
+      action: "View",
+    },
+    {
+      date: "28/10/2012",
+      respondent: "Dianne Russell",
+      channel: "Whatsapp",
+      status: "Complete",
+      action: "View",
+    },
+    {
+      date: "12/06/2020",
+      respondent: "Jane Cooper",
+      channel: "QR-Code",
+      status: "Incomplete",
+      action: "View",
+    },
+  ];
 
   const performanceData = [
     {
@@ -239,8 +242,8 @@ const SocialInsights = () => {
                       <span>Created: 20/09/2025</span>
                     </div>
                   </div>
-                  <Button 
-                    className="gap-2 flex-1 lg:flex-none bg-primary hover:bg-primary/90 text-primary-foreground"
+                  <Button
+                    className="gap-2 flex-1 lg:flex-none bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground"
                     onClick={() => setAddContactModalOpen(true)}
                   >
                     <Plus className="w-4 h-4" />
@@ -312,7 +315,10 @@ const SocialInsights = () => {
               Fill in the details to add a new contact to your audience
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmitContact)} className="space-y-4 py-4">
+          <form
+            onSubmit={handleSubmit(onSubmitContact)}
+            className="space-y-4 py-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="name">Channels *</Label>
               <Input
@@ -321,7 +327,9 @@ const SocialInsights = () => {
                 {...register("name", { required: "Channel is required" })}
               />
               {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message as string}</p>
+                <p className="text-sm text-destructive">
+                  {errors.name.message as string}
+                </p>
               )}
             </div>
 
@@ -336,7 +344,9 @@ const SocialInsights = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="channel">Status *</Label>
-              <Select {...register("status", { required: "status is required" })}>
+              <Select
+                {...register("status", { required: "status is required" })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Status" />
                 </SelectTrigger>
@@ -348,10 +358,12 @@ const SocialInsights = () => {
                 </SelectContent>
               </Select>
               {errors.status && (
-                <p className="text-sm text-destructive">{errors.channel.message as string}</p>
+                <p className="text-sm text-destructive">
+                  {errors.channel.message as string}
+                </p>
               )}
             </div>
-           
+
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"

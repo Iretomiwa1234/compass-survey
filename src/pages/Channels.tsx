@@ -39,7 +39,7 @@ const Channels = () => {
   const [qrGenerated, setQrGenerated] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const { toast } = useToast();
-  
+
   // Upload states
   const [emailRecipients, setEmailRecipients] = useState("");
   const [emailFileName, setEmailFileName] = useState("");
@@ -47,12 +47,12 @@ const Channels = () => {
   const [smsFileName, setSmsFileName] = useState("");
   const [whatsappNumbers, setWhatsappNumbers] = useState("");
   const [whatsappFileName, setWhatsappFileName] = useState("");
-  
+
   // File input refs
   const emailFileRef = useRef<HTMLInputElement>(null);
   const smsFileRef = useRef<HTMLInputElement>(null);
   const whatsappFileRef = useRef<HTMLInputElement>(null);
-  
+
   const surveyLink = "https://msurvey123.com/customerfeedback";
   const websiteUrl = "https://msurvey123.com";
 
@@ -63,7 +63,11 @@ const Channels = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.csv') && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    if (
+      !file.name.endsWith(".csv") &&
+      !file.name.endsWith(".xlsx") &&
+      !file.name.endsWith(".xls")
+    ) {
       toast({
         title: "Invalid file type",
         description: "Please upload a CSV or Excel file.",
@@ -75,7 +79,7 @@ const Channels = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result as string;
-      const lines = content.split(/[\r\n]+/).filter(line => line.trim());
+      const lines = content.split(/[\r\n]+/).filter((line) => line.trim());
       const data = lines.join(", ");
 
       switch (type) {
@@ -160,7 +164,8 @@ const Channels = () => {
       handleCopyLink();
       toast({
         title: "Link Copied!",
-        description: "Share not supported on this browser. Link copied instead.",
+        description:
+          "Share not supported on this browser. Link copied instead.",
       });
     }
   };
@@ -223,13 +228,15 @@ const Channels = () => {
       canvas.height = 200;
       const ctx = canvas.getContext("2d");
       const img = new Image();
-      const svgBlob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
+      const svgBlob = new Blob([svgContent], {
+        type: "image/svg+xml;charset=utf-8",
+      });
       const url = URL.createObjectURL(svgBlob);
-      
+
       img.onload = () => {
         ctx?.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
-        
+
         canvas.toBlob((blob) => {
           if (blob) {
             const pngUrl = URL.createObjectURL(blob);
@@ -255,14 +262,14 @@ const Channels = () => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
-              <DashboardSidebar />
-      
-              <SidebarInset className="flex-1 flex flex-col">
-                <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
-                  <SidebarTrigger className="-ml-1" />
-                  <div className="flex-1" />
-                </header>
-                <DashboardHeader headerTitle="Social Listening" hideGreeting />
+        <DashboardSidebar />
+
+        <SidebarInset className="flex-1 flex flex-col">
+          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex-1" />
+          </header>
+          <DashboardHeader headerTitle="Social Listening" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             {/* Survey Selection Bar */}
@@ -275,7 +282,7 @@ const Channels = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search for survey"
-                    className="pl-9 h-9 bg-primary/5 border-0"
+                    className="pl-9 h-9 bg-white border border-primary/5"
                   />
                 </div>
                 <Select defaultValue="customer-satisfaction">
@@ -298,34 +305,34 @@ const Channels = () => {
             </div>
 
             {/* Tabs and Action Buttons Row */}
-            <div className="mb-6">
+            <div className="mb-6  bg-white p-4 rounded-lg">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <div className="flex items-center justify-between">
                   <TabsList className="bg-transparent p-0 h-auto gap-1">
                     <TabsTrigger
                       value="email"
-                      className="gap-2 px-5 py-2.5 rounded-md bg-card border border-border text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary"
+                      className="gap-2 px-5 py-2.5 rounded-md bg-white text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
                     >
                       <Mail className="w-4 h-4" />
                       Email
                     </TabsTrigger>
                     <TabsTrigger
                       value="sms"
-                      className="gap-2 px-5 py-2.5 rounded-md bg-card border border-border text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary"
+                      className="gap-2 px-5 py-2.5 rounded-md bg-white text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
                     >
                       <MessageSquare className="w-4 h-4" />
                       SMS
                     </TabsTrigger>
                     <TabsTrigger
                       value="whatsapp"
-                      className="gap-2 px-5 py-2.5 rounded-md bg-card border border-border text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary"
+                      className="gap-2 px-5 py-2.5 rounded-md bg-white text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
                     >
                       <MessageSquare className="w-4 h-4" />
                       WhatsApp
                     </TabsTrigger>
                     <TabsTrigger
                       value="qrcode"
-                      className="gap-2 px-5 py-2.5 rounded-md bg-card border border-border text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary"
+                      className="gap-2 px-5 py-2.5 rounded-md bg-white text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
                     >
                       <QrCode className="w-4 h-4" />
                       QR Code
@@ -404,12 +411,19 @@ const Channels = () => {
                               <Input
                                 placeholder="Upload CSV or enter emails"
                                 value={emailRecipients}
-                                onChange={(e) => setEmailRecipients(e.target.value)}
+                                onChange={(e) =>
+                                  setEmailRecipients(e.target.value)
+                                }
                               />
                               {emailFileName && (
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded text-xs">
-                                  <span className="text-primary">{emailFileName}</span>
-                                  <button onClick={() => clearUpload("email")} className="text-muted-foreground hover:text-destructive">
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#206AB5]/10 px-2 py-0.5 rounded text-xs">
+                                  <span className="text-primary">
+                                    {emailFileName}
+                                  </span>
+                                  <button
+                                    onClick={() => clearUpload("email")}
+                                    className="text-muted-foreground hover:text-destructive"
+                                  >
                                     <X className="w-3 h-3" />
                                   </button>
                                 </div>
@@ -422,8 +436,8 @@ const Channels = () => {
                               className="hidden"
                               onChange={(e) => handleFileUpload(e, "email")}
                             />
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               className="gap-2"
                               onClick={() => emailFileRef.current?.click()}
                             >
@@ -433,7 +447,7 @@ const Channels = () => {
                           </div>
                         </div>
 
-                        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2">
                           <Mail className="w-4 h-4" />
                           Send Email Campaign
                         </Button>
@@ -465,7 +479,7 @@ const Channels = () => {
                             </p>
                           </div>
 
-                          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                          <Button className="bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2">
                             <Share2 className="w-4 h-4" />
                             Go to survey
                           </Button>
@@ -511,9 +525,14 @@ Thank you!`}
                                 onChange={(e) => setSmsNumbers(e.target.value)}
                               />
                               {smsFileName && (
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded text-xs">
-                                  <span className="text-primary">{smsFileName}</span>
-                                  <button onClick={() => clearUpload("sms")} className="text-muted-foreground hover:text-destructive">
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#206AB5]/10 px-2 py-0.5 rounded text-xs">
+                                  <span className="text-primary">
+                                    {smsFileName}
+                                  </span>
+                                  <button
+                                    onClick={() => clearUpload("sms")}
+                                    className="text-muted-foreground hover:text-destructive"
+                                  >
                                     <X className="w-3 h-3" />
                                   </button>
                                 </div>
@@ -526,8 +545,8 @@ Thank you!`}
                               className="hidden"
                               onChange={(e) => handleFileUpload(e, "sms")}
                             />
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               className="gap-2"
                               onClick={() => smsFileRef.current?.click()}
                             >
@@ -537,7 +556,7 @@ Thank you!`}
                           </div>
                         </div>
 
-                        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2">
                           <MessageSquare className="w-4 h-4" />
                           Send SMS Campaign
                         </Button>
@@ -604,12 +623,19 @@ Thank you!`}
                               <Input
                                 placeholder="Upload CSV or enter numbers"
                                 value={whatsappNumbers}
-                                onChange={(e) => setWhatsappNumbers(e.target.value)}
+                                onChange={(e) =>
+                                  setWhatsappNumbers(e.target.value)
+                                }
                               />
                               {whatsappFileName && (
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded text-xs">
-                                  <span className="text-primary">{whatsappFileName}</span>
-                                  <button onClick={() => clearUpload("whatsapp")} className="text-muted-foreground hover:text-destructive">
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#206AB5]/10 px-2 py-0.5 rounded text-xs">
+                                  <span className="text-primary">
+                                    {whatsappFileName}
+                                  </span>
+                                  <button
+                                    onClick={() => clearUpload("whatsapp")}
+                                    className="text-muted-foreground hover:text-destructive"
+                                  >
                                     <X className="w-3 h-3" />
                                   </button>
                                 </div>
@@ -622,8 +648,8 @@ Thank you!`}
                               className="hidden"
                               onChange={(e) => handleFileUpload(e, "whatsapp")}
                             />
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               className="gap-2"
                               onClick={() => whatsappFileRef.current?.click()}
                             >
@@ -633,7 +659,7 @@ Thank you!`}
                           </div>
                         </div>
 
-                        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                        <Button className="w-full bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2">
                           <MessageSquare className="w-4 h-4" />
                           Send Whatsapp Campaign
                         </Button>
@@ -694,9 +720,9 @@ Thank you!`}
                           />
                         </div>
 
-                        <Button 
+                        <Button
                           onClick={handleGenerateQR}
-                          className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-medium"
+                          className="w-full h-10 bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2 font-medium"
                         >
                           <QrCode className="w-4 h-4" />
                           Generate QR Code
@@ -706,7 +732,7 @@ Thank you!`}
                           <Button
                             variant="outline"
                             onClick={() => handleDownloadQR("png")}
-                            className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-primary/5"
+                            className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-[#206AB5]/5"
                           >
                             <Download className="w-4 h-4" />
                             Download PNG
@@ -714,7 +740,7 @@ Thank you!`}
                           <Button
                             variant="outline"
                             onClick={() => handleDownloadQR("svg")}
-                            className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-primary/5"
+                            className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-[#206AB5]/5"
                           >
                             <Download className="w-4 h-4" />
                             Download SVG
@@ -732,7 +758,11 @@ Thank you!`}
 
                       <CardContent className="flex items-center justify-center py-12">
                         <div className="flex flex-col items-center space-y-4">
-                          <div className={`p-2 transition-opacity ${qrGenerated ? 'opacity-100' : 'opacity-50'}`}>
+                          <div
+                            className={`p-2 transition-opacity ${
+                              qrGenerated ? "opacity-100" : "opacity-50"
+                            }`}
+                          >
                             <QrCode
                               className="w-40 h-40 text-primary"
                               strokeWidth={1}
@@ -744,9 +774,9 @@ Thank you!`}
                           </p>
 
                           <p className="text-sm text-muted-foreground">
-                            {surveyLink.replace('https://', '')}
+                            {surveyLink.replace("https://", "")}
                           </p>
-                          
+
                           {!qrGenerated && (
                             <p className="text-xs text-muted-foreground italic">
                               Click "Generate QR Code" to create your code
