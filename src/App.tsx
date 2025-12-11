@@ -11,11 +11,7 @@ import SurveyAnalysis from "./pages/SurveyAnalysis";
 import CreateSurvey from "./pages/CreateSurvey";
 import SocialListening from "./pages/SocialListening";
 import AISurvey from "./pages/AiSurvey";
-<<<<<<< Updated upstream
 import AIAssistant from "./pages/AiAssistant";
-=======
-import AIAssistant from "./pages/AIAssistant";
->>>>>>> Stashed changes
 // import CommunityPanel from "./pages/CommunityPanel";
 import Channels from "./pages/Channels";
 import Campaigns from "./pages/Campaigns";

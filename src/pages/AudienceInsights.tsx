@@ -259,7 +259,7 @@ const AudienceInsights = () => {
                 <div className="flex gap-2 w-full lg:w-auto">
                   <Button
                     variant="outline"
-                    className="gap-2 flex-1 lg:flex-none text-primary border-primary/20 bg-[#206AB5]/5 hover:bg-[#206AB5]/10 hover:text-primary"
+                    className="gap-2 flex-1 lg:flex-none text-primary border-primary/20 bg-primary/5 hover:bg-primary/10 hover:text-primary"
                     onClick={() => setImportModalOpen(true)}
                   >
                     <Download className="w-4 h-4" />
@@ -267,14 +267,14 @@ const AudienceInsights = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="gap-2 flex-1 lg:flex-none text-primary border-primary/20 bg-[#206AB5]/5 hover:bg-[#206AB5]/10 hover:text-primary"
+                    className="gap-2 flex-1 lg:flex-none text-primary border-primary/20 bg-primary/5 hover:bg-primary/10 hover:text-primary"
                     onClick={() => setExportModalOpen(true)}
                   >
                     <Upload className="w-4 h-4" />
                     Export
                   </Button>
                   <Button
-                    className="gap-2 flex-1 lg:flex-none bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground"
+                    className="gap-2 flex-1 lg:flex-none bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => setAddContactModalOpen(true)}
                   >
                     <Plus className="w-4 h-4" />
@@ -601,4 +601,3 @@ const AudienceInsights = () => {
 };
 
 export default AudienceInsights;
-
