@@ -4,12 +4,16 @@ import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SurveyStatsOverview } from "@/components/SurveyStatsOverview";
 import { SurveyListItem, Survey } from "@/components/SurveyListItem";
+<<<<<<< Updated upstream
 import { Card, CardContent } from "@/components/ui/card"; // Keep for later use
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+=======
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+>>>>>>> Stashed changes
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StarIcon from "/assets/stars-01.svg?url";
@@ -153,7 +157,7 @@ const SurveyResearch = () => {
   const handleGenerateWithAI = () => {
     setOpen(false);
     setIsGenerating(true);
-
+    
     setTimeout(() => {
       setIsGenerating(false);
       navigate("/ai-survey");
@@ -161,8 +165,12 @@ const SurveyResearch = () => {
   };
 
   const handleView = (survey: Survey) => {
+<<<<<<< Updated upstream
     setSelectedSurvey(survey);
     setViewModalOpen(true);
+=======
+    console.log("View survey:", survey.id);
+>>>>>>> Stashed changes
   };
 
   const handleAnalytics = (survey: Survey) => {
@@ -173,6 +181,7 @@ const SurveyResearch = () => {
     navigate("/create-survey");
   };
 
+<<<<<<< Updated upstream
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "active":
@@ -186,6 +195,8 @@ const SurveyResearch = () => {
     }
   };
 
+=======
+>>>>>>> Stashed changes
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-[#F7FBFF]">
@@ -198,12 +209,83 @@ const SurveyResearch = () => {
           </header>
           <DashboardHeader headerTitle="Surveys" hideGreeting />
 
+<<<<<<< Updated upstream
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">
             <div className="mb-4 sm:mb-6">
               <div className="rounded-xl border border-[#dce8f5] bg-white px-4 py-4 shadow-sm sm:px-6 sm:py-5">
                 <h2 className="text-md font-semibold text-[#2b3a4f]">
                   Customer Satisfaction Survey
                 </h2>
+=======
+          <main className="flex-1 p-6 overflow-y-auto">
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-foreground mb-6">
+                Customer Satisfaction Survey
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <StatCard
+                  title="Total Responses"
+                  value="1,500"
+                  icon={Users}
+                  iconBgColor="bg-purple-500/10"
+                  iconColor="text-purple-500"
+                  badges={[
+                    { label: "Completed", count: 1100, variant: "success" },
+                    { label: "In Progress", count: 200, variant: "warning" },
+                    { label: "Abandoned", count: 200, variant: "destructive" },
+                  ]}
+                />
+
+                <DonutMetricCard
+                  title="Avg Response Rate"
+                  icon={TrendingUp}
+                  percentage={72}
+                  chartColor="#3B82F6"
+                  iconBgColor="bg-orange-500/10"
+                  iconColor="text-orange-500"
+                  data={[
+                    { label: "Total Invite Sent", value: "1,500" },
+                    {
+                      label: "Total Responded",
+                      value: "1,300",
+                      color: "text-blue-500",
+                    },
+                  ]}
+                />
+
+                <DonutMetricCard
+                  title="Completion Rate"
+                  icon={CheckCircle2}
+                  percentage={80}
+                  chartColor="#22C55E"
+                  remainingColor="#EF4444"
+                  iconBgColor="bg-green-500/10"
+                  iconColor="text-green-500"
+                  data={[
+                    {
+                      label: "Completed",
+                      value: "1,300",
+                      color: "text-green-500",
+                    },
+                    { label: "Abandoned", value: "200", color: "text-red-500" },
+                  ]}
+                />
+
+                <StatCard
+                  title="Country Reach"
+                  value="16"
+                  icon={Globe2}
+                  iconBgColor="bg-blue-500/10"
+                  iconColor="text-blue-500"
+                  badges={[
+                    { label: "Africa", count: 5, variant: "secondary" },
+                    { label: "Asia", count: 3, variant: "secondary" },
+                    { label: "Europe", count: 3, variant: "secondary" },
+                    { label: "America", count: 4, variant: "secondary" },
+                  ]}
+                />
+>>>>>>> Stashed changes
               </div>
             </div>
 
@@ -256,6 +338,22 @@ const SurveyResearch = () => {
                 ))}
               </div>
             </div>
+<<<<<<< Updated upstream
+=======
+
+            <div className="space-y-3 mb-8">
+              {surveys.map((survey) => (
+                <SurveyListItem 
+                  key={survey.id} 
+                  survey={survey}
+                  onView={handleView}
+                  onAnalytics={handleAnalytics}
+                  onEdit={handleEdit}
+                />
+              ))}
+            </div>
+
+>>>>>>> Stashed changes
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
@@ -305,8 +403,13 @@ const SurveyResearch = () => {
 
             <div>
               <Label>Description</Label>
+<<<<<<< Updated upstream
               <textarea
                 className="w-full border rounded-md p-2 mt-2 h-24 bg-background text-foreground"
+=======
+              <textarea 
+                className="w-full border rounded-md p-2 mt-2 h-24 bg-background text-foreground" 
+>>>>>>> Stashed changes
                 placeholder="Describe your survey..."
               />
             </div>

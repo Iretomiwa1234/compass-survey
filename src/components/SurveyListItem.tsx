@@ -20,12 +20,16 @@ interface SurveyListItemProps {
   onEdit?: (survey: Survey) => void;
 }
 
+<<<<<<< Updated upstream
 export const SurveyListItem = ({
   survey,
   onView,
   onAnalytics,
   onEdit,
 }: SurveyListItemProps) => {
+=======
+export const SurveyListItem = ({ survey, onView, onAnalytics, onEdit }: SurveyListItemProps) => {
+>>>>>>> Stashed changes
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "active":
@@ -83,7 +87,11 @@ export const SurveyListItem = ({
                 <Button
                   variant="default"
                   size="sm"
+<<<<<<< Updated upstream
                   className="gap-2 bg-[#EDF3FF] hover:bg-muted text-[#185287]"
+=======
+                  className="gap-2 bg-[#206AB5] hover:bg-[#185287] text-white"
+>>>>>>> Stashed changes
                   onClick={() => onView?.(survey)}
                 >
                   <Eye className="w-3.5 h-3.5" />
