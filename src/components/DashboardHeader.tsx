@@ -22,7 +22,7 @@ export function DashboardHeader({
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    navigate("/auth");
+    navigate("/");
   };
 
   return (

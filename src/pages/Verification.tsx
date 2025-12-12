@@ -25,7 +25,7 @@ const Verification = () => {
   const handleVerify = () => {
     setIsVerifying(true);
     setTimeout(() => {
-      navigate("/");
+      navigate("/dashboard");
     }, 3000);
   };
 
@@ -162,7 +162,7 @@ const Verification = () => {
             <p className="text-center text-sm text-gray-600 pt-2">
               Already Have an account?{" "}
               <button
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/dashboard")}
                 className="text-[#206AB5] font-semibold hover:underline"
               >
                 LOGIN
