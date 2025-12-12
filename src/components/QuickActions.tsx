@@ -244,6 +244,7 @@ export function QuickActions() {
             display: "flex",
             gap: "0.5rem",
             alignItems: "center",
+            zIndex: "-4",
           }}
           className="rounded-full"
         >

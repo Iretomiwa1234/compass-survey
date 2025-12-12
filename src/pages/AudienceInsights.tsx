@@ -217,15 +217,11 @@ const AudienceInsights = () => {
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader />
+          <DashboardHeader hideGreeting headerTitle="Audience Insights" />
 
           <main className="flex-1 p-6 overflow-y-auto mt-[var(--nav-height)]">
-            <div className="mb-8">
-              <h1 className="text-xl font-semibold text-foreground mb-6">
-                Audience Insights
-              </h1>
-
-              <div className="flex flex-col lg:flex-row gap-3 mb-6 items-start lg:items-center">
+            <div className="mb-8 p-3 bg-background rounded-lg">
+              <div className="flex flex-col lg:flex-row gap-3 mb-2 items-start lg:items-center">
                 <div className="flex flex-col sm:flex-row gap-3 flex-1">
                   <div className="relative w-full sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

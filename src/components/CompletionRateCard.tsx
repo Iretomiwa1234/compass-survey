@@ -26,9 +26,9 @@ export function CompletionRateCard({
         {
           label: "Completed",
           value: completedValue,
-          color: "text-[#118C36]",
+          color: "text-[#55B95B]",
         },
-        { label: "Abandoned", value: abandonedValue, color: "text-[#A12D2D]" },
+        { label: "Abandoned", value: abandonedValue, color: "text-[#FF6161]" },
       ]}
     />
   );

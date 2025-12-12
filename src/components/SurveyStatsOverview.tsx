@@ -51,7 +51,7 @@ export function SurveyStatsOverview({
         title="Avg Response Rate"
         icon={TrendingUp}
         percentage={avgResponsePercentage}
-        chartColor="#4D7CB6"
+        chartColor="#6A9CCE"
         iconBgColor="bg-amber-500/10"
         iconColor="text-amber-500"
         rotation={0}

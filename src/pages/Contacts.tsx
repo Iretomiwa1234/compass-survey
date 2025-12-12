@@ -261,9 +261,9 @@ const Contacts = () => {
 
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto bg-background p-3 rounded-lg">
                   <table className="w-full">
-                    <thead className="border-b bg-gray-50/80">
+                    <thead className="bg-[#F8FBFF]">
                       <tr>
                         <th className="text-left p-4 font-medium text-sm text-gray-600">
                           Name
@@ -289,7 +289,7 @@ const Contacts = () => {
                       {contacts.map((contact, idx) => (
                         <tr
                           key={idx}
-                          className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                          className="border-b border-gray-100 odd:bg-white even:bg-[#F8FBFF] hover:bg-gray-50/50 transition-colors"
                         >
                           <td className="p-4 font-normal text-gray-900">
                             {contact.name}

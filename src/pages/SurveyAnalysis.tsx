@@ -111,19 +111,13 @@ const SurveyAnalysis = () => {
             <div className="flex-1" />
           </header>
 
-          <DashboardHeader />
+          <DashboardHeader hideGreeting headerTitle="Survey Analysis" />
 
-          <main className="flex-1 p-6 space-y-6 bg-background">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold text-foreground">
-                Survey Analysis
-              </h1>
-            </div>
-
+          <main className="flex-1 p-6 space-y-6">
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="!py-2 px-3">
                 <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                  <h2 className="text-lg font-medium">
+                  <h2 className="text-md font-normal">
                     Customer Satisfaction Survey
                   </h2>
                   <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">

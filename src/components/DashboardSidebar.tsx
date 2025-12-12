@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   FileText,
   Volume2,
-  Users,
   TrendingUp,
   BarChart3,
   Activity,
@@ -13,6 +12,10 @@ import {
   User,
 } from "lucide-react";
 import compassLogo from "/assets/Compass-logo.png?url";
+import audienceInsightsIcon from "/assets/audienceInsights-icon.svg?url";
+import channelsIcon from "/assets/channels-icon.svg?url";
+import socialInsightsIcon from "/assets/socialInsights-icon.svg?url";
+import surveyAnalysisIcon from "/assets/surveyAnalysis-icon.svg?url";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -27,6 +30,22 @@ import {
   useSidebar,
   SidebarHeader,
 } from "@/components/ui/sidebar";
+
+// Component for rendering SVG icons with dynamic color
+function IconImage({ src, isActive }: { src: string; isActive: boolean }) {
+  return (
+    <img
+      src={src}
+      alt=""
+      className="h-4 w-4"
+      style={{
+        filter: isActive
+          ? "invert(20%) sepia(50%) saturate(1200%) hue-rotate(200deg)"
+          : "invert(53%) sepia(0%) saturate(0%) brightness(97%)",
+      }}
+    />
+  );
+}
 const menuSections = [
   {
     title: "Intelligence Hub",
@@ -39,15 +58,25 @@ const menuSections = [
   {
     title: "Distribution",
     items: [
-      { name: "Channels", icon: TrendingUp, path: "/channels" },
+      { name: "Channels", icon: "image", src: channelsIcon, path: "/channels" },
       { name: "Campaigns", icon: Activity, path: "/campaigns" },
     ],
   },
   {
     title: "Analysis",
     items: [
-      { name: "Survey Analysis", icon: BarChart3, path: "/survey-analysis" },
-      { name: "Social Insights", icon: BarChart3, path: "/social-insights" },
+      {
+        name: "Survey Analysis",
+        icon: "image",
+        src: surveyAnalysisIcon,
+        path: "/survey-analysis",
+      },
+      {
+        name: "Social Insights",
+        icon: "image",
+        src: socialInsightsIcon,
+        path: "/social-insights",
+      },
       { name: "Report", icon: FileBarChart, path: "/report" },
     ],
   },
@@ -55,7 +84,12 @@ const menuSections = [
     title: "Audience",
     items: [
       { name: "Contacts", icon: User, path: "/contacts" },
-      { name: "Audience Insights", icon: Users, path: "/audience-insights" },
+      {
+        name: "Audience Insights",
+        icon: "image",
+        src: audienceInsightsIcon,
+        path: "/audience-insights",
+      },
     ],
   },
 ];
@@ -140,11 +174,15 @@ export function DashboardSidebar() {
                             {isActive && (
                               <div className="absolute left-1 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-[#1F6BB8]" />
                             )}
-                            <item.icon
-                              className={`h-4 w-4 ${
-                                isActive ? "text-[#1F6BB8]" : "text-[#6B7287]"
-                              }`}
-                            />
+                            {item.icon === "image" ? (
+                              <IconImage src={item.src} isActive={isActive} />
+                            ) : (
+                              <item.icon
+                                className={`h-4 w-4 ${
+                                  isActive ? "text-[#1F6BB8]" : "text-[#6B7287]"
+                                }`}
+                              />
+                            )}
                             <span className="leading-[18px]">{item.name}</span>
                           </NavLink>
                         </SidebarMenuButton>
