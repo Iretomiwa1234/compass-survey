@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+
 import {
   Pagination,
   PaginationContent,
@@ -293,53 +293,33 @@ const SurveyResearch = () => {
           <DialogHeader>
             <DialogTitle>Create Survey</DialogTitle>
             <DialogDescription>
-              Let's start with some basic information about your survey.
+              Choose how you want to create your survey.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label>Survey Title</Label>
-              <Input placeholder="Customer feedback" className="mt-2" />
-            </div>
-
-            <div>
-              <Label>Description</Label>
-              <textarea
-                className="w-full border rounded-md p-2 mt-2 h-24 bg-background text-foreground"
-                placeholder="Describe your survey..."
-              />
-            </div>
-
-            <div>
-              <Label>Target Audience</Label>
-              <Select defaultValue="all">
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="All Groups" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Groups</SelectItem>
-                  <SelectItem value="customers">Customers</SelectItem>
-                  <SelectItem value="employees">Employees</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button
-                onClick={handleGenerateWithAI}
-                className="bg-[#206AB5] hover:bg-[#123c67] text-white rounded-[8px] px-[10px] py-[16px]"
-              >
-                <img src={StarIcon} alt="" /> Generate with AI
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/create-survey")}
-                className="bg-white border-[#D2E1F0] text-[#48556B] rounded-[8px] px-[10px] py-[16px]"
-              >
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <button
+              onClick={handleGenerateWithAI}
+              className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-[#206AB5]/30 hover:border-[#206AB5] hover:bg-[#206AB5]/5 transition-all group gap-3"
+            >
+              <div className="p-3 rounded-full bg-[#206AB5]/10 group-hover:bg-[#206AB5]/20 transition-colors">
+                <img src={StarIcon} alt="" className="w-6 h-6" />
+              </div>
+              <span className="font-semibold text-[#206AB5]">
+                Generate with AI
+              </span>
+            </button>
+            <button
+              onClick={() => navigate("/create-survey")}
+              className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all group gap-3"
+            >
+              <div className="p-3 rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors">
+                <Plus className="w-6 h-6 text-gray-600" />
+              </div>
+              <span className="font-semibold text-gray-700">
                 Create Manually
-              </Button>
-            </div>
+              </span>
+            </button>
           </div>
         </DialogContent>
       </Dialog>

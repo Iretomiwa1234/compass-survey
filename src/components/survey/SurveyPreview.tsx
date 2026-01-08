@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 
 interface SurveyPreviewProps {
   onDropType?: (label: string) => void;
+  title?: string;
+  description?: string;
   questions?: Array<{
     id: number;
     label: string;
@@ -17,6 +19,8 @@ interface SurveyPreviewProps {
 
 const SurveyPreview = ({
   onDropType,
+  title = "Survey Title",
+  description = "",
   questions = [],
   onSelectQuestion,
 }: SurveyPreviewProps) => {
@@ -40,12 +44,11 @@ const SurveyPreview = ({
         <div className="rounded-lg border border-[#B5CDE6] overflow-hidden">
           <div className="mb-1 border-b border-[#B5CDE6]">
             <h2 className="text-lg font-normal mb-2 px-6 py-2 text-foreground text-[#3C4759] bg-[#E4EDFF]">
-              Survey Title
+              {title || "Survey Title"}
             </h2>
-            <textarea
-              placeholder="Description will go in here"
-              className="resize-none text-sm text-muted-foreground h-[116px] px-6 py-3 w-full"
-            />
+            <div className="px-6 py-3 min-h-[116px] text-sm text-muted-foreground whitespace-pre-wrap">
+              {description || "Description will go in here"}
+            </div>
           </div>
 
           <div className="flex flex-col gap-2 py-4 px-6">
