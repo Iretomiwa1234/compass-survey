@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 // Pages where QuickActions should be hidden
-const hiddenRoutes = ["/auth", "/verification"];
+const hiddenRoutes = ["/auth", "/login", "/register", "/verification"];
 
 // SVG icon components
 const EditIcon = () => (
@@ -74,10 +74,7 @@ export function QuickActions() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hide on auth-related pages
-  if (hiddenRoutes.includes(location.pathname)) {
-    return null;
-  }
+  const shouldHide = hiddenRoutes.includes(location.pathname);
 
   // offset state (in px)
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -116,6 +113,7 @@ export function QuickActions() {
 
   // pointer event handlers (works for mouse + touch)
   useEffect(() => {
+    if (shouldHide) return;
     const onPointerMove = (ev: PointerEvent) => {
       if (!startRef.current) return;
       // calculate delta
@@ -157,7 +155,7 @@ export function QuickActions() {
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [isDragging]);
+  }, [shouldHide]);
 
   const onPointerDownHandle = (e: React.PointerEvent) => {
     // only start drag using primary button
@@ -202,8 +200,10 @@ export function QuickActions() {
   // determine whether position changed from original
   const isMoved = offset.x !== 0 || offset.y !== 0;
 
-  // style: keep anchored to bottom center, apply translate(-50%) base and then translate(x,y)
-  const transform = `translateX(-50%) translate(${offset.x}px, ${offset.y}px)`;
+  // Hide on auth-related pages
+  if (shouldHide) {
+    return null;
+  }
   const handleCursor = isDragging
     ? "grabbing"
     : showHandle

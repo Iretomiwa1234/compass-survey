@@ -302,7 +302,7 @@ const SurveyResearch = () => {
               onClick={handleGenerateWithAI}
               className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-[#206AB5]/30 hover:border-[#206AB5] hover:bg-[#206AB5]/5 transition-all group gap-3"
             >
-              <div className="p-3 rounded-full bg-[#206AB5]/10 group-hover:bg-[#206AB5]/20 transition-colors">
+              <div className="p-3 rounded-full bg-[#206AB5] group-hover:bg-[#206AB5]/20 transition-colors">
                 <img src={StarIcon} alt="" className="w-6 h-6" />
               </div>
               <span className="font-semibold text-[#206AB5]">

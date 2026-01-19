@@ -1,6 +1,19 @@
-import { ArrowLeft, Eye, Save, Send, Target, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  Save,
+  Send,
+  Target,
+  FileText,
+  Settings,
+  Calendar,
+  Hash,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -27,6 +40,11 @@ import {
 } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const CreateSurvey = () => {
   const navigate = useNavigate();
@@ -36,16 +54,22 @@ const CreateSurvey = () => {
   );
   const [description, setDescription] = useState("");
   const [targetAudience, setTargetAudience] = useState("all");
-  const [questions, setQuestions] = useState<
-    Array<{
-      id: number;
-      label: string;
-      hint?: string;
-      defaultValue?: string;
-      required?: boolean;
-      type?: string;
-    }>
-  >([]);
+  const [maxResponses, setMaxResponses] = useState("500");
+  const [singleResponse, setSingleResponse] = useState("false");
+  const [endDate, setEndDate] = useState("2026-03-31");
+  const [allowEdit, setAllowEdit] = useState("false");
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+
+  type Question = {
+    id: number;
+    label: string;
+    hint?: string;
+    defaultValue?: string;
+    required?: boolean;
+    type?: string;
+  };
+
+  const [questions, setQuestions] = useState<Question[]>([]);
 
   const addQuestion = (label: string) => {
     const id = Date.now();
@@ -61,7 +85,7 @@ const CreateSurvey = () => {
     setSelectedId(id);
   };
 
-  const updateQuestion = (id: number, patch: Partial<any>) => {
+  const updateQuestion = (id: number, patch: Partial<Question>) => {
     setQuestions((s) => s.map((q) => (q.id === id ? { ...q, ...patch } : q)));
   };
 
@@ -129,43 +153,118 @@ const CreateSurvey = () => {
             </div>
 
             {/* Editable Survey Info Bar */}
-            <div className="flex flex-wrap items-center gap-6 bg-white border border-[#E2E8F0] px-6 py-2 mb-4 rounded-[12px] shadow-sm">
-              <div className="flex-1 min-w-[200px]">
-                <Input
-                  value={surveyTitle}
-                  onChange={(e) => setSurveyTitle(e.target.value)}
-                  placeholder="Survey Title"
-                  className="border-none bg-transparent h-8 p-0 focus-visible:ring-0 text-base font-medium text-slate-800 placeholder:text-slate-300"
-                />
+            <Collapsible
+              open={isAdvancedOpen}
+              onOpenChange={setIsAdvancedOpen}
+              className="bg-white border border-[#E2E8F0] mb-4 rounded-[12px] shadow-sm transition-all duration-200"
+            >
+              <div className="flex flex-wrap items-center gap-6 px-6 py-2">
+                <div className="flex-1 min-w-[200px]">
+                  <Input
+                    value={surveyTitle}
+                    onChange={(e) => setSurveyTitle(e.target.value)}
+                    placeholder="Survey Title"
+                    className="border-none bg-transparent h-8 p-0 focus-visible:ring-0 text-base font-medium text-slate-800 placeholder:text-slate-300"
+                  />
+                </div>
+                <div className="h-4 w-[1px] bg-slate-200 hidden md:block" />
+                <div className="flex-[2] min-w-[300px] flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-slate-400 italic" />
+                  <Input
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Add survey description..."
+                    className="border-none bg-transparent h-8 p-0 focus-visible:ring-0 text-sm text-slate-600 placeholder:text-slate-300"
+                  />
+                </div>
+                <div className="h-4 w-[1px] bg-slate-200 hidden md:block" />
+                <div className="w-[160px] flex items-center gap-2">
+                  <Target className="h-4 w-4 text-slate-400" />
+                  <Select
+                    value={targetAudience}
+                    onValueChange={setTargetAudience}
+                  >
+                    <SelectTrigger className="border-none bg-transparent h-8 p-0 focus:ring-0 shadow-none text-sm text-slate-600 hover:bg-transparent">
+                      <SelectValue placeholder="Audience" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Groups</SelectItem>
+                      <SelectItem value="customers">Customers</SelectItem>
+                      <SelectItem value="employees">Employees</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="h-4 w-[1px] bg-slate-200 hidden md:block" />
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-slate-400 hover:text-[#206AB5] hover:bg-slate-50"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </CollapsibleTrigger>
               </div>
-              <div className="h-4 w-[1px] bg-slate-200 hidden md:block" />
-              <div className="flex-[2] min-w-[300px] flex items-center gap-2">
-                <FileText className="h-4 w-4 text-slate-400 italic" />
-                <Input
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add survey description..."
-                  className="border-none bg-transparent h-8 p-0 focus-visible:ring-0 text-sm text-slate-600 placeholder:text-slate-300"
-                />
-              </div>
-              <div className="h-4 w-[1px] bg-slate-200 hidden md:block" />
-              <div className="w-[160px] flex items-center gap-2">
-                <Target className="h-4 w-4 text-slate-400" />
-                <Select
-                  value={targetAudience}
-                  onValueChange={setTargetAudience}
-                >
-                  <SelectTrigger className="border-none bg-transparent h-8 p-0 focus:ring-0 shadow-none text-sm text-slate-600 hover:bg-transparent">
-                    <SelectValue placeholder="Audience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Groups</SelectItem>
-                    <SelectItem value="customers">Customers</SelectItem>
-                    <SelectItem value="employees">Employees</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+
+              <CollapsibleContent>
+                <div className="px-6 pb-6 pt-2 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-500 font-medium flex items-center gap-2">
+                      <Hash className="w-3 h-3" /> Max Responses
+                    </Label>
+                    <Input
+                      type="number"
+                      value={maxResponses}
+                      onChange={(e) => setMaxResponses(e.target.value)}
+                      className="h-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                      placeholder="e.g. 500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-500 font-medium flex items-center gap-2">
+                      <Users className="w-3 h-3" /> Single Response
+                    </Label>
+                    <Select
+                      value={singleResponse}
+                      onValueChange={setSingleResponse}
+                    >
+                      <SelectTrigger className="h-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-500 font-medium flex items-center gap-2">
+                      <Calendar className="w-3 h-3" /> End Date
+                    </Label>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="h-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-500 font-medium flex items-center gap-2">
+                      <ShieldCheck className="w-3 h-3" /> Allow Edit
+                    </Label>
+                    <Select value={allowEdit} onValueChange={setAllowEdit}>
+                      <SelectTrigger className="h-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             <div className="flex flex-1 gap-2 overflow-hidden md:flex-row flex-col">
               <AddInputPanel onSelect={(label) => addQuestion(label)} />
@@ -178,7 +277,7 @@ const CreateSurvey = () => {
               />
               <EditInputPanel
                 selected={questions.find((q) => q.id === selectedId) ?? null}
-                onUpdate={(patch: Partial<any>) =>
+                onUpdate={(patch: Partial<Question>) =>
                   selectedId && updateQuestion(selectedId, patch)
                 }
               />

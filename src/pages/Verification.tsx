@@ -1,17 +1,22 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
+import { toast } from "@/hooks/use-toast";
+import { verifyUser } from "@/lib/auth";
 import maaLogo from "/assets/MAA-Logo.png?url";
 
 const Verification = () => {
   const navigate = useNavigate();
-  const [otp, setOtp] = useState("");
+  const location = useLocation();
+  const initialCode = (() => {
+    const state = location.state as { verificationCode?: string } | null;
+    return typeof state?.verificationCode === "string"
+      ? state.verificationCode
+      : "";
+  })();
+  const [otp, setOtp] = useState(initialCode);
   const [isVerifying, setIsVerifying] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
 
@@ -22,11 +27,36 @@ const Verification = () => {
     }
   }, [resendTimer]);
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
+    const code = otp.trim();
+    if (!code) {
+      toast({
+        title: "Enter your verification code",
+        description: "Please paste the code from your email to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsVerifying(true);
-    setTimeout(() => {
-      navigate("/");
-    }, 3000);
+    try {
+      await verifyUser(code);
+      toast({
+        title: "Account verified",
+        description: "You can now log in with your credentials.",
+      });
+      navigate("/login");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Verification failed";
+      toast({
+        title: "Verification failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleResend = () => {
@@ -88,51 +118,28 @@ const Verification = () => {
             Verify your Account
           </h2>
           <p className="text-center text-sm text-gray-500 mb-8">
-            We've sent a 6-digit code to your mail. Enter it below to continue.
+            We've sent a verification code to your mail. Enter it below to
+            continue.
           </p>
           <div className="space-y-6 max-w-md mx-auto w-full">
-            <div>
+            <div className="text-center">
               <label className="text-sm font-medium text-gray-700 block mb-3">
                 Enter Verification Code
               </label>
-              <div className="flex justify-start gap-2 sm:gap-3">
-                <InputOTP
-                  maxLength={6}
+              <div className="flex justify-center">
+                <Input
+                  type="text"
+                  inputMode="text"
+                  autoComplete="one-time-code"
+                  placeholder="Enter your code"
                   value={otp}
-                  onChange={(value) => setOtp(value)}
-                  className="gap-2 sm:gap-3"
-                >
-                  <InputOTPGroup className="gap-2 sm:gap-3">
-                    <InputOTPSlot
-                      index={0}
-                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
-                    />
-                    <InputOTPSlot
-                      index={1}
-                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
-                    />
-                    <InputOTPSlot
-                      index={2}
-                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
-                    />
-                    <InputOTPSlot
-                      index={3}
-                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
-                    />
-                    <InputOTPSlot
-                      index={4}
-                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
-                    />
-                    <InputOTPSlot
-                      index={5}
-                      className="w-10 h-12 sm:w-12 sm:h-14 text-lg border-gray-200 rounded-md"
-                    />
-                  </InputOTPGroup>
-                </InputOTP>
+                  onChange={(event) => setOtp(event.target.value)}
+                  className="h-12 sm:h-14 text-base sm:text-lg text-center tracking-[0.3em] uppercase"
+                />
               </div>
             </div>
 
-            <p className="text-sm text-gray-600">
+            <p className="text-center text-sm text-gray-600">
               Didn't get code?{" "}
               <button
                 onClick={handleResend}
@@ -152,7 +159,7 @@ const Verification = () => {
 
             <Button
               onClick={handleVerify}
-              disabled={isVerifying || otp.length < 6}
+              disabled={isVerifying || otp.trim().length === 0}
               className="w-full h-12 bg-[#6A9FCA] hover:bg-[#5A8FBA] text-white text-base font-medium disabled:opacity-60"
             >
               {isVerifying && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -162,7 +169,7 @@ const Verification = () => {
             <p className="text-center text-sm text-gray-600 pt-2">
               Already Have an account?{" "}
               <button
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/login")}
                 className="text-[#206AB5] font-semibold hover:underline"
               >
                 LOGIN

@@ -101,7 +101,7 @@ const AudienceInsights = () => {
     URL.revokeObjectURL(url);
   };
 
-  const onSubmitContact = (data: any) => {
+  const onSubmitContact = (data: unknown) => {
     console.log(data);
     toast.success("Contact added successfully");
     setAddContactModalOpen(false);
@@ -391,7 +391,9 @@ const AudienceInsights = () => {
                   <p className="font-medium">{selectedRow.date}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground text-sm">Status</Label>
+                  <Label className="text-muted-foreground text-sm">
+                    Status
+                  </Label>
                   <div className="mt-1">
                     <Badge
                       className={`font-normal border-0 ${
@@ -406,7 +408,9 @@ const AudienceInsights = () => {
                 </div>
               </div>
               <div>
-                <Label className="text-muted-foreground text-sm">Respondent</Label>
+                <Label className="text-muted-foreground text-sm">
+                  Respondent
+                </Label>
                 <p className="font-medium">{selectedRow.respondent}</p>
               </div>
               <div>
@@ -505,7 +509,7 @@ const AudienceInsights = () => {
                 </p>
               )}
             </div>
-          
+
             <div className="space-y-2">
               <Label htmlFor="channel">Preferred Channel *</Label>
               <Select

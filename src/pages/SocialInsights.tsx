@@ -50,7 +50,7 @@ const SocialInsights = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmitContact = (data: any) => {
+  const onSubmitContact = (data: unknown) => {
     // Handle add contact logic here
     console.log(data);
     toast.success("Contact added successfully");
