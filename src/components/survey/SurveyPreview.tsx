@@ -1,4 +1,4 @@
-import { CirclePlus } from "lucide-react";
+import { CirclePlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -9,12 +9,13 @@ interface SurveyPreviewProps {
   questions?: Array<{
     id: number;
     label: string;
-    hint?: string;
-    defaultValue?: string;
+    placeholder?: string;
     required?: boolean;
-    type?: string;
+    type: "text" | "rating";
+    scale?: number;
   }>;
   onSelectQuestion?: (id: number) => void;
+  onRemoveQuestion?: (id: number) => void;
 }
 
 const SurveyPreview = ({
@@ -23,6 +24,7 @@ const SurveyPreview = ({
   description = "",
   questions = [],
   onSelectQuestion,
+  onRemoveQuestion,
 }: SurveyPreviewProps) => {
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -79,26 +81,46 @@ const SurveyPreview = ({
                             <span className="text-rose-600">*</span>
                           ) : null}
                         </div>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onRemoveQuestion?.(q.id);
+                          }}
+                          className="rounded p-1 text-slate-400 hover:text-rose-500"
+                          aria-label="Remove question"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
-                      {q.hint ? (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {q.hint}
-                        </div>
-                      ) : null}
                     </div>
 
                     <div className="p-4">
-                      {q.type === "Multiline text" ? (
-                        <textarea
-                          disabled
-                          value={q.defaultValue ?? ""}
-                          className="w-full h-20 rounded-md border border-input px-3 py-2 text-sm bg-white"
-                        />
+                      {q.type === "rating" ? (
+                        <div className="space-y-3">
+                          <div className="flex gap-2">
+                            {[1, 2, 3, 4, 5].map((num) => (
+                              <button
+                                key={num}
+                                type="button"
+                                disabled
+                                className="flex-1 h-10 rounded font-medium text-sm bg-[#E8F0FB] text-[#206AB5] cursor-default"
+                              >
+                                {num}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-400 px-1">
+                            <span>Not satisfied</span>
+                            <span>Very satisfied</span>
+                          </div>
+                        </div>
                       ) : (
                         <input
-                          disabled
-                          value={q.defaultValue ?? ""}
-                          className="w-full rounded-md border border-[#4583C1] px-3 py-2 text-sm bg-white"
+                          readOnly
+                          value=""
+                          placeholder={q.placeholder ?? ""}
+                          className="w-full rounded-md border border-[#4583C1] px-3 py-2 text-sm bg-white placeholder:text-gray-400"
                         />
                       )}
                     </div>

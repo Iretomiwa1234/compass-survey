@@ -7,6 +7,13 @@ export default defineConfig({
   server: {
     host: "::",
     port: 8000,
+    proxy: {
+      "/compass": {
+        target: "https://pocupine.com",
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
   plugins: [react()],
   resolve: {

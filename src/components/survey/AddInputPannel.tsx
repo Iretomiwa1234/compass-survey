@@ -36,12 +36,9 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
             <InputTypeButton
               icon={Type}
               label="Single line text"
-              onClick={() => onSelect?.("Question")}
+              onClick={() => onSelect?.("text")}
               onDragStart={(e) =>
-                e.dataTransfer.setData(
-                  "application/x-inputtype",
-                  "Single line text"
-                )
+                e.dataTransfer.setData("application/x-inputtype", "text")
               }
             />
             <InputTypeButton
@@ -59,7 +56,7 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
               onDragStart={(e) =>
                 e.dataTransfer.setData(
                   "application/x-inputtype",
-                  "Multiline text"
+                  "Multiline text",
                 )
               }
             />
@@ -70,7 +67,7 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
               onDragStart={(e) =>
                 e.dataTransfer.setData(
                   "application/x-inputtype",
-                  "Date and Time"
+                  "Date and Time",
                 )
               }
             />
@@ -137,7 +134,7 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
               onDragStart={(e) =>
                 e.dataTransfer.setData(
                   "application/x-inputtype",
-                  "Single Select"
+                  "Single Select",
                 )
               }
             />
@@ -148,7 +145,7 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
               onDragStart={(e) =>
                 e.dataTransfer.setData(
                   "application/x-inputtype",
-                  "Single Select Grid"
+                  "Single Select Grid",
                 )
               }
             />
@@ -159,7 +156,7 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
               onDragStart={(e) =>
                 e.dataTransfer.setData(
                   "application/x-inputtype",
-                  "Multiple Select"
+                  "Multiple Select",
                 )
               }
             />
@@ -170,7 +167,7 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
               onDragStart={(e) =>
                 e.dataTransfer.setData(
                   "application/x-inputtype",
-                  "Likert Scale"
+                  "Likert Scale",
                 )
               }
             />
@@ -185,9 +182,9 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
             <InputTypeButton
               icon={Star}
               label="Rating"
-              onClick={() => onSelect?.("Rating")}
+              onClick={() => onSelect?.("rating")}
               onDragStart={(e) =>
-                e.dataTransfer.setData("application/x-inputtype", "Rating")
+                e.dataTransfer.setData("application/x-inputtype", "rating")
               }
             />
             <InputTypeButton
@@ -229,7 +226,7 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
               onDragStart={(e) =>
                 e.dataTransfer.setData(
                   "application/x-inputtype",
-                  "Location List"
+                  "Location List",
                 )
               }
             />

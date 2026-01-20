@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { StatCard } from "@/components/StatCard";
@@ -7,6 +8,7 @@ import { MentionsCard } from "@/components/MentionsCard";
 import { SentimentChart } from "@/components/SentimentChart";
 import { ActiveSurveys } from "@/components/ActiveSurveys";
 import { FileText, Users } from "lucide-react";
+import { getSurveys, SurveyListItemApi } from "@/lib/auth";
 import {
   SidebarProvider,
   SidebarInset,
@@ -14,6 +16,26 @@ import {
 } from "@/components/ui/sidebar";
 
 const Index = () => {
+  const [surveys, setSurveys] = useState<SurveyListItemApi[]>([]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    getSurveys()
+      .then((response) => {
+        if (!isActive) return;
+        const items = response?.data?.survey?.data ?? [];
+        setSurveys(items);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setSurveys([]);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -63,7 +85,7 @@ const Index = () => {
               <RecentProjects />
             </div>
 
-            <ActiveSurveys />
+            <ActiveSurveys surveys={surveys} />
           </main>
         </SidebarInset>
       </div>

@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 interface Question {
   id: number;
   label: string;
-  hint?: string;
-  defaultValue?: string;
+  placeholder?: string;
   required?: boolean;
-  type?: string;
+  type: "text" | "rating";
+  scale?: number;
 }
 
 interface EditInputPanelProps {
@@ -17,21 +17,21 @@ interface EditInputPanelProps {
 
 const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
   const [label, setLabel] = useState("");
-  const [hint, setHint] = useState("");
-  const [defaultValue, setDefaultValue] = useState("");
+  const [placeholder, setPlaceholder] = useState("");
   const [required, setRequired] = useState(false);
+  const [scale, setScale] = useState(5);
 
   useEffect(() => {
     if (selected) {
       setLabel(selected.label ?? "");
-      setHint(selected.hint ?? "");
-      setDefaultValue(selected.defaultValue ?? "");
+      setPlaceholder(selected.placeholder ?? "");
       setRequired(!!selected.required);
+      setScale(selected.scale ?? 5);
     } else {
       setLabel("");
-      setHint("");
-      setDefaultValue("");
+      setPlaceholder("");
       setRequired(false);
+      setScale(5);
     }
   }, [selected]);
 
@@ -66,29 +66,16 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground">Hint</label>
-              <textarea
-                value={hint}
-                onChange={(e) => {
-                  setHint(e.target.value);
-                  onUpdate?.({ hint: e.target.value });
-                }}
-                placeholder="Hint"
-                className="mt-1 block w-full rounded-md border border-input px-3 py-2 text-sm bg-transparent h-24"
-              />
-            </div>
-
-            <div>
               <label className="text-xs text-muted-foreground">
-                Default Value
+                Placeholder
               </label>
               <input
-                value={defaultValue}
+                value={placeholder}
                 onChange={(e) => {
-                  setDefaultValue(e.target.value);
-                  onUpdate?.({ defaultValue: e.target.value });
+                  setPlaceholder(e.target.value);
+                  onUpdate?.({ placeholder: e.target.value });
                 }}
-                placeholder="Question1"
+                placeholder="Enter placeholder"
                 className="mt-1 block w-full rounded-md border border-input px-3 py-2 text-sm bg-transparent"
               />
             </div>
@@ -109,20 +96,47 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
               </label>
             </div>
 
-            {selected &&
-              selected.type !== "Single line text" &&
-              selected.type !== "Multiline text" && (
-                <Card className="p-3 bg-muted/30 border-0">
-                  <p className="text-sm text-muted-foreground">
-                    No edit options implemented yet for this input type.
-                  </p>
-                </Card>
-              )}
+            {selected?.type === "rating" ? (
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  Rating Scale (1-5)
+                </label>
+                <div className="mt-3 space-y-2">
+                  <div className="flex gap-2 justify-between">
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => {
+                          setScale(num);
+                          onUpdate?.({ scale: num });
+                        }}
+                        className={`flex-1 h-10 rounded font-medium text-sm transition-colors ${
+                          scale === num
+                            ? "bg-[#6AAFE0] text-white"
+                            : "bg-[#E8F0FB] text-[#206AB5] hover:bg-[#D5E6F5]"
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground mt-2 px-1">
+                    <span>Not satisfied</span>
+                    <span>Very satisfied</span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() =>
                   selected &&
-                  onUpdate?.({ label, hint, defaultValue, required })
+                  onUpdate?.({
+                    label,
+                    placeholder,
+                    required,
+                    ...(selected.type === "rating" ? { scale } : {}),
+                  })
                 }
                 className="inline-flex items-center rounded bg-[#206AB5] px-3 py-1.5 text-sm text-white"
               >

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -30,7 +30,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Plus, Calendar, Target, FileText, Users } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Calendar,
+  Target,
+  FileText,
+  Users,
+  SearchX,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,116 +46,21 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-const surveys: Survey[] = [
-  {
-    id: "1",
-    title: "Customer Satisfaction Survey",
-    status: "Active",
-    totalResponse: 1520,
-    responseRate: 68,
-    createdDate: "20/09/2025",
-    description:
-      "Gather feedback on customer satisfaction with our products and services.",
-    targetAudience: "Customers",
-  },
-  {
-    id: "2",
-    title: "Product Feedback Collection",
-    status: "Draft",
-    totalResponse: 0,
-    responseRate: 0,
-    createdDate: "22/09/2025",
-    description: "Collect feedback on new product features and improvements.",
-    targetAudience: "All Groups",
-  },
-  {
-    id: "3",
-    title: "Employee Engagement Study",
-    status: "Closed",
-    totalResponse: 1520,
-    responseRate: 68,
-    createdDate: "20/09/2025",
-    description: "Measure employee engagement and satisfaction levels.",
-    targetAudience: "Employees",
-  },
-  {
-    id: "4",
-    title: "Product Market Survey",
-    status: "Closed",
-    totalResponse: 1520,
-    responseRate: 68,
-    createdDate: "20/09/2025",
-    description: "Analyze market trends and product positioning.",
-    targetAudience: "Customers",
-  },
-  {
-    id: "5",
-    title: "Useability Study",
-    status: "Closed",
-    totalResponse: 1490,
-    responseRate: 78,
-    createdDate: "19/09/2025",
-    description: "Test user experience and interface usability.",
-    targetAudience: "All Groups",
-  },
-  {
-    id: "6",
-    title: "Customer Product Feedback",
-    status: "Closed",
-    totalResponse: 520,
-    responseRate: 58,
-    createdDate: "17/09/2025",
-    description: "Gather customer opinions on product quality.",
-    targetAudience: "Customers",
-  },
-  {
-    id: "7",
-    title: "Webinar Follow-Up Survey",
-    status: "Closed",
-    totalResponse: 1220,
-    responseRate: 82,
-    createdDate: "15/09/2025",
-    description: "Collect feedback from webinar attendees.",
-    targetAudience: "All Groups",
-  },
-  {
-    id: "8",
-    title: "Product Concept Testing",
-    status: "Closed",
-    totalResponse: 20,
-    responseRate: 38,
-    createdDate: "12/09/2025",
-    description: "Test new product concepts with target audience.",
-    targetAudience: "Customers",
-  },
-  {
-    id: "9",
-    title: "Speaker and Session Rating",
-    status: "Closed",
-    totalResponse: 450,
-    responseRate: 58,
-    createdDate: "10/09/2025",
-    description: "Rate conference speakers and sessions.",
-    targetAudience: "All Groups",
-  },
-  {
-    id: "10",
-    title: "Customer Product Feedback",
-    status: "Closed",
-    totalResponse: 620,
-    responseRate: 65,
-    createdDate: "6/09/2025",
-    description: "Ongoing customer feedback collection.",
-    targetAudience: "Customers",
-  },
-];
+import { getSurveys } from "@/lib/auth";
+import { Loader } from "@/components/ui/loader";
+import { EmptyState } from "@/components/survey/EmptyState";
 
 const SurveyResearch = () => {
   const [open, setOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
+  const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [isLoadingSurveys, setIsLoadingSurveys] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
 
   const handleGenerateWithAI = () => {
@@ -170,7 +83,12 @@ const SurveyResearch = () => {
   };
 
   const handleEdit = (survey: Survey) => {
-    navigate("/create-survey");
+    navigate("/create-survey", {
+      state: {
+        surveyId: survey.id,
+        title: survey.title,
+      },
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -185,6 +103,76 @@ const SurveyResearch = () => {
         return "bg-gray-100 text-gray-600 border-gray-200";
     }
   };
+
+  useEffect(() => {
+    let isActive = true;
+    setIsLoadingSurveys(true);
+
+    getSurveys(currentPage)
+      .then((response) => {
+        if (!isActive) return;
+        const data = response?.data?.survey?.data ?? [];
+        const mapped = data.map((item) => {
+          const completion = Number.parseFloat(
+            item.completion_percentage || "0",
+          );
+          const status = item.status || "draft";
+          const formattedStatus =
+            status.charAt(0).toUpperCase() + status.slice(1);
+          return {
+            id: String(item.survey_id),
+            title: item.title,
+            status: formattedStatus,
+            totalResponse: item.total_responses,
+            responseRate: Number.isNaN(completion) ? 0 : completion,
+            createdDate: item.created_at,
+          };
+        });
+
+        setSurveys(mapped);
+        setLastPage(response?.data?.survey?.last_page ?? 1);
+        setIsLoadingSurveys(false);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setSurveys([]);
+        setLastPage(1);
+        setIsLoadingSurveys(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentPage]);
+
+  const filteredSurveys = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return surveys.filter((survey) => {
+      const matchesStatus =
+        statusFilter === "all" || survey.status.toLowerCase() === statusFilter;
+      const matchesSearch =
+        query.length === 0 || survey.title.toLowerCase().includes(query);
+      return matchesStatus && matchesSearch;
+    });
+  }, [surveys, searchTerm, statusFilter]);
+
+  const pages = useMemo(() => {
+    const total = Math.max(1, lastPage);
+    const current = Math.min(Math.max(1, currentPage), total);
+
+    if (total <= 5) {
+      return Array.from({ length: total }, (_, idx) => idx + 1);
+    }
+
+    const pageSet = new Set<number>();
+    pageSet.add(1);
+    pageSet.add(total);
+    pageSet.add(current);
+    pageSet.add(Math.max(1, current - 1));
+    pageSet.add(Math.min(total, current + 1));
+
+    return Array.from(pageSet).sort((a, b) => a - b);
+  }, [currentPage, lastPage]);
 
   return (
     <SidebarProvider>
@@ -217,9 +205,11 @@ const SurveyResearch = () => {
                       type="search"
                       placeholder="Search for survey"
                       className="pl-9 bg-background"
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
                     />
                   </div>
-                  <Select defaultValue="all">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-[140px]">
                       <SelectValue
                         placeholder="All Surveys"
@@ -245,41 +235,97 @@ const SurveyResearch = () => {
               </div>
 
               <div className="mb-8 space-y-3">
-                {surveys.map((survey) => (
-                  <SurveyListItem
-                    key={survey.id}
-                    survey={survey}
-                    onView={handleView}
-                    onAnalytics={handleAnalytics}
-                    onEdit={handleEdit}
+                {isLoadingSurveys ? (
+                  Array.from({ length: 4 }).map((_, idx) => (
+                    <div
+                      key={`survey-skeleton-${idx}`}
+                      className="rounded-lg border border-border/50 p-4 animate-pulse"
+                    >
+                      <div className="h-4 w-1/3 rounded bg-muted mb-3" />
+                      <div className="h-3 w-2/3 rounded bg-muted mb-2" />
+                      <div className="h-3 w-1/2 rounded bg-muted" />
+                    </div>
+                  ))
+                ) : filteredSurveys.length > 0 ? (
+                  filteredSurveys.map((survey) => (
+                    <SurveyListItem
+                      key={survey.id}
+                      survey={survey}
+                      onView={handleView}
+                      onAnalytics={handleAnalytics}
+                      onEdit={handleEdit}
+                    />
+                  ))
+                ) : searchTerm || statusFilter !== "all" ? (
+                  <EmptyState
+                    icon="search"
+                    title="No matching surveys"
+                    description={`We couldn't find any surveys matching "${searchTerm}" with status "${statusFilter}".`}
+                    action={{
+                      label: "Clear filters",
+                      onClick: () => {
+                        setSearchTerm("");
+                        setStatusFilter("all");
+                      },
+                    }}
                   />
-                ))}
+                ) : (
+                  <EmptyState
+                    icon="clipboard"
+                    title="No surveys yet"
+                    description="You haven't created any surveys yet. Start by creating your first survey!"
+                    action={{
+                      label: "Create Survey",
+                      onClick: () => setOpen(true),
+                    }}
+                  />
+                )}
               </div>
             </div>
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious href="#" />
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setCurrentPage((prev) => Math.max(1, prev - 1));
+                    }}
+                  />
                 </PaginationItem>
+                {pages.map((page, idx) => {
+                  const prev = pages[idx - 1];
+                  const showEllipsis = prev && page - prev > 1;
+                  return (
+                    <Fragment key={page}>
+                      {showEllipsis ? (
+                        <PaginationItem key={`ellipsis-${page}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      ) : null}
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === currentPage}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            setCurrentPage(page);
+                          }}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </Fragment>
+                  );
+                })}
                 <PaginationItem>
-                  <PaginationLink href="#" isActive>
-                    1
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#">2</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#">3</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#">50</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext href="#" />
+                  <PaginationNext
+                    href="#"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setCurrentPage((prev) => Math.min(lastPage, prev + 1));
+                    }}
+                  />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
@@ -328,7 +374,7 @@ const SurveyResearch = () => {
       <Dialog open={isGenerating} onOpenChange={setIsGenerating}>
         <DialogContent className="max-w-md p-12">
           <div className="flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <Loader size={20} />
             <div>
               <DialogTitle className="text-lg mb-2">Create Survey</DialogTitle>
               <p className="text-sm text-muted-foreground">Generating Survey</p>
@@ -345,7 +391,7 @@ const SurveyResearch = () => {
               {selectedSurvey && (
                 <span
                   className={`px-2.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(
-                    selectedSurvey.status
+                    selectedSurvey.status,
                   )}`}
                 >
                   {selectedSurvey.status}

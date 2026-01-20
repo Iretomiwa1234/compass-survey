@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader } from "@/components/ui/loader";
 import { toast } from "@/hooks/use-toast";
 import { verifyUser } from "@/lib/auth";
 import maaLogo from "/assets/MAA-Logo.png?url";
@@ -162,7 +162,7 @@ const Verification = () => {
               disabled={isVerifying || otp.trim().length === 0}
               className="w-full h-12 bg-[#6A9FCA] hover:bg-[#5A8FBA] text-white text-base font-medium disabled:opacity-60"
             >
-              {isVerifying && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isVerifying && <Loader size={8} className="mr-2" />}
               Verify and Continue
             </Button>
 

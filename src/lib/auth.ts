@@ -67,6 +67,92 @@ export type VerifyResponse = {
   };
 };
 
+export type SurveyQuestionPayload = {
+  id: number;
+  type: "text" | "rating";
+  label: string;
+  placeholder?: string;
+  required?: boolean;
+  scale?: number;
+};
+
+export type CreateSurveyPayload = {
+  title: string;
+  description: string;
+  survey_group: string;
+  status: "draft" | "published";
+  is_published: boolean;
+  max_responses: number;
+  single_response: boolean;
+  end_date: string;
+  allow_edit_after_submit: boolean;
+  questions: SurveyQuestionPayload[];
+};
+
+export type EditSurveyPayload = CreateSurveyPayload;
+
+export type CreateSurveyResponse = {
+  status?: string;
+  message?: string;
+  code?: string;
+  error?: string;
+  data?: unknown;
+};
+
+export type GetSurveysResponse = {
+  status?: string;
+  message?: string;
+  code?: string;
+  error?: string;
+  data?: {
+    survey?: {
+      data?: SurveyListItemApi[];
+      total?: number;
+      per_page?: number;
+      current_page?: number;
+      last_page?: number;
+      [key: string]: unknown;
+    };
+  };
+};
+
+export type SurveyListItemApi = {
+  survey_id: number;
+  title: string;
+  status: string;
+  business_id: string | null;
+  created_at: string;
+  total_responses: number;
+  completed_responses: string;
+  abandoned_responses: string;
+  pending_responses: string;
+  completion_percentage: string;
+};
+
+export type SurveyDetail = {
+  survey_id: number;
+  title: string;
+  description?: string;
+  survey_group?: string;
+  status?: string;
+  is_published?: boolean;
+  max_responses?: number;
+  single_response?: boolean;
+  end_date?: string;
+  allow_edit_after_submit?: boolean;
+  questions?: SurveyQuestionPayload[];
+};
+
+export type GetSurveyDetailResponse = {
+  status?: string;
+  message?: string;
+  code?: string;
+  error?: string;
+  data?: {
+    survey?: SurveyDetail;
+  };
+};
+
 function getBaseUrl() {
   const baseUrl = import.meta.env.VITE_BASE_URL;
   if (!baseUrl) {
@@ -75,6 +161,7 @@ function getBaseUrl() {
   return baseUrl;
 }
 
+// Register User
 export async function registerUser(payload: RegisterPayload) {
   return fetchJson<RegisterResponse>({
     baseUrl: getBaseUrl(),
@@ -84,6 +171,7 @@ export async function registerUser(payload: RegisterPayload) {
   });
 }
 
+// Login User
 export async function loginUser(payload: LoginPayload) {
   return fetchJson<LoginResponse>({
     baseUrl: getBaseUrl(),
@@ -93,6 +181,7 @@ export async function loginUser(payload: LoginPayload) {
   });
 }
 
+// verify Code
 export async function verifyUser(code: string) {
   const trimmed = code.trim();
   return fetchJson<VerifyResponse>({
@@ -101,6 +190,8 @@ export async function verifyUser(code: string) {
     method: "GET",
   });
 }
+
+// Get current signed in User
 export async function getCurrentUser(): Promise<CurrentUser> {
   const token = getAuthToken();
   if (!token) {
@@ -131,4 +222,74 @@ export async function getCurrentUser(): Promise<CurrentUser> {
     }
     throw error;
   }
+}
+
+// Create Survey
+export async function createSurvey(payload: CreateSurveyPayload) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  return fetchJson<CreateSurveyResponse>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/survey/create",
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: payload,
+  });
+}
+
+// Edit Survey
+export async function editSurvey(surveyId: number, payload: EditSurveyPayload) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  return fetchJson<CreateSurveyResponse>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/edit/${surveyId}`,
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: payload,
+  });
+}
+
+// Get Surveys List
+export async function getSurveys(page = 1) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  return fetchJson<GetSurveysResponse>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey?page=${page}`,
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+// Get Survey Detail
+export async function getSurveyDetail(surveyId: number) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  return fetchJson<GetSurveyDetailResponse>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/${surveyId}`,
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 }

@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getAuthToken } from "@/lib/session";
+import { Loader } from "@/components/ui/loader";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -29,7 +30,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-2">
-          <div className="w-8 h-8 border-4 border-[#E2E8F0] border-t-[#206AB5] rounded-full animate-spin" />
+          <Loader size={16} />
           <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
