@@ -79,6 +79,7 @@ export type SurveyQuestionPayload = {
     | "date_time"
     | "email"
     | "website"
+    | "address"
     | "single_select"
     | "multiple_select"
     | "ranking"
@@ -234,7 +235,6 @@ export async function getCurrentUser(): Promise<CurrentUser> {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-        "X-Lace-Session": token,
       },
     });
 
@@ -267,7 +267,6 @@ export async function createSurvey(payload: CreateSurveyPayload) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      "X-Lace-Session": token,
     },
     body: payload,
   });
@@ -286,7 +285,6 @@ export async function editSurvey(surveyId: number, payload: EditSurveyPayload) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      "X-Lace-Session": token,
     },
     body: payload,
   });
@@ -305,7 +303,6 @@ export async function getSurveys(page = 1) {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
-      "X-Lace-Session": token,
     },
   });
 }
@@ -323,7 +320,6 @@ export async function getSurveyDetail(surveyId: number) {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
-      "X-Lace-Session": token,
     },
   });
 }

@@ -21,6 +21,7 @@ interface SurveyPreviewProps {
       | "date_time"
       | "email"
       | "website"
+      | "address"
       | "single_select"
       | "multiple_select"
       | "ranking"
@@ -196,6 +197,33 @@ const SurveyPreview = ({
                           placeholder={q.placeholder ?? ""}
                           className="w-full rounded-md border border-[#4583C1] px-3 py-2 text-sm bg-white placeholder:text-gray-400"
                         />
+                      ) : q.type === "address" ? (
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            readOnly
+                            placeholder="Street"
+                            className="w-full rounded-md border border-[#4583C1] px-3 py-2 text-sm bg-white placeholder:text-gray-400"
+                          />
+                          <input
+                            type="text"
+                            readOnly
+                            placeholder="City"
+                            className="w-full rounded-md border border-[#4583C1] px-3 py-2 text-sm bg-white placeholder:text-gray-400"
+                          />
+                          <input
+                            type="text"
+                            readOnly
+                            placeholder="State"
+                            className="w-full rounded-md border border-[#4583C1] px-3 py-2 text-sm bg-white placeholder:text-gray-400"
+                          />
+                          <input
+                            type="text"
+                            readOnly
+                            placeholder="Country"
+                            className="w-full rounded-md border border-[#4583C1] px-3 py-2 text-sm bg-white placeholder:text-gray-400"
+                          />
+                        </div>
                       ) : q.type === "slider" ? (
                         <div className="space-y-3">
                           <input

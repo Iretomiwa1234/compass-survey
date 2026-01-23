@@ -111,14 +111,14 @@ const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
                 e.dataTransfer.setData("application/x-inputtype", "Date")
               }
             />
-            <InputTypeButton
+            {/* <InputTypeButton
               icon={Grid3x3}
               label="Barcode"
               onClick={() => onSelect?.("Barcode")}
               onDragStart={(e) =>
                 e.dataTransfer.setData("application/x-inputtype", "Barcode")
               }
-            />
+            /> */}
           </div>
         </div>
 

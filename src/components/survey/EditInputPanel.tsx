@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 
 interface Question {
@@ -17,6 +17,7 @@ interface Question {
     | "date_time"
     | "email"
     | "website"
+    | "address"
     | "single_select"
     | "multiple_select"
     | "ranking"
@@ -46,6 +47,7 @@ interface EditInputPanelProps {
 }
 
 const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
+  const prevIdRef = useRef<number | null>(null);
   const [label, setLabel] = useState("");
   const [placeholder, setPlaceholder] = useState("");
   const [required, setRequired] = useState(false);
@@ -71,30 +73,35 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
   const [colsToAdd, setColsToAdd] = useState(1);
 
   useEffect(() => {
+    const questionIdChanged = selected?.id !== prevIdRef.current;
+
     if (selected) {
-      setLabel(selected.label ?? "");
-      setPlaceholder(selected.placeholder ?? "");
-      setRequired(!!selected.required);
-      setScale(selected.scale ?? 5);
-      setMaxLength(selected.max_length);
-      setMinVal(selected.min ?? 0);
-      setMaxVal(selected.max ?? 100);
-      setStepVal(selected.step ?? 1);
-      setMinDate(selected.min_date ?? null);
-      setMaxDate(selected.max_date ?? null);
-      setMinDateTime(selected.min_datetime ?? null);
-      setMaxDateTime(selected.max_datetime ?? null);
-      setOptions(selected.options ?? []);
-      setItems(selected.items ?? []);
-      setRows(selected.rows ?? []);
-      setColumns(selected.columns ?? []);
-      setScaleOptions(selected.scale_options ?? []);
-      setStatements(selected.statements ?? []);
-      setNewOption("");
-      setNewItem("");
-      setNewStatement("");
-      setRowsToAdd(1);
-      setColsToAdd(1);
+      if (questionIdChanged) {
+        setLabel(selected.label ?? "");
+        setPlaceholder(selected.placeholder ?? "");
+        setRequired(!!selected.required);
+        setScale(selected.scale ?? 5);
+        setMaxLength(selected.max_length);
+        setMinVal(selected.min ?? 0);
+        setMaxVal(selected.max ?? 100);
+        setStepVal(selected.step ?? 1);
+        setMinDate(selected.min_date ?? null);
+        setMaxDate(selected.max_date ?? null);
+        setMinDateTime(selected.min_datetime ?? null);
+        setMaxDateTime(selected.max_datetime ?? null);
+        setOptions(selected.options ?? []);
+        setItems(selected.items ?? []);
+        setRows(selected.rows ?? []);
+        setColumns(selected.columns ?? []);
+        setScaleOptions(selected.scale_options ?? []);
+        setStatements(selected.statements ?? []);
+        setNewOption("");
+        setNewItem("");
+        setNewStatement("");
+        setRowsToAdd(1);
+        setColsToAdd(1);
+        prevIdRef.current = selected.id;
+      }
     } else {
       setLabel("");
       setPlaceholder("");
@@ -119,8 +126,9 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
       setNewStatement("");
       setRowsToAdd(1);
       setColsToAdd(1);
+      prevIdRef.current = null;
     }
-  }, [selected]);
+  }, [selected?.id]);
 
   const updateArrayValue = (
     values: string[],

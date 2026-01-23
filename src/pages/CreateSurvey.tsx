@@ -90,6 +90,7 @@ const CreateSurvey = () => {
     | "date_time"
     | "email"
     | "website"
+    | "address"
     | "single_select"
     | "multiple_select"
     | "ranking"
@@ -136,6 +137,7 @@ const CreateSurvey = () => {
     }
     if (normalized === "email") return "email";
     if (normalized === "website") return "website";
+    if (normalized === "address") return "address";
     if (normalized === "single select") return "single_select";
     if (normalized === "multiple select") return "multiple_select";
     if (normalized === "ranking") return "ranking";
@@ -263,9 +265,11 @@ const CreateSurvey = () => {
                 ? "name@example.com"
                 : type === "website"
                   ? "https://example.com"
-                  : type === "drop_down"
-                    ? "Choose..."
-                    : "";
+                  : type === "address"
+                    ? "Street, City, State, Country"
+                    : type === "drop_down"
+                      ? "Choose..."
+                      : "";
       const newQuestion: Question = {
         id: prev.length + 1,
         label: "",

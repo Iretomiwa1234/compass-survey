@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -63,7 +63,7 @@ const SurveyResearch = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
 
-  const handleGenerateWithAI = () => {
+  const handleGenerateWithAI = useCallback(() => {
     setOpen(false);
     setIsGenerating(true);
 
@@ -71,25 +71,31 @@ const SurveyResearch = () => {
       setIsGenerating(false);
       navigate("/ai-survey");
     }, 10000);
-  };
+  }, [navigate]);
 
-  const handleView = (survey: Survey) => {
+  const handleView = useCallback((survey: Survey) => {
     setSelectedSurvey(survey);
     setViewModalOpen(true);
-  };
+  }, []);
 
-  const handleAnalytics = (survey: Survey) => {
-    navigate("/survey-analysis");
-  };
+  const handleAnalytics = useCallback(
+    (survey: Survey) => {
+      navigate("/survey-analysis");
+    },
+    [navigate],
+  );
 
-  const handleEdit = (survey: Survey) => {
-    navigate("/create-survey", {
-      state: {
-        surveyId: survey.id,
-        title: survey.title,
-      },
-    });
-  };
+  const handleEdit = useCallback(
+    (survey: Survey) => {
+      navigate("/create-survey", {
+        state: {
+          surveyId: survey.id,
+          title: survey.title,
+        },
+      });
+    },
+    [navigate],
+  );
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -174,6 +180,19 @@ const SurveyResearch = () => {
     return Array.from(pageSet).sort((a, b) => a - b);
   }, [currentPage, lastPage]);
 
+  const surveyItems = useMemo(() => {
+    if (filteredSurveys.length === 0) return null;
+    return filteredSurveys.map((survey) => (
+      <SurveyListItem
+        key={survey.id}
+        survey={survey}
+        onView={handleView}
+        onAnalytics={handleAnalytics}
+        onEdit={handleEdit}
+      />
+    ));
+  }, [filteredSurveys, handleAnalytics, handleEdit, handleView]);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-[#F7FBFF]">
@@ -246,16 +265,8 @@ const SurveyResearch = () => {
                       <div className="h-3 w-1/2 rounded bg-muted" />
                     </div>
                   ))
-                ) : filteredSurveys.length > 0 ? (
-                  filteredSurveys.map((survey) => (
-                    <SurveyListItem
-                      key={survey.id}
-                      survey={survey}
-                      onView={handleView}
-                      onAnalytics={handleAnalytics}
-                      onEdit={handleEdit}
-                    />
-                  ))
+                ) : surveyItems ? (
+                  surveyItems
                 ) : searchTerm || statusFilter !== "all" ? (
                   <EmptyState
                     icon="search"
@@ -343,30 +354,32 @@ const SurveyResearch = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-4 pt-4">
-            <button
-              onClick={handleGenerateWithAI}
-              className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-[#206AB5]/30 hover:border-[#206AB5] hover:bg-[#206AB5]/5 transition-all group gap-3"
-            >
-              <div className="p-3 rounded-full bg-[#206AB5] group-hover:bg-[#206AB5]/20 transition-colors">
-                <img src={StarIcon} alt="" className="w-6 h-6" />
-              </div>
-              <span className="font-semibold text-[#206AB5]">
-                Generate with AI
-              </span>
-            </button>
-            <button
-              onClick={() => navigate("/create-survey")}
-              className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all group gap-3"
-            >
-              <div className="p-3 rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors">
-                <Plus className="w-6 h-6 text-gray-600" />
-              </div>
-              <span className="font-semibold text-gray-700">
-                Create Manually
-              </span>
-            </button>
-          </div>
+          {open && (
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <button
+                onClick={handleGenerateWithAI}
+                className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-[#206AB5]/30 hover:border-[#206AB5] hover:bg-[#206AB5]/5 transition-all group gap-3"
+              >
+                <div className="p-3 rounded-full bg-[#206AB5] group-hover:bg-[#206AB5]/20 transition-colors">
+                  <img src={StarIcon} alt="" className="w-6 h-6" />
+                </div>
+                <span className="font-semibold text-[#206AB5]">
+                  Generate with AI
+                </span>
+              </button>
+              <button
+                onClick={() => navigate("/create-survey")}
+                className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all group gap-3"
+              >
+                <div className="p-3 rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors">
+                  <Plus className="w-6 h-6 text-gray-600" />
+                </div>
+                <span className="font-semibold text-gray-700">
+                  Create Manually
+                </span>
+              </button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
