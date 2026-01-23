@@ -28,6 +28,7 @@ import EditInputPanel from "@/components/survey/EditInputPanel";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { createSurvey, editSurvey, getSurveyDetail } from "@/lib/auth";
+import type { CreateSurveyPayload } from "@/lib/auth";
 import { Loader } from "@/components/ui/loader";
 import {
   DropdownMenu,
@@ -79,7 +80,22 @@ const CreateSurvey = () => {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isLoadingSurvey, setIsLoadingSurvey] = useState(false);
 
-  type QuestionType = "text" | "rating";
+  type QuestionType =
+    | "text"
+    | "multiline_text"
+    | "rating"
+    | "slider"
+    | "date"
+    | "time"
+    | "date_time"
+    | "email"
+    | "website"
+    | "single_select"
+    | "multiple_select"
+    | "ranking"
+    | "drop_down"
+    | "single_select_grid"
+    | "likert_scale";
 
   type Question = {
     id: number;
@@ -88,13 +104,47 @@ const CreateSurvey = () => {
     required?: boolean;
     type: QuestionType;
     scale?: number;
+    max_length?: number;
+    min?: number;
+    max?: number;
+    step?: number;
+    min_date?: string | null;
+    max_date?: string | null;
+    min_datetime?: string | null;
+    max_datetime?: string | null;
+    options?: string[];
+    items?: string[];
+    rows?: string[];
+    columns?: string[];
+    scale_options?: string[];
+    statements?: string[];
   };
 
   const [questions, setQuestions] = useState<Question[]>([]);
 
   const normalizeType = useCallback((value: string): QuestionType => {
     const normalized = value.trim().toLowerCase();
-    return normalized === "rating" ? "rating" : "text";
+    if (normalized === "rating") return "rating";
+    if (normalized === "multiline_text" || normalized === "multiline text") {
+      return "multiline_text";
+    }
+    if (normalized === "slider") return "slider";
+    if (normalized === "date") return "date";
+    if (normalized === "time") return "time";
+    if (normalized === "date_time" || normalized === "date and time") {
+      return "date_time";
+    }
+    if (normalized === "email") return "email";
+    if (normalized === "website") return "website";
+    if (normalized === "single select") return "single_select";
+    if (normalized === "multiple select") return "multiple_select";
+    if (normalized === "ranking") return "ranking";
+    if (normalized === "drop down" || normalized === "dropdown") {
+      return "drop_down";
+    }
+    if (normalized === "single select grid") return "single_select_grid";
+    if (normalized === "likert scale") return "likert_scale";
+    return "text";
   }, []);
 
   useEffect(() => {
@@ -137,6 +187,36 @@ const CreateSurvey = () => {
             required: q.required ?? false,
             type,
             ...(type === "rating" ? { scale: q.scale ?? 5 } : {}),
+            ...(type === "text" || type === "multiline_text"
+              ? { max_length: q.max_length }
+              : {}),
+            ...(type === "slider"
+              ? { min: q.min ?? 0, max: q.max ?? 100, step: q.step ?? 1 }
+              : {}),
+            ...(type === "date"
+              ? { min_date: q.min_date ?? null, max_date: q.max_date ?? null }
+              : {}),
+            ...(type === "date_time"
+              ? {
+                  min_datetime: q.min_datetime ?? null,
+                  max_datetime: q.max_datetime ?? null,
+                }
+              : {}),
+            ...(type === "single_select" ||
+            type === "multiple_select" ||
+            type === "drop_down"
+              ? { options: q.options ?? [] }
+              : {}),
+            ...(type === "ranking" ? { items: q.items ?? [] } : {}),
+            ...(type === "single_select_grid"
+              ? { rows: q.rows ?? [], columns: q.columns ?? [] }
+              : {}),
+            ...(type === "likert_scale"
+              ? {
+                  scale_options: q.scale_options ?? [],
+                  statements: q.statements ?? [],
+                }
+              : {}),
           };
         });
 
@@ -172,17 +252,58 @@ const CreateSurvey = () => {
   const addQuestion = (value: string) => {
     setQuestions((prev) => {
       const type = normalizeType(value);
-      const next = [
-        ...prev,
-        {
-          id: prev.length + 1,
-          label: "",
-          placeholder: "",
-          required: false,
-          type,
-          ...(type === "rating" ? { scale: 5 } : {}),
-        },
-      ].map((q, idx) => ({ ...q, id: idx + 1 }));
+      const defaultPlaceholder =
+        type === "date"
+          ? "YYYY-MM-DD"
+          : type === "time"
+            ? "HH:MM"
+            : type === "date_time"
+              ? "YYYY-MM-DD HH:MM"
+              : type === "email"
+                ? "name@example.com"
+                : type === "website"
+                  ? "https://example.com"
+                  : type === "drop_down"
+                    ? "Choose..."
+                    : "";
+      const newQuestion: Question = {
+        id: prev.length + 1,
+        label: "",
+        placeholder: defaultPlaceholder,
+        required: false,
+        type,
+        ...(type === "rating" ? { scale: 5 } : {}),
+        ...(type === "slider" ? { min: 0, max: 100, step: 1 } : {}),
+        ...(type === "date" ? { min_date: null, max_date: null } : {}),
+        ...(type === "date_time"
+          ? { min_datetime: null, max_datetime: null }
+          : {}),
+        ...(type === "single_select" ||
+        type === "multiple_select" ||
+        type === "drop_down"
+          ? { options: ["Option 1", "Option 2"] }
+          : {}),
+        ...(type === "ranking" ? { items: ["Item A", "Item B"] } : {}),
+        ...(type === "single_select_grid"
+          ? { rows: ["Row 1", "Row 2"], columns: ["Col 1", "Col 2"] }
+          : {}),
+        ...(type === "likert_scale"
+          ? {
+              scale_options: [
+                "Strongly Disagree",
+                "Disagree",
+                "Neutral",
+                "Agree",
+                "Strongly Agree",
+              ],
+              statements: ["Statement 1"],
+            }
+          : {}),
+      };
+      const next = [...prev, newQuestion].map((q, idx) => ({
+        ...q,
+        id: idx + 1,
+      }));
       setSelectedId(next[next.length - 1]?.id ?? null);
       return next;
     });
@@ -224,7 +345,7 @@ const CreateSurvey = () => {
     }
 
     try {
-      const payload = {
+      const payload: CreateSurveyPayload = {
         title: surveyTitle,
         description,
         survey_group: targetAudience,
@@ -238,9 +359,51 @@ const CreateSurvey = () => {
           id: idx + 1,
           type: q.type,
           label: q.label,
-          placeholder: q.placeholder,
+          placeholder:
+            q.type === "rating" ||
+            q.type === "slider" ||
+            q.type === "single_select" ||
+            q.type === "multiple_select" ||
+            q.type === "ranking" ||
+            q.type === "single_select_grid" ||
+            q.type === "likert_scale"
+              ? undefined
+              : q.placeholder,
           required: q.required ?? false,
           ...(q.type === "rating" ? { scale: q.scale ?? 5 } : {}),
+          ...(q.type === "text" && q.max_length
+            ? { max_length: q.max_length }
+            : {}),
+          ...(q.type === "multiline_text" && q.max_length
+            ? { max_length: q.max_length }
+            : {}),
+          ...(q.type === "slider"
+            ? { min: q.min ?? 0, max: q.max ?? 100, step: q.step ?? 1 }
+            : {}),
+          ...(q.type === "date"
+            ? { min_date: q.min_date ?? null, max_date: q.max_date ?? null }
+            : {}),
+          ...(q.type === "date_time"
+            ? {
+                min_datetime: q.min_datetime ?? null,
+                max_datetime: q.max_datetime ?? null,
+              }
+            : {}),
+          ...(q.type === "single_select" ||
+          q.type === "multiple_select" ||
+          q.type === "drop_down"
+            ? { options: q.options ?? [] }
+            : {}),
+          ...(q.type === "ranking" ? { items: q.items ?? [] } : {}),
+          ...(q.type === "single_select_grid"
+            ? { rows: q.rows ?? [], columns: q.columns ?? [] }
+            : {}),
+          ...(q.type === "likert_scale"
+            ? {
+                scale_options: q.scale_options ?? [],
+                statements: q.statements ?? [],
+              }
+            : {}),
         })),
       };
 

@@ -69,11 +69,40 @@ export type VerifyResponse = {
 
 export type SurveyQuestionPayload = {
   id: number;
-  type: "text" | "rating";
+  type:
+    | "text"
+    | "multiline_text"
+    | "rating"
+    | "slider"
+    | "date"
+    | "time"
+    | "date_time"
+    | "email"
+    | "website"
+    | "single_select"
+    | "multiple_select"
+    | "ranking"
+    | "drop_down"
+    | "single_select_grid"
+    | "likert_scale";
   label: string;
   placeholder?: string;
   required?: boolean;
   scale?: number;
+  max_length?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  min_date?: string | null;
+  max_date?: string | null;
+  min_datetime?: string | null;
+  max_datetime?: string | null;
+  options?: string[];
+  items?: string[];
+  rows?: string[];
+  columns?: string[];
+  scale_options?: string[];
+  statements?: string[];
 };
 
 export type CreateSurveyPayload = {
@@ -205,6 +234,7 @@ export async function getCurrentUser(): Promise<CurrentUser> {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
+        "X-Lace-Session": token,
       },
     });
 
@@ -237,6 +267,7 @@ export async function createSurvey(payload: CreateSurveyPayload) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
+      "X-Lace-Session": token,
     },
     body: payload,
   });
@@ -255,6 +286,7 @@ export async function editSurvey(surveyId: number, payload: EditSurveyPayload) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
+      "X-Lace-Session": token,
     },
     body: payload,
   });
@@ -273,6 +305,7 @@ export async function getSurveys(page = 1) {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
+      "X-Lace-Session": token,
     },
   });
 }
@@ -290,6 +323,7 @@ export async function getSurveyDetail(surveyId: number) {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
+      "X-Lace-Session": token,
     },
   });
 }
