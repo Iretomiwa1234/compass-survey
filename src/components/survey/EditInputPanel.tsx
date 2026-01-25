@@ -10,6 +10,7 @@ interface Question {
   type:
     | "text"
     | "multiline_text"
+    | "number"
     | "rating"
     | "slider"
     | "date"
@@ -18,6 +19,7 @@ interface Question {
     | "email"
     | "website"
     | "address"
+    | "location_list"
     | "single_select"
     | "multiple_select"
     | "ranking"
@@ -39,6 +41,7 @@ interface Question {
   columns?: string[];
   scale_options?: string[];
   statements?: string[];
+  locations?: string[];
 }
 
 interface EditInputPanelProps {
@@ -66,9 +69,11 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
   const [columns, setColumns] = useState<string[]>([]);
   const [scaleOptions, setScaleOptions] = useState<string[]>([]);
   const [statements, setStatements] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
   const [newOption, setNewOption] = useState("");
   const [newItem, setNewItem] = useState("");
   const [newStatement, setNewStatement] = useState("");
+  const [newLocation, setNewLocation] = useState("");
   const [rowsToAdd, setRowsToAdd] = useState(1);
   const [colsToAdd, setColsToAdd] = useState(1);
 
@@ -95,9 +100,11 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
         setColumns(selected.columns ?? []);
         setScaleOptions(selected.scale_options ?? []);
         setStatements(selected.statements ?? []);
+        setLocations(selected.locations ?? []);
         setNewOption("");
         setNewItem("");
         setNewStatement("");
+        setNewLocation("");
         setRowsToAdd(1);
         setColsToAdd(1);
         prevIdRef.current = selected.id;
@@ -121,14 +128,16 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
       setColumns([]);
       setScaleOptions([]);
       setStatements([]);
+      setLocations([]);
       setNewOption("");
       setNewItem("");
       setNewStatement("");
+      setNewLocation("");
       setRowsToAdd(1);
       setColsToAdd(1);
       prevIdRef.current = null;
     }
-  }, [selected?.id]);
+  }, [selected]);
 
   const updateArrayValue = (
     values: string[],
@@ -414,8 +423,16 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
             selected?.type === "multiple_select" ||
             selected?.type === "drop_down") && (
             <div>
-              <div className="flex items-center justify-between">
-                <label className="text-xs text-muted-foreground">Options</label>
+              <label className="text-xs text-muted-foreground mb-2 block">
+                Options
+              </label>
+              <div className="mt-2 flex gap-2 mb-3">
+                <input
+                  value={newOption}
+                  onChange={(e) => setNewOption(e.target.value)}
+                  placeholder="Add option"
+                  className="block flex-1 rounded-md border border-input px-3 py-2 text-sm bg-transparent"
+                />
                 <button
                   type="button"
                   onClick={() => {
@@ -426,24 +443,15 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
                     setNewOption("");
                     onUpdate?.({ options: next });
                   }}
-                  className="inline-flex items-center gap-1 rounded-md border border-input px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                  className="inline-flex items-center rounded-md bg-[#206AB5] px-3 py-2 text-sm font-medium text-white hover:bg-[#1a5399]"
                 >
-                  <Plus className="h-3 w-3" />
                   Add
                 </button>
               </div>
-              <div className="mt-2 flex gap-2">
-                <input
-                  value={newOption}
-                  onChange={(e) => setNewOption(e.target.value)}
-                  placeholder="Add option"
-                  className="block w-full rounded-md border border-input px-3 py-2 text-sm bg-transparent"
-                />
-              </div>
-              <div className="mt-3 space-y-2">
+              <div className="space-y-2">
                 {options.map((option, index) => (
                   <div
-                    key={`${option}-${index}`}
+                    key={`option-${index}`}
                     className="flex items-center gap-2"
                   >
                     <input
@@ -508,8 +516,16 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
 
           {selected?.type === "ranking" && (
             <div>
-              <div className="flex items-center justify-between">
-                <label className="text-xs text-muted-foreground">Items</label>
+              <label className="text-xs text-muted-foreground mb-2 block">
+                Items
+              </label>
+              <div className="mt-2 flex gap-2 mb-3">
+                <input
+                  value={newItem}
+                  onChange={(e) => setNewItem(e.target.value)}
+                  placeholder="Add item"
+                  className="block flex-1 rounded-md border border-input px-3 py-2 text-sm bg-transparent"
+                />
                 <button
                   type="button"
                   onClick={() => {
@@ -520,24 +536,15 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
                     setNewItem("");
                     onUpdate?.({ items: next });
                   }}
-                  className="inline-flex items-center gap-1 rounded-md border border-input px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                  className="inline-flex items-center rounded-md bg-[#206AB5] px-3 py-2 text-sm font-medium text-white hover:bg-[#1a5399]"
                 >
-                  <Plus className="h-3 w-3" />
                   Add
                 </button>
               </div>
-              <div className="mt-2 flex gap-2">
-                <input
-                  value={newItem}
-                  onChange={(e) => setNewItem(e.target.value)}
-                  placeholder="Add item"
-                  className="block w-full rounded-md border border-input px-3 py-2 text-sm bg-transparent"
-                />
-              </div>
-              <div className="mt-3 space-y-2">
+              <div className="space-y-2">
                 {items.map((item, index) => (
                   <div
-                    key={`${item}-${index}`}
+                    key={`item-${index}`}
                     className="flex items-center gap-2"
                   >
                     <input
@@ -635,7 +642,7 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
                 <div className="mt-3 space-y-2">
                   {rows.map((row, index) => (
                     <div
-                      key={`${row}-${index}`}
+                      key={`row-${index}`}
                       className="flex items-center gap-2"
                     >
                       <input
@@ -700,7 +707,7 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
                 <div className="mt-3 space-y-2">
                   {columns.map((column, index) => (
                     <div
-                      key={`${column}-${index}`}
+                      key={`column-${index}`}
                       className="flex items-center gap-2"
                     >
                       <input
@@ -756,10 +763,16 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
                 </div>
               </div>
               <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs text-muted-foreground">
-                    Statements (optional)
-                  </label>
+                <label className="text-xs text-muted-foreground mb-2 block">
+                  Statements (optional)
+                </label>
+                <div className="mt-2 flex gap-2 mb-3">
+                  <input
+                    value={newStatement}
+                    onChange={(e) => setNewStatement(e.target.value)}
+                    placeholder="Add statement"
+                    className="block flex-1 rounded-md border border-input px-3 py-2 text-sm bg-transparent"
+                  />
                   <button
                     type="button"
                     onClick={() => {
@@ -770,24 +783,15 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
                       setNewStatement("");
                       onUpdate?.({ statements: next });
                     }}
-                    className="inline-flex items-center gap-1 rounded-md border border-input px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                    className="inline-flex items-center rounded-md bg-[#206AB5] px-3 py-2 text-sm font-medium text-white hover:bg-[#1a5399]"
                   >
-                    <Plus className="h-3 w-3" />
                     Add
                   </button>
                 </div>
-                <div className="mt-2 flex gap-2">
-                  <input
-                    value={newStatement}
-                    onChange={(e) => setNewStatement(e.target.value)}
-                    placeholder="Add statement"
-                    className="block w-full rounded-md border border-input px-3 py-2 text-sm bg-transparent"
-                  />
-                </div>
-                <div className="mt-3 space-y-2">
+                <div className="space-y-2">
                   {statements.map((statement, index) => (
                     <div
-                      key={`${statement}-${index}`}
+                      key={`statement-${index}`}
                       className="flex items-center gap-2"
                     >
                       <input
@@ -820,6 +824,109 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {selected?.type === "location_list" && (
+            <div>
+              <label className="text-xs text-muted-foreground mb-2 block">
+                Locations
+              </label>
+              <div className="mt-2 flex gap-2 mb-3">
+                <input
+                  value={newLocation}
+                  onChange={(e) => setNewLocation(e.target.value)}
+                  placeholder="Add location"
+                  className="block flex-1 rounded-md border border-input px-3 py-2 text-sm bg-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const value = newLocation.trim();
+                    if (!value) return;
+                    const next = [...locations, value];
+                    setLocations(next);
+                    setNewLocation("");
+                    onUpdate?.({ locations: next });
+                  }}
+                  className="inline-flex items-center rounded-md bg-[#206AB5] px-3 py-2 text-sm font-medium text-white hover:bg-[#1a5399]"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="space-y-2">
+                {locations.map((location, index) => (
+                  <div
+                    key={`location-${index}`}
+                    className="flex items-center gap-2"
+                  >
+                    <input
+                      value={location}
+                      onChange={(e) =>
+                        updateArrayValue(
+                          locations,
+                          index,
+                          e.target.value,
+                          setLocations,
+                          "locations",
+                        )
+                      }
+                      className="block w-full rounded-md border border-input px-3 py-2 text-sm bg-transparent"
+                    />
+                    <div className="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          moveArrayValue(
+                            locations,
+                            index,
+                            index - 1,
+                            setLocations,
+                            "locations",
+                          )
+                        }
+                        className="rounded border border-input bg-transparent p-1 text-muted-foreground hover:text-foreground"
+                        aria-label="Move up"
+                        disabled={index === 0}
+                      >
+                        <ChevronUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          moveArrayValue(
+                            locations,
+                            index,
+                            index + 1,
+                            setLocations,
+                            "locations",
+                          )
+                        }
+                        className="rounded border border-input bg-transparent p-1 text-muted-foreground hover:text-foreground"
+                        aria-label="Move down"
+                        disabled={index === locations.length - 1}
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeArrayValue(
+                          locations,
+                          index,
+                          setLocations,
+                          "locations",
+                        )
+                      }
+                      className="rounded border border-input bg-transparent p-1 text-muted-foreground hover:text-rose-500"
+                      aria-label="Remove"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -871,6 +978,7 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
                         statements,
                       }
                     : {}),
+                  ...(selected.type === "location_list" ? { locations } : {}),
                 })
               }
               className="inline-flex items-center rounded bg-[#206AB5] px-3 py-1.5 text-sm text-white"

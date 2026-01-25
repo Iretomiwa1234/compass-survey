@@ -72,6 +72,7 @@ export type SurveyQuestionPayload = {
   type:
     | "text"
     | "multiline_text"
+    | "number"
     | "rating"
     | "slider"
     | "date"
@@ -80,6 +81,7 @@ export type SurveyQuestionPayload = {
     | "email"
     | "website"
     | "address"
+    | "location_list"
     | "single_select"
     | "multiple_select"
     | "ranking"
@@ -104,6 +106,7 @@ export type SurveyQuestionPayload = {
   columns?: string[];
   scale_options?: string[];
   statements?: string[];
+  locations?: string[];
 };
 
 export type CreateSurveyPayload = {
@@ -207,7 +210,10 @@ export async function loginUser(payload: LoginPayload) {
     baseUrl: getBaseUrl(),
     path: "/v1/login",
     method: "POST",
-    body: payload,
+    body: {
+      ...payload,
+      user_type: "business",
+    },
   });
 }
 

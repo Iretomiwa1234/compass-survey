@@ -68,9 +68,7 @@ const CreateSurvey = () => {
   }, [locationState.surveyId]);
   const isEditing = surveyId !== null;
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [surveyTitle, setSurveyTitle] = useState(
-    "Customer Satisfaction Survey",
-  );
+  const [surveyTitle, setSurveyTitle] = useState("");
   const [description, setDescription] = useState("");
   const [targetAudience, setTargetAudience] = useState("all");
   const [maxResponses, setMaxResponses] = useState("500");
@@ -83,6 +81,7 @@ const CreateSurvey = () => {
   type QuestionType =
     | "text"
     | "multiline_text"
+    | "number"
     | "rating"
     | "slider"
     | "date"
@@ -91,6 +90,7 @@ const CreateSurvey = () => {
     | "email"
     | "website"
     | "address"
+    | "location_list"
     | "single_select"
     | "multiple_select"
     | "ranking"
@@ -119,6 +119,7 @@ const CreateSurvey = () => {
     columns?: string[];
     scale_options?: string[];
     statements?: string[];
+    locations?: string[];
   };
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -129,6 +130,7 @@ const CreateSurvey = () => {
     if (normalized === "multiline_text" || normalized === "multiline text") {
       return "multiline_text";
     }
+    if (normalized === "number") return "number";
     if (normalized === "slider") return "slider";
     if (normalized === "date") return "date";
     if (normalized === "time") return "time";
@@ -138,6 +140,9 @@ const CreateSurvey = () => {
     if (normalized === "email") return "email";
     if (normalized === "website") return "website";
     if (normalized === "address") return "address";
+    if (normalized === "location list" || normalized === "location_list") {
+      return "location_list";
+    }
     if (normalized === "single select") return "single_select";
     if (normalized === "multiple select") return "multiple_select";
     if (normalized === "ranking") return "ranking";
@@ -219,6 +224,9 @@ const CreateSurvey = () => {
                   statements: q.statements ?? [],
                 }
               : {}),
+            ...(type === "location_list"
+              ? { locations: q.locations ?? [] }
+              : {}),
           };
         });
 
@@ -251,7 +259,7 @@ const CreateSurvey = () => {
     };
   }, [isEditing, surveyId, normalizeType]);
 
-  const addQuestion = (value: string) => {
+  const addQuestion = (value: string, insertIndex?: number) => {
     setQuestions((prev) => {
       const type = normalizeType(value);
       const defaultPlaceholder =
@@ -261,15 +269,19 @@ const CreateSurvey = () => {
             ? "HH:MM"
             : type === "date_time"
               ? "YYYY-MM-DD HH:MM"
-              : type === "email"
-                ? "name@example.com"
-                : type === "website"
-                  ? "https://example.com"
-                  : type === "address"
-                    ? "Street, City, State, Country"
-                    : type === "drop_down"
-                      ? "Choose..."
-                      : "";
+              : type === "number"
+                ? "Enter a number"
+                : type === "email"
+                  ? "name@example.com"
+                  : type === "website"
+                    ? "https://example.com"
+                    : type === "address"
+                      ? "Street, City, State, Country"
+                      : type === "location_list"
+                        ? "Search locations..."
+                        : type === "drop_down"
+                          ? "Choose..."
+                          : "";
       const newQuestion: Question = {
         id: prev.length + 1,
         label: "",
@@ -303,13 +315,27 @@ const CreateSurvey = () => {
               statements: ["Statement 1"],
             }
           : {}),
+        ...(type === "location_list"
+          ? { locations: ["Location A", "Location B"] }
+          : {}),
       };
-      const next = [...prev, newQuestion].map((q, idx) => ({
+      const next = [...prev];
+      if (typeof insertIndex === "number") {
+        const safeIndex = Math.max(0, Math.min(insertIndex, next.length));
+        next.splice(safeIndex, 0, newQuestion);
+      } else {
+        next.push(newQuestion);
+      }
+      const reindexed = next.map((q, idx) => ({
         ...q,
         id: idx + 1,
       }));
-      setSelectedId(next[next.length - 1]?.id ?? null);
-      return next;
+      const selectedIndex =
+        typeof insertIndex === "number"
+          ? Math.max(0, Math.min(insertIndex, reindexed.length - 1))
+          : reindexed.length - 1;
+      setSelectedId(reindexed[selectedIndex]?.id ?? null);
+      return reindexed;
     });
   };
 
@@ -407,6 +433,9 @@ const CreateSurvey = () => {
                 scale_options: q.scale_options ?? [],
                 statements: q.statements ?? [],
               }
+            : {}),
+          ...(q.type === "location_list"
+            ? { locations: q.locations ?? [] }
             : {}),
         })),
       };
@@ -620,7 +649,9 @@ const CreateSurvey = () => {
                 <div className="flex flex-1 gap-2 overflow-hidden md:flex-row flex-col">
                   <AddInputPanel onSelect={(label) => addQuestion(label)} />
                   <SurveyPreview
-                    onDropType={(label) => addQuestion(label)}
+                    onDropType={(label, insertIndex) =>
+                      addQuestion(label, insertIndex)
+                    }
                     questions={questions}
                     title={surveyTitle}
                     description={description}

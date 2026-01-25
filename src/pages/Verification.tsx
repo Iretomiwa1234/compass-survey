@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
@@ -9,14 +9,7 @@ import maaLogo from "/assets/MAA-Logo.png?url";
 
 const Verification = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const initialCode = (() => {
-    const state = location.state as { verificationCode?: string } | null;
-    return typeof state?.verificationCode === "string"
-      ? state.verificationCode
-      : "";
-  })();
-  const [otp, setOtp] = useState(initialCode);
+  const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
 

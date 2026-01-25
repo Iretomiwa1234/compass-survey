@@ -194,18 +194,12 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
       });
     },
     onSuccess: (response) => {
-      const verificationCode = response?.data?.verification_code;
       toast({
         title: "Welcome aboard!",
         description:
           "Your account has been created successfully. Please check your email to verify your account.",
       });
-      navigate("/verification", {
-        state: {
-          verificationCode:
-            typeof verificationCode === "string" ? verificationCode : "",
-        },
-      });
+      navigate("/verification");
     },
     onError: (error: unknown) => {
       toast({
