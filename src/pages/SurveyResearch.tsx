@@ -46,10 +46,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+
 import { getSurveys } from "@/lib/auth";
 import { Loader } from "@/components/ui/loader";
 import { EmptyState } from "@/components/survey/EmptyState";
-
 const SurveyResearch = () => {
   const [open, setOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
