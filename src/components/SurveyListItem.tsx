@@ -7,6 +7,7 @@ export interface Survey {
   id: string;
   title: string;
   status: string;
+  isPublished?: boolean;
   totalResponse: number;
   responseRate: number;
   createdDate: string;
@@ -30,13 +31,14 @@ interface SurveyListItemProps {
 export const SurveyListItem = memo(
   ({ survey, onView, onAnalytics, onEdit }: SurveyListItemProps) => {
     const getStatusColor = (status: string) => {
-      switch (status.toLowerCase()) {
-        case "active":
-          return "bg-green-100 text-green-600 border-green-200";
+      const statusLower = status.toLowerCase();
+      switch (statusLower) {
         case "draft":
           return "bg-orange-100 text-orange-600 border-orange-200";
-        case "closed":
-          return "bg-gray-100 text-gray-600 border-gray-200";
+        case "template":
+          return "bg-purple-100 text-purple-600 border-purple-200";
+        case "published":
+          return "bg-green-100 text-green-600 border-green-200";
         default:
           return "bg-gray-100 text-gray-600 border-gray-200";
       }

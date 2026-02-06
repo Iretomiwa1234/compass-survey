@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -29,9 +30,11 @@ import {
   Check,
   Download,
   X,
+  Inbox,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { getSurveys, SurveyListItemApi } from "@/lib/auth";
 import whatsappChat from "/assets/Whatsapp Chat.png?url";
 
 const Channels = () => {
@@ -39,6 +42,13 @@ const Channels = () => {
   const [qrGenerated, setQrGenerated] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const { toast } = useToast();
+
+  const [surveys, setSurveys] = useState<SurveyListItemApi[]>([]);
+  const [isLoadingSurveys, setIsLoadingSurveys] = useState(false);
+  const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
 
   // Upload states
   const [emailRecipients, setEmailRecipients] = useState("");
@@ -55,6 +65,62 @@ const Channels = () => {
 
   const surveyLink = "https://msurvey123.com/customerfeedback";
   const websiteUrl = "https://msurvey123.com";
+
+  useEffect(() => {
+    let isActive = true;
+    setIsLoadingSurveys(true);
+
+    getSurveys(1)
+      .then((response) => {
+        if (!isActive) return;
+        const items = response?.data?.survey?.data ?? [];
+        setSurveys(items);
+        setIsLoadingSurveys(false);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setSurveys([]);
+        setIsLoadingSurveys(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showSuggestions) return;
+    setIsSearchLoading(true);
+    const timer = window.setTimeout(() => {
+      setIsSearchLoading(false);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchTerm, showSuggestions]);
+
+  const sortedSurveys = useMemo(() => {
+    return [...surveys].sort((a, b) => b.survey_id - a.survey_id);
+  }, [surveys]);
+
+  const selectedSurvey = useMemo(() => {
+    if (selectedSurveyId === null) return null;
+    return surveys.find((survey) => survey.survey_id === selectedSurveyId) || null;
+  }, [selectedSurveyId, surveys]);
+
+  const searchSuggestions = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return [];
+    return surveys
+      .filter((survey) => survey.title.toLowerCase().includes(query))
+      .sort((a, b) => b.survey_id - a.survey_id)
+      .slice(0, 10);
+  }, [searchTerm, surveys]);
+
+  const handleSelectSurvey = (surveyId: number) => {
+    const survey = surveys.find((item) => item.survey_id === surveyId);
+    setSelectedSurveyId(surveyId);
+    setSearchTerm(survey?.title ?? "");
+    setShowSuggestions(false);
+  };
 
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -275,7 +341,7 @@ const Channels = () => {
             {/* Survey Selection Bar */}
             <div className="bg-card rounded-lg p-4 mb-6 flex items-center justify-between">
               <h2 className="text-base font-semibold text-foreground">
-                Customer Satisfaction Survey
+                {selectedSurvey?.title ?? "Select a survey"}
               </h2>
               <div className="flex items-center gap-3">
                 <div className="relative w-[200px]">
@@ -283,30 +349,97 @@ const Channels = () => {
                   <Input
                     placeholder="Search for survey"
                     className="pl-9 h-9 bg-white border border-primary/5"
+                    value={searchTerm}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => {
+                      window.setTimeout(() => setShowSuggestions(false), 150);
+                    }}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setShowSuggestions(true);
+                    }}
                   />
+                  {showSuggestions && (isSearchLoading || searchTerm.trim()) && (
+                    <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 rounded-md border border-border bg-white p-1 shadow-md">
+                      {isSearchLoading ? (
+                        <div className="space-y-2 p-2">
+                          {Array.from({ length: 3 }).map((_, idx) => (
+                            <Skeleton key={`survey-search-skeleton-${idx}`} className="h-6 w-full" />
+                          ))}
+                        </div>
+                      ) : searchSuggestions.length > 0 ? (
+                        searchSuggestions.map((survey) => (
+                          <button
+                            key={survey.survey_id}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => handleSelectSurvey(survey.survey_id)}
+                            className="flex w-full items-center rounded-sm px-2 py-2 text-left text-sm text-foreground hover:bg-accent"
+                          >
+                            {survey.title}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-2 py-2 text-sm text-muted-foreground">
+                          No matching surveys
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <Select defaultValue="customer-satisfaction">
+                <Select
+                  value={selectedSurveyId ? String(selectedSurveyId) : undefined}
+                  onValueChange={(value) => handleSelectSurvey(Number(value))}
+                >
                   <SelectTrigger className="w-[150px] h-9 bg-card border border-border">
                     <SelectValue placeholder="Select Survey" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="customer-satisfaction">
-                      Select Survey
-                    </SelectItem>
-                    <SelectItem value="product-feedback">
-                      Product Feedback
-                    </SelectItem>
-                    <SelectItem value="employee-engagement">
-                      Employee Engagement
-                    </SelectItem>
+                    {isLoadingSurveys && (
+                      <SelectItem value="loading" disabled>
+                        Loading surveys...
+                      </SelectItem>
+                    )}
+                    {!isLoadingSurveys && sortedSurveys.length === 0 && (
+                      <SelectItem value="empty" disabled>
+                        No surveys found
+                      </SelectItem>
+                    )}
+                    {!isLoadingSurveys &&
+                      sortedSurveys.map((survey) => (
+                        <SelectItem
+                          key={survey.survey_id}
+                          value={String(survey.survey_id)}
+                        >
+                          {survey.title}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* Tabs and Action Buttons Row */}
-            <div className="mb-6  bg-white p-4 rounded-lg">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
+            {!selectedSurvey ? (
+              <div className="flex min-h-[50vh] items-center justify-center">
+                <Card className="max-w-md border border-border bg-white shadow-sm">
+                  <CardContent className="p-6 text-center">
+                    <div className="flex justify-center mb-4">
+                      <Inbox className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Select a survey to work on
+                    </h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Choose a survey from the dropdown or search to continue.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <>
+                {/* Tabs and Action Buttons Row */}
+                <div className="mb-6  bg-white p-4 rounded-lg">
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <div className="flex items-center justify-between">
                   <TabsList className="bg-transparent p-0 h-auto gap-1">
                     <TabsTrigger
@@ -787,8 +920,10 @@ Thank you!`}
                     </Card>
                   </div>
                 </TabsContent>
-              </Tabs>
-            </div>
+                  </Tabs>
+                </div>
+              </>
+            )}
           </main>
         </SidebarInset>
       </div>

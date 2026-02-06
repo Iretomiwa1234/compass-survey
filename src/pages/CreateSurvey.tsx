@@ -21,15 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import AddInputPanel from "@/components/survey/AddInputPannel";
 import SurveyPreview from "@/components/survey/SurveyPreview";
 import EditInputPanel from "@/components/survey/EditInputPanel";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { createSurvey, editSurvey, getSurveyDetail } from "@/lib/auth";
+import { ApiError } from "@/lib/api";
 import type { CreateSurveyPayload } from "@/lib/auth";
-import { Loader } from "@/components/ui/loader";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,21 +53,13 @@ import {
 
 const CreateSurvey = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const locationState = useMemo(() => {
-    return (location.state ?? {}) as {
-      surveyId?: string | number;
-      title?: string;
-      description?: string;
-    };
-  }, [location.state]);
-  const surveyId = useMemo(() => {
-    const rawId = locationState.surveyId;
-    if (rawId == null) return null;
-    const parsed = Number(rawId);
+  const { surveyId } = useParams<{ surveyId?: string }>();
+  const parsedSurveyId = useMemo(() => {
+    if (!surveyId) return null;
+    const parsed = Number(surveyId);
     return Number.isNaN(parsed) ? null : parsed;
-  }, [locationState.surveyId]);
-  const isEditing = surveyId !== null;
+  }, [surveyId]);
+  const isEditing = parsedSurveyId !== null;
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [surveyTitle, setSurveyTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -77,6 +70,8 @@ const CreateSurvey = () => {
   const [allowEdit, setAllowEdit] = useState("false");
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isLoadingSurvey, setIsLoadingSurvey] = useState(false);
+  const [showEditBanner, setShowEditBanner] = useState(true);
+  const [invalidQuestionIds, setInvalidQuestionIds] = useState<number[]>([]);
 
   type QuestionType =
     | "text"
@@ -155,81 +150,114 @@ const CreateSurvey = () => {
   }, []);
 
   useEffect(() => {
-    if (locationState.title) {
-      setSurveyTitle(locationState.title);
-    }
-    if (locationState.description) {
-      setDescription(locationState.description);
-    }
-  }, [locationState.description, locationState.title]);
-
-  useEffect(() => {
-    if (!isEditing || !surveyId) return;
+    if (!isEditing || !parsedSurveyId) return;
 
     let isActive = true;
     setIsLoadingSurvey(true);
 
-    getSurveyDetail(surveyId)
+    getSurveyDetail(parsedSurveyId)
       .then((response) => {
         if (!isActive) return;
-        const survey = response?.data?.survey;
+        const surveyPayload = response?.data?.survey as
+          | { data?: Array<Record<string, unknown>> }
+          | Record<string, unknown>
+          | undefined;
+        const survey = Array.isArray(surveyPayload?.data)
+          ? (surveyPayload?.data?.[0] as Record<string, unknown> | undefined)
+          : (surveyPayload as Record<string, unknown> | undefined);
         if (!survey) {
           throw new Error("Survey not found.");
         }
 
-        setSurveyTitle(survey.title || "");
-        setDescription(survey.description || "");
-        setTargetAudience(survey.survey_group || "all");
-        setMaxResponses(String(survey.max_responses ?? 0));
-        setSingleResponse(survey.single_response ? "true" : "false");
-        setEndDate(survey.end_date || "");
-        setAllowEdit(survey.allow_edit_after_submit ? "true" : "false");
+        const surveyTitleValue = (survey.title as string | undefined) ?? "";
+        const descriptionValue =
+          (survey.description as string | undefined) ?? "";
+        const surveyGroupValue =
+          (survey.survey_group as string | undefined) ?? "all";
+        const maxResponsesValue = Number(survey.max_responses ?? 0);
+        const singleResponseValue =
+          Number(survey.single_response ?? 0) === 1 ? "true" : "false";
+        const allowEditValue =
+          Number(survey.allow_edit_after_submit ?? 0) === 1 ? "true" : "false";
+        const rawEndDate = (survey.end_date as string | undefined) ?? "";
+        const normalizedEndDate = rawEndDate ? rawEndDate.split(" ")[0] : "";
 
-        const mappedQuestions = (survey.questions ?? []).map((q, idx) => {
-          const type = normalizeType(q.type);
+        setSurveyTitle(surveyTitleValue);
+        setDescription(descriptionValue);
+        setTargetAudience(surveyGroupValue);
+        setMaxResponses(String(maxResponsesValue));
+        setSingleResponse(singleResponseValue);
+        setEndDate(normalizedEndDate);
+        setAllowEdit(allowEditValue);
+
+        const questionList =
+          (survey.question as Array<Record<string, unknown>> | undefined) ??
+          (survey.questions as Array<Record<string, unknown>> | undefined) ??
+          [];
+
+        const mappedQuestions = questionList.map((q, idx) => {
+          const type = normalizeType(String(q.type ?? ""));
+          const requiredValue =
+            q.required === true || q.required === "1" || q.required === 1;
+          const parsedId = Number(q.id ?? idx + 1);
+          const parsedScale = Number(q.scale ?? 5);
           return {
-            id: q.id ?? idx + 1,
-            label: q.label ?? "",
-            placeholder: q.placeholder ?? "",
-            required: q.required ?? false,
+            id: Number.isNaN(parsedId) ? idx + 1 : parsedId,
+            label: String(q.label ?? ""),
+            placeholder: String(q.placeholder ?? ""),
+            required: requiredValue,
             type,
-            ...(type === "rating" ? { scale: q.scale ?? 5 } : {}),
+            ...(type === "rating"
+              ? { scale: Number.isNaN(parsedScale) ? 5 : parsedScale }
+              : {}),
             ...(type === "text" || type === "multiline_text"
-              ? { max_length: q.max_length }
+              ? { max_length: q.max_length as number | undefined }
               : {}),
             ...(type === "slider"
-              ? { min: q.min ?? 0, max: q.max ?? 100, step: q.step ?? 1 }
+              ? {
+                  min: Number(q.min ?? 0),
+                  max: Number(q.max ?? 100),
+                  step: Number(q.step ?? 1),
+                }
               : {}),
             ...(type === "date"
-              ? { min_date: q.min_date ?? null, max_date: q.max_date ?? null }
+              ? {
+                  min_date: (q.min_date as string | null) ?? null,
+                  max_date: (q.max_date as string | null) ?? null,
+                }
               : {}),
             ...(type === "date_time"
               ? {
-                  min_datetime: q.min_datetime ?? null,
-                  max_datetime: q.max_datetime ?? null,
+                  min_datetime: (q.min_datetime as string | null) ?? null,
+                  max_datetime: (q.max_datetime as string | null) ?? null,
                 }
               : {}),
             ...(type === "single_select" ||
             type === "multiple_select" ||
             type === "drop_down"
-              ? { options: q.options ?? [] }
+              ? { options: (q.options as string[] | undefined) ?? [] }
               : {}),
-            ...(type === "ranking" ? { items: q.items ?? [] } : {}),
+            ...(type === "ranking"
+              ? { items: (q.items as string[] | undefined) ?? [] }
+              : {}),
             ...(type === "single_select_grid"
-              ? { rows: q.rows ?? [], columns: q.columns ?? [] }
+              ? {
+                  rows: (q.rows as string[] | undefined) ?? [],
+                  columns: (q.columns as string[] | undefined) ?? [],
+                }
               : {}),
             ...(type === "likert_scale"
               ? {
-                  scale_options: q.scale_options ?? [],
-                  statements: q.statements ?? [],
+                  scale_options:
+                    (q.scale_options as string[] | undefined) ?? [],
+                  statements: (q.statements as string[] | undefined) ?? [],
                 }
               : {}),
             ...(type === "location_list"
-              ? { locations: q.locations ?? [] }
+              ? { locations: (q.locations as string[] | undefined) ?? [] }
               : {}),
           };
         });
-
         const ordered = mappedQuestions.map((q, idx) => ({
           ...q,
           id: idx + 1,
@@ -257,7 +285,7 @@ const CreateSurvey = () => {
     return () => {
       isActive = false;
     };
-  }, [isEditing, surveyId, normalizeType]);
+  }, [isEditing, parsedSurveyId, normalizeType]);
 
   const addQuestion = (value: string, insertIndex?: number) => {
     setQuestions((prev) => {
@@ -341,12 +369,16 @@ const CreateSurvey = () => {
 
   const updateQuestion = (id: number, patch: Partial<Question>) => {
     setQuestions((s) => s.map((q) => (q.id === id ? { ...q, ...patch } : q)));
+    if (patch.label !== undefined && patch.label.trim() !== "") {
+      setInvalidQuestionIds((prev) => prev.filter((qid) => qid !== id));
+    }
   };
 
   const removeQuestion = (id: number) => {
     setQuestions((prev) =>
       prev.filter((q) => q.id !== id).map((q, idx) => ({ ...q, id: idx + 1 })),
     );
+    setInvalidQuestionIds((prev) => prev.filter((qid) => qid !== id));
     setSelectedId((prev) => {
       if (prev == null) return null;
       if (prev === id) return null;
@@ -355,7 +387,77 @@ const CreateSurvey = () => {
     });
   };
 
-  const handleSaveDraft = async () => {
+  const buildPayload = (
+    status: CreateSurveyPayload["status"],
+    isPublished: boolean,
+  ): CreateSurveyPayload => ({
+    title: surveyTitle,
+    description,
+    survey_group: targetAudience,
+    status,
+    is_published: isPublished,
+    max_responses: Number(maxResponses) || 0,
+    single_response: singleResponse === "true",
+    end_date: endDate,
+    allow_edit_after_submit: allowEdit === "true",
+    questions: questions.map((q, idx) => ({
+      id: idx + 1,
+      type: q.type,
+      label: q.label,
+      placeholder:
+        q.type === "rating" ||
+        q.type === "slider" ||
+        q.type === "single_select" ||
+        q.type === "multiple_select" ||
+        q.type === "ranking" ||
+        q.type === "single_select_grid" ||
+        q.type === "likert_scale"
+          ? undefined
+          : q.placeholder,
+      required: q.required ?? false,
+      ...(q.type === "rating" ? { scale: q.scale ?? 5 } : {}),
+      ...(q.type === "text" && q.max_length
+        ? { max_length: q.max_length }
+        : {}),
+      ...(q.type === "multiline_text" && q.max_length
+        ? { max_length: q.max_length }
+        : {}),
+      ...(q.type === "slider"
+        ? { min: q.min ?? 0, max: q.max ?? 100, step: q.step ?? 1 }
+        : {}),
+      ...(q.type === "date"
+        ? { min_date: q.min_date ?? null, max_date: q.max_date ?? null }
+        : {}),
+      ...(q.type === "date_time"
+        ? {
+            min_datetime: q.min_datetime ?? null,
+            max_datetime: q.max_datetime ?? null,
+          }
+        : {}),
+      ...(q.type === "single_select" ||
+      q.type === "multiple_select" ||
+      q.type === "drop_down"
+        ? { options: q.options ?? [] }
+        : {}),
+      ...(q.type === "ranking" ? { items: q.items ?? [] } : {}),
+      ...(q.type === "single_select_grid"
+        ? { rows: q.rows ?? [], columns: q.columns ?? [] }
+        : {}),
+      ...(q.type === "likert_scale"
+        ? {
+            scale_options: q.scale_options ?? [],
+            statements: q.statements ?? [],
+          }
+        : {}),
+      ...(q.type === "location_list" ? { locations: q.locations ?? [] } : {}),
+    })),
+  });
+
+  const handleSave = async (
+    status: CreateSurveyPayload["status"],
+    isPublished: boolean,
+    successLabel: string,
+  ) => {
     if (!surveyTitle.trim()) {
       toast({
         title: "Missing title",
@@ -375,85 +477,59 @@ const CreateSurvey = () => {
     }
 
     try {
-      const payload: CreateSurveyPayload = {
-        title: surveyTitle,
-        description,
-        survey_group: targetAudience,
-        status: "draft",
-        is_published: false,
-        max_responses: Number(maxResponses) || 0,
-        single_response: singleResponse === "true",
-        end_date: endDate,
-        allow_edit_after_submit: allowEdit === "true",
-        questions: questions.map((q, idx) => ({
-          id: idx + 1,
-          type: q.type,
-          label: q.label,
-          placeholder:
-            q.type === "rating" ||
-            q.type === "slider" ||
-            q.type === "single_select" ||
-            q.type === "multiple_select" ||
-            q.type === "ranking" ||
-            q.type === "single_select_grid" ||
-            q.type === "likert_scale"
-              ? undefined
-              : q.placeholder,
-          required: q.required ?? false,
-          ...(q.type === "rating" ? { scale: q.scale ?? 5 } : {}),
-          ...(q.type === "text" && q.max_length
-            ? { max_length: q.max_length }
-            : {}),
-          ...(q.type === "multiline_text" && q.max_length
-            ? { max_length: q.max_length }
-            : {}),
-          ...(q.type === "slider"
-            ? { min: q.min ?? 0, max: q.max ?? 100, step: q.step ?? 1 }
-            : {}),
-          ...(q.type === "date"
-            ? { min_date: q.min_date ?? null, max_date: q.max_date ?? null }
-            : {}),
-          ...(q.type === "date_time"
-            ? {
-                min_datetime: q.min_datetime ?? null,
-                max_datetime: q.max_datetime ?? null,
-              }
-            : {}),
-          ...(q.type === "single_select" ||
-          q.type === "multiple_select" ||
-          q.type === "drop_down"
-            ? { options: q.options ?? [] }
-            : {}),
-          ...(q.type === "ranking" ? { items: q.items ?? [] } : {}),
-          ...(q.type === "single_select_grid"
-            ? { rows: q.rows ?? [], columns: q.columns ?? [] }
-            : {}),
-          ...(q.type === "likert_scale"
-            ? {
-                scale_options: q.scale_options ?? [],
-                statements: q.statements ?? [],
-              }
-            : {}),
-          ...(q.type === "location_list"
-            ? { locations: q.locations ?? [] }
-            : {}),
-        })),
-      };
-
-      if (isEditing && surveyId) {
-        await editSurvey(surveyId, payload);
+      const payload = buildPayload(status, isPublished);
+      if (isEditing && parsedSurveyId) {
+        await editSurvey(parsedSurveyId, payload);
       } else {
         await createSurvey(payload);
       }
+      setInvalidQuestionIds([]);
       toast({
-        title: isEditing ? "Draft updated" : "Draft saved",
+        title: isEditing ? `${successLabel} updated` : `${successLabel} saved`,
         description: isEditing
-          ? "Your survey draft has been updated."
-          : "Your survey has been saved as a draft.",
+          ? `Your survey ${successLabel.toLowerCase()} has been updated.`
+          : `Your survey has been saved as ${successLabel.toLowerCase()}.`,
       });
     } catch (error: unknown) {
+      if (error instanceof ApiError) {
+        const data = error.data;
+        const invalidIndexes: number[] = [];
+        if (data && typeof data === "object") {
+          const payload = data as Record<string, unknown>;
+          const errorData = payload.data;
+          if (errorData && typeof errorData === "object") {
+            Object.keys(errorData as Record<string, unknown>).forEach((key) => {
+              const match = /^questions\.(\d+)\./.exec(key);
+              if (match) {
+                const idx = Number(match[1]);
+                if (!Number.isNaN(idx)) invalidIndexes.push(idx);
+              }
+            });
+          }
+        }
+
+        if (invalidIndexes.length > 0) {
+          const invalidIds = invalidIndexes
+            .map((idx) => questions[idx]?.id)
+            .filter((id): id is number => typeof id === "number");
+          setInvalidQuestionIds(invalidIds);
+          setSelectedId(invalidIds[0] ?? null);
+          const questionNumbers = invalidIndexes
+            .map((idx) => idx + 1)
+            .sort((a, b) => a - b)
+            .join(", ");
+          toast({
+            title: "Missing question details",
+            description: `Please add labels for question${
+              invalidIndexes.length > 1 ? "s" : ""
+            } ${questionNumbers}.`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
       const message =
-        error instanceof Error ? error.message : "Failed to save draft.";
+        error instanceof Error ? error.message : "Failed to save survey.";
       toast({
         title: "Save failed",
         description: message,
@@ -461,6 +537,10 @@ const CreateSurvey = () => {
       });
     }
   };
+
+  const handleSaveDraft = () => handleSave("draft", false, "Draft");
+  const handleSaveTemplate = () => handleSave("template", false, "Template");
+  const handleSavePublish = () => handleSave("publish", true, "Publish");
 
   return (
     <SidebarProvider>
@@ -473,7 +553,7 @@ const CreateSurvey = () => {
             <div className="flex-1" />
           </header>
           <DashboardHeader headerTitle="Create Survey" hideGreeting />
-          <div className="flex flex-col h-[calc(100vh-var(--nav-height))] bg-[#F7FAFE] px-3">
+          <div className="flex flex-col h-[calc(100vh-var(--nav-height))] min-h-0 bg-[#F7FAFE] px-3 py-3">
             <div className="flex items-center justify-between bg-white px-6 py-3 mb-2 rounded-[12px] border border-[#E2E8F0]">
               <div className="flex items-center gap-4">
                 <Button
@@ -513,13 +593,16 @@ const CreateSurvey = () => {
                     <DropdownMenuItem onClick={handleSaveDraft}>
                       Save as Draft
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Save as Template</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSaveTemplate}>
+                      Save as Template
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
                 <Button
                   size="sm"
                   className="gap-2 bg-[#206AB5] text-white rounded-[10px] px-3 py-4 border-none hover:bg-[#185287]"
+                  onClick={handleSavePublish}
                 >
                   <Send className="h-4 w-4" />
                   Publish
@@ -527,11 +610,63 @@ const CreateSurvey = () => {
               </div>
             </div>
             {isEditing && isLoadingSurvey ? (
-              <div className="flex flex-1 items-center justify-center">
-                <Loader />
+              <div className="flex flex-1 flex-col gap-4">
+                <div className="bg-white border border-[#E2E8F0] rounded-[12px] p-4">
+                  <div className="flex flex-wrap items-center gap-6">
+                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-5 w-80" />
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  </div>
+                </div>
+                <div className="flex flex-1 gap-2 overflow-hidden md:flex-row flex-col">
+                  <div className="min-w-[300px] md:max-w-[350px] rounded-lg bg-card p-4 h-[calc(100vh-var(--nav-height))] md:w-[35%] w-full">
+                    <Skeleton className="h-5 w-24 mb-4" />
+                    <div className="space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                  <div className="flex-1 rounded-lg bg-card p-4 h-[calc(100vh-var(--nav-height))]">
+                    <Skeleton className="h-6 w-48 mb-4" />
+                    <div className="space-y-3">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-28 w-full" />
+                      <Skeleton className="h-28 w-full" />
+                      <Skeleton className="h-28 w-full" />
+                    </div>
+                  </div>
+                  <div className="min-w-[300px] md:max-w-[350px] rounded-lg bg-card p-4 h-[calc(100vh-var(--nav-height))] md:w-[35%] w-full">
+                    <Skeleton className="h-5 w-28 mb-4" />
+                    <div className="space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
+                {isEditing && showEditBanner ? (
+                  <div className="mb-3 rounded-[10px] border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-900 flex items-center justify-between">
+                    <span>
+                      You are currently editing this survey. Changes will update
+                      the existing survey.
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-yellow-900 hover:bg-yellow-100"
+                      onClick={() => setShowEditBanner(false)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                ) : null}
                 {/* Editable Survey Info Bar */}
                 <Collapsible
                   open={isAdvancedOpen}
@@ -646,7 +781,7 @@ const CreateSurvey = () => {
                   </CollapsibleContent>
                 </Collapsible>
 
-                <div className="flex flex-1 gap-2 overflow-hidden md:flex-row flex-col">
+                <div className="flex flex-1 gap-2 overflow-hidden md:flex-row flex-col min-h-0 max-h-[750px]">
                   <AddInputPanel onSelect={(label) => addQuestion(label)} />
                   <SurveyPreview
                     onDropType={(label, insertIndex) =>
@@ -655,6 +790,8 @@ const CreateSurvey = () => {
                     questions={questions}
                     title={surveyTitle}
                     description={description}
+                    selectedQuestionId={selectedId}
+                    invalidQuestionIds={invalidQuestionIds}
                     onSelectQuestion={(id: number) => setSelectedId(id)}
                     onRemoveQuestion={removeQuestion}
                   />

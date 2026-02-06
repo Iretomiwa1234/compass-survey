@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 
@@ -179,7 +180,7 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
   };
 
   return (
-    <div className="min-w-[300px] md:max-w-[350px] rounded-lg bg-card p-4 overflow-y-auto h-[calc(100vh-var(--nav-height))] md:w-[35%] w-full">
+    <div className="min-w-[300px] md:max-w-[350px] rounded-lg bg-card p-4 overflow-y-auto h-full md:w-[35%] w-full">
       <h2 className="text-lg font-semibold mb-4">Edit Input</h2>
 
       {!selected ? (
@@ -207,6 +208,17 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
             />
           </div>
 
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-muted-foreground">Required</label>
+            <Switch
+              checked={required}
+              onCheckedChange={(next) => {
+                setRequired(next);
+                onUpdate?.({ required: next });
+              }}
+            />
+          </div>
+
           {selected?.type !== "rating" &&
             selected?.type !== "slider" &&
             selected?.type !== "single_select" &&
@@ -231,72 +243,39 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
               </div>
             )}
 
-          <div className="flex items-start gap-2">
-            <input
-              id="required"
-              type="checkbox"
-              checked={required}
-              onChange={(e) => {
-                setRequired(e.target.checked);
-                onUpdate?.({ required: e.target.checked });
-              }}
-              className="mt-1"
-            />
-            <label htmlFor="required" className="text-sm">
-              Required Question
-            </label>
-          </div>
-
-          {(selected?.type === "text" ||
-            selected?.type === "multiline_text") && (
-            <div>
-              <label className="text-xs text-muted-foreground">
-                Max Length (characters)
-              </label>
-              <input
-                type="number"
-                value={maxLength ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value
-                    ? Number(e.target.value)
-                    : undefined;
-                  setMaxLength(val);
-                  onUpdate?.({ max_length: val });
-                }}
-                placeholder="Leave empty for unlimited"
-                className="mt-1 block w-full rounded-md border border-input px-3 py-2 text-sm bg-transparent"
-              />
-            </div>
-          )}
-
           {selected?.type === "rating" && (
-            <div>
-              <label className="text-xs text-muted-foreground">
-                Rating Scale (1-5)
-              </label>
-              <div className="mt-3 space-y-2">
-                <div className="flex gap-2 justify-between">
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <button
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  Scale (1-10)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={scale}
+                  onChange={(e) => {
+                    const val = Math.max(
+                      1,
+                      Math.min(10, Number(e.target.value)),
+                    );
+                    setScale(val);
+                    onUpdate?.({ scale: val });
+                  }}
+                  className="mt-1 block w-full rounded-md border border-input px-3 py-2 text-sm bg-transparent"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: scale }, (_, idx) => idx + 1).map(
+                  (num) => (
+                    <div
                       key={num}
-                      onClick={() => {
-                        setScale(num);
-                        onUpdate?.({ scale: num });
-                      }}
-                      className={`flex-1 h-10 rounded font-medium text-sm transition-colors ${
-                        scale === num
-                          ? "bg-[#6AAFE0] text-white"
-                          : "bg-[#E8F0FB] text-[#206AB5] hover:bg-[#D5E6F5]"
-                      }`}
+                      className="flex h-9 w-9 items-center justify-center rounded-md bg-muted/40 text-sm text-muted-foreground"
                     >
                       {num}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-2 px-1">
-                  <span>Not satisfied</span>
-                  <span>Very satisfied</span>
-                </div>
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           )}
@@ -930,62 +909,6 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
               </div>
             </div>
           )}
-
-          <div className="pt-2 flex justify-end">
-            <button
-              onClick={() =>
-                selected &&
-                onUpdate?.({
-                  label,
-                  placeholder:
-                    selected.type === "rating" ||
-                    selected.type === "slider" ||
-                    selected.type === "single_select" ||
-                    selected.type === "multiple_select" ||
-                    selected.type === "ranking" ||
-                    selected.type === "drop_down" ||
-                    selected.type === "single_select_grid" ||
-                    selected.type === "likert_scale"
-                      ? undefined
-                      : placeholder,
-                  required,
-                  ...(selected.type === "rating" ? { scale } : {}),
-                  ...(selected.type === "text" ||
-                  selected.type === "multiline_text"
-                    ? { max_length: maxLength }
-                    : {}),
-                  ...(selected.type === "slider"
-                    ? { min: minVal, max: maxVal, step: stepVal }
-                    : {}),
-                  ...(selected.type === "date"
-                    ? { min_date: minDate, max_date: maxDate }
-                    : {}),
-                  ...(selected.type === "date_time"
-                    ? { min_datetime: minDateTime, max_datetime: maxDateTime }
-                    : {}),
-                  ...(selected.type === "single_select" ||
-                  selected.type === "multiple_select" ||
-                  selected.type === "drop_down"
-                    ? { options }
-                    : {}),
-                  ...(selected.type === "ranking" ? { items } : {}),
-                  ...(selected.type === "single_select_grid"
-                    ? { rows, columns }
-                    : {}),
-                  ...(selected.type === "likert_scale"
-                    ? {
-                        scale_options: scaleOptions,
-                        statements,
-                      }
-                    : {}),
-                  ...(selected.type === "location_list" ? { locations } : {}),
-                })
-              }
-              className="inline-flex items-center rounded bg-[#206AB5] px-3 py-1.5 text-sm text-white"
-            >
-              Save
-            </button>
-          </div>
         </div>
       )}
     </div>

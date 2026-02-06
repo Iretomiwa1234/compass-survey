@@ -80,12 +80,7 @@ export function ActiveSurveys({ surveys = [] }: ActiveSurveysProps) {
   };
 
   const handleEdit = (survey: Survey) => {
-    navigate("/create-survey", {
-      state: {
-        surveyId: survey.id,
-        title: survey.name,
-      },
-    });
+    navigate(`/create-survey/edit/${survey.id}`);
   };
 
   const handleCreateNew = () => {

@@ -87,12 +87,7 @@ const SurveyResearch = () => {
 
   const handleEdit = useCallback(
     (survey: Survey) => {
-      navigate("/create-survey", {
-        state: {
-          surveyId: survey.id,
-          title: survey.title,
-        },
-      });
+      navigate(`/create-survey/edit/${survey.id}`);
     },
     [navigate],
   );
@@ -129,6 +124,7 @@ const SurveyResearch = () => {
             id: String(item.survey_id),
             title: item.title,
             status: formattedStatus,
+            isPublished: item.is_published ?? false,
             totalResponse: item.total_responses,
             responseRate: Number.isNaN(completion) ? 0 : completion,
             createdDate: item.created_at,

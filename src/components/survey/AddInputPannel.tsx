@@ -24,7 +24,7 @@ interface AddInputPanelProps {
 
 const AddInputPanel = ({ onSelect }: AddInputPanelProps) => {
   return (
-    <div className="min-w-[300px] bg-card p-4 overflow-y-auto h-[calc(100vh-var(--nav-height))] rounded-lg md:w-[30%] w-full">
+    <div className="min-w-[300px] bg-card p-4 overflow-y-auto h-full rounded-lg md:w-[30%] w-full">
       <h2 className="text-lg font-semibold mb-4">Add Input</h2>
 
       <div className="space-y-6">

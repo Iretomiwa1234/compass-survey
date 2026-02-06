@@ -77,6 +77,14 @@ const App = () => (
               }
             />
             <Route
+              path="/create-survey/edit/:surveyId"
+              element={
+                <ProtectedRoute>
+                  <CreateSurvey />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/ai-survey"
               element={
                 <ProtectedRoute>

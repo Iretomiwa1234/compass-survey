@@ -113,7 +113,7 @@ export type CreateSurveyPayload = {
   title: string;
   description: string;
   survey_group: string;
-  status: "draft" | "published";
+  status: "draft" | "publish" | "template";
   is_published: boolean;
   max_responses: number;
   single_response: boolean;
@@ -153,6 +153,7 @@ export type SurveyListItemApi = {
   survey_id: number;
   title: string;
   status: string;
+  is_published?: boolean;
   business_id: string | null;
   created_at: string;
   total_responses: number;
@@ -288,7 +289,7 @@ export async function editSurvey(surveyId: number, payload: EditSurveyPayload) {
   return fetchJson<CreateSurveyResponse>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/edit/${surveyId}`,
-    method: "POST",
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -322,20 +323,13 @@ export async function getSurveyDetail(surveyId: number) {
 
   return fetchJson<GetSurveyDetailResponse>({
     baseUrl: getBaseUrl(),
-    path: `/v1/survey/${surveyId}`,
+    path: `/v1/survey/questions/${surveyId}`,
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 }
-
-
-
-
-
-
-
 
 // =========================
 // Social Listening
@@ -399,7 +393,7 @@ export async function getSocialListenings(): Promise<SocialListening[]> {
 
 // Create a new Social Listening project
 export async function createSocialListening(
-  payload: CreateSocialListeningPayload
+  payload: CreateSocialListeningPayload,
 ): Promise<SocialListening> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
@@ -419,7 +413,7 @@ export async function createSocialListening(
 // Edit an existing Social Listening project
 export async function editSocialListening(
   projectId: number,
-  payload: EditSocialListeningPayload
+  payload: EditSocialListeningPayload,
 ): Promise<SocialListening> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
@@ -437,9 +431,7 @@ export async function editSocialListening(
 }
 
 // Delete a Social Listening project
-export async function deleteSocialListening(
-  projectId: number
-): Promise<void> {
+export async function deleteSocialListening(projectId: number): Promise<void> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
@@ -450,4 +442,3 @@ export async function deleteSocialListening(
     headers: { Authorization: `Bearer ${token}` },
   });
 }
-

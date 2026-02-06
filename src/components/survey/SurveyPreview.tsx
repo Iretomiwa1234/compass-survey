@@ -48,6 +48,8 @@ interface SurveyPreviewProps {
     statements?: string[];
     locations?: string[];
   }>;
+  selectedQuestionId?: number | null;
+  invalidQuestionIds?: number[];
   onSelectQuestion?: (id: number) => void;
   onRemoveQuestion?: (id: number) => void;
 }
@@ -57,6 +59,8 @@ const SurveyPreview = ({
   title = "Survey Title",
   description = "",
   questions = [],
+  selectedQuestionId = null,
+  invalidQuestionIds = [],
   onSelectQuestion,
   onRemoveQuestion,
 }: SurveyPreviewProps) => {
@@ -86,7 +90,7 @@ const SurveyPreview = ({
     <div
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className="min-w-[500px] flex-1 p-6 overflow-y-auto bg-white rounded-lg md:w-[35%] w-full"
+      className="min-w-[500px] flex-1 p-6 overflow-y-auto bg-white rounded-lg md:w-[35%] w-full h-full"
     >
       <Card className="w-full mx-auto border-accent/50">
         <div className="rounded-lg border border-[#B5CDE6] overflow-hidden">
@@ -128,7 +132,13 @@ const SurveyPreview = ({
                     />
                     <div
                       onClick={() => onSelectQuestion?.(q.id)}
-                      className="cursor-pointer rounded-md p-0"
+                      className={`cursor-pointer rounded-md p-0 border transition-colors ${
+                        invalidQuestionIds.includes(q.id)
+                          ? "bg-rose-50 border-rose-200"
+                          : selectedQuestionId === q.id
+                            ? "bg-[#EDF3FF] border-[#B5CDE6]"
+                            : "border-transparent"
+                      }`}
                     >
                       <div className="px-4 py-2">
                         <div className="flex items-center justify-between">
