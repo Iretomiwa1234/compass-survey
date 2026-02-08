@@ -70,24 +70,24 @@ export type VerifyResponse = {
 export type SurveyQuestionPayload = {
   id: number;
   type:
-    | "text"
-    | "multiline_text"
-    | "number"
-    | "rating"
-    | "slider"
-    | "date"
-    | "time"
-    | "date_time"
-    | "email"
-    | "website"
-    | "address"
-    | "location_list"
-    | "single_select"
-    | "multiple_select"
-    | "ranking"
-    | "drop_down"
-    | "single_select_grid"
-    | "likert_scale";
+  | "text"
+  | "multiline_text"
+  | "number"
+  | "rating"
+  | "slider"
+  | "date"
+  | "time"
+  | "date_time"
+  | "email"
+  | "website"
+  | "address"
+  | "location_list"
+  | "single_select"
+  | "multiple_select"
+  | "ranking"
+  | "drop_down"
+  | "single_select_grid"
+  | "likert_scale";
   label: string;
   placeholder?: string;
   required?: boolean;
@@ -338,7 +338,8 @@ export async function getSurveyDetail(surveyId: number) {
 export type SocialListening = {
   id: number;
   title: string;
-  mentions: number;
+  mentions?: number;
+  business_id?: string;
   created_at: string;
   updated_at?: string;
 };
@@ -381,14 +382,48 @@ export async function getSocialListenings(): Promise<SocialListening[]> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<GetSocialListeningResponse>({
+  const response = await fetchJson<GetSocialListeningResponse | SocialListening[]>({
     baseUrl: getBaseUrl(),
     path: "/v1/project",
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  return response.data || [];
+  console.log("getSocialListenings: Raw response:", response);
+
+  if (!response) {
+    console.log("getSocialListenings: No response, returning empty array");
+    return [];
+  }
+
+  // If it's already an array, return it
+  if (Array.isArray(response)) {
+    console.log("getSocialListenings: Response is array with length:", response.length);
+    return response;
+  }
+
+  // Check if it's an object with a data property
+  if (typeof response === "object" && response !== null) {
+    const anyResponse = response as any;
+    
+    // Handle nested structure: response.data.survey.data
+    if (anyResponse.data?.survey?.data && Array.isArray(anyResponse.data.survey.data)) {
+      console.log("getSocialListenings: Found nested data.survey.data array with length:", anyResponse.data.survey.data.length);
+      return anyResponse.data.survey.data;
+    }
+    
+    // Handle standard wrapped response: response.data
+    if (Array.isArray(anyResponse.data)) {
+      console.log("getSocialListenings: Response has data array with length:", anyResponse.data.length);
+      return anyResponse.data;
+    }
+    
+    // Log the full response structure for debugging
+    console.log("getSocialListenings: Unexpected response structure:", JSON.stringify(response, null, 2));
+  }
+
+  console.error("getSocialListenings: Unexpected response format:", response);
+  throw new Error("Invalid data format received from API");
 }
 
 // Create a new Social Listening project
@@ -398,16 +433,77 @@ export async function createSocialListening(
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<CreateSocialListeningResponse>({
-    baseUrl: getBaseUrl(),
-    path: "/v1/project/create",
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: payload,
-  });
+  console.log("createSocialListening: Sending payload:", payload);
 
-  if (!response.data) throw new Error("Failed to create social listening");
-  return response.data;
+  try {
+    const response = await fetchJson<CreateSocialListeningResponse | SocialListening>({
+      baseUrl: getBaseUrl(),
+      path: "/v1/project/create",
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: payload,
+    });
+
+    console.log("createSocialListening: Raw response:", response);
+    console.log("createSocialListening: Response type:", typeof response);
+    console.log("createSocialListening: Response keys:", response ? Object.keys(response) : 'null');
+
+    if (!response) {
+      // API might not return data, construct from payload
+      console.log("createSocialListening: No response, returning constructed item");
+      return {
+        id: Date.now(), // Generate temporary ID
+        title: payload.title,
+        mentions: payload.mentions,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    // Handle both wrapped and unwrapped responses
+    let data: SocialListening | undefined;
+    const anyResponse = response as any;
+    
+    // Check for nested structure: response.data.survey.data or response.data
+    if (anyResponse.data?.survey?.data && anyResponse.data.survey.data.id) {
+      console.log("createSocialListening: Found nested data.survey.data:", anyResponse.data.survey.data);
+      data = anyResponse.data.survey.data;
+    } else if (anyResponse.data?.id) {
+      console.log("createSocialListening: Found wrapped data:", anyResponse.data);
+      data = anyResponse.data;
+    } else if ((response as SocialListening).id) {
+      console.log("createSocialListening: Found direct response with id");
+      data = response as SocialListening;
+    }
+    
+    // Check for other possible response structures
+    if (!data) {
+      console.log("createSocialListening: Checking alternative structures...");
+      if (anyResponse.project) {
+        data = anyResponse.project;
+      } else if (anyResponse.item) {
+        data = anyResponse.item;
+      } else if (anyResponse.result) {
+        data = anyResponse.result;
+      }
+    }
+
+    if (!data || !data.id) {
+      // If API returns success but no data object, construct from payload
+      console.log("createSocialListening: Constructing response from payload");
+      return {
+        id: Date.now(), // Generate temporary ID
+        title: payload.title,
+        mentions: payload.mentions,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    console.log("createSocialListening: Created item:", data);
+    return data;
+  } catch (error) {
+    console.error("createSocialListening: Error during create:", error);
+    throw error;
+  }
 }
 
 // Edit an existing Social Listening project
@@ -418,16 +514,64 @@ export async function editSocialListening(
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<EditSocialListeningResponse>({
-    baseUrl: getBaseUrl(),
-    path: `/v1/project/${projectId}`,
-    method: "PATCH",
-    headers: { Authorization: `Bearer ${token}` },
-    body: payload,
-  });
+  console.log("editSocialListening: Sending payload:", payload, "for projectId:", projectId);
 
-  if (!response.data) throw new Error("Failed to edit social listening");
-  return response.data;
+  try {
+    const response = await fetchJson<EditSocialListeningResponse | SocialListening>({
+      baseUrl: getBaseUrl(),
+      path: `/v1/project/${projectId}`,
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: payload,
+    });
+
+    console.log("editSocialListening: Raw response:", response);
+    console.log("editSocialListening: Response type:", typeof response);
+    console.log("editSocialListening: Response keys:", response ? Object.keys(response) : 'null');
+
+    if (!response) {
+      // API might not return data, construct from payload
+      console.log("editSocialListening: No response, returning constructed item");
+      return {
+        id: projectId,
+        title: payload.title || "",
+        mentions: payload.mentions || 0,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    // Handle nested response structure like create
+    let data: SocialListening | undefined;
+    const anyResponse = response as any;
+    
+    if (anyResponse.data?.survey?.data && anyResponse.data.survey.data.id) {
+      console.log("editSocialListening: Found nested data.survey.data");
+      data = anyResponse.data.survey.data;
+    } else if (anyResponse.data?.id) {
+      console.log("editSocialListening: Found wrapped data");
+      data = anyResponse.data;
+    } else if ((response as SocialListening).id) {
+      console.log("editSocialListening: Found direct response");
+      data = response as SocialListening;
+    }
+
+    if (!data || !data.id) {
+      // If API returns success but no data object, construct from payload
+      console.log("editSocialListening: Constructing response from payload");
+      return {
+        id: projectId,
+        title: payload.title || "",
+        mentions: payload.mentions || 0,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    console.log("editSocialListening: Updated item:", data);
+    return data;
+  } catch (error) {
+    console.error("editSocialListening: Error during edit:", error);
+    throw error;
+  }
 }
 
 // Delete a Social Listening project
