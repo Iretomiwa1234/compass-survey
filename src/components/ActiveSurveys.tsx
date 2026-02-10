@@ -51,8 +51,19 @@ export function ActiveSurveys({ surveys = [] }: ActiveSurveysProps) {
     const sorted = [...surveys].sort((a, b) => b.survey_id - a.survey_id);
     return sorted.slice(0, 4).map((survey) => {
       const completion = Number.parseFloat(survey.completion_percentage || "0");
-      const status = survey.status?.toLowerCase() || "draft";
-      const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+      const rawStatus = (survey.status ?? "").trim().toLowerCase();
+      const isPublished = Number(survey.is_published ?? 0) === 1;
+      const formattedStatus = isPublished
+        ? "Published"
+        : rawStatus === "active"
+          ? "Template"
+          : rawStatus === "close"
+            ? "Closed"
+            : rawStatus === "pending"
+              ? "Pending"
+              : rawStatus
+                ? rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1)
+                : "Draft";
 
       return {
         id: survey.survey_id,
@@ -119,7 +130,11 @@ export function ActiveSurveys({ surveys = [] }: ActiveSurveysProps) {
                       </h4>
                       <Badge
                         variant={
-                          survey.status === "Active" ? "success" : "secondary"
+                          survey.status === "Published"
+                            ? "success"
+                            : survey.status === "Draft"
+                              ? "warning"
+                              : "secondary"
                         }
                       >
                         {survey.status}

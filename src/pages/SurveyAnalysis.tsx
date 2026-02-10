@@ -58,15 +58,123 @@ const deviceUsageData = [
   { name: "Tablet", value: 340, color: "#313C4A" },
 ];
 
-const countryData = [
-  { day: "Monday", value: 250 },
-  { day: "Tuesday", value: 1100 },
-  { day: "Wednesday", value: 750 },
-  { day: "Thursday", value: 550 },
-  { day: "Friday", value: 800 },
-  { day: "Saturday", value: 250 },
-  { day: "Sunday", value: 1100 },
+const countryColorPalette = [
+  "#206AB5",
+  "#1A4D80",
+  "#4A89C7",
+  "#26A69A",
+  "#2E7D32",
+  "#66BB6A",
+  "#5C6BC0",
+  "#8E24AA",
+  "#C2185B",
+  "#D84315",
+  "#F9A825",
+  "#6D4C41",
+  "#607D8B",
+  "#102A43",
+  "#0288D1",
 ];
+
+const countryResponse = {
+  data: [
+    {
+      day: "Monday",
+      countries: [
+        { name: "Nigeria", value: 120 },
+        { name: "Ghana", value: 60 },
+        { name: "Kenya", value: 40 },
+        { name: "South Africa", value: 55 },
+        { name: "Egypt", value: 35 },
+      ],
+    },
+    {
+      day: "Tuesday",
+      countries: [
+        { name: "Nigeria", value: 260 },
+        { name: "Ghana", value: 160 },
+        { name: "Kenya", value: 110 },
+        { name: "South Africa", value: 95 },
+        { name: "Egypt", value: 80 },
+      ],
+    },
+    {
+      day: "Wednesday",
+      countries: [
+        { name: "Nigeria", value: 180 },
+        { name: "Ghana", value: 130 },
+        { name: "Kenya", value: 90 },
+        { name: "South Africa", value: 70 },
+        { name: "Egypt", value: 60 },
+      ],
+    },
+    {
+      day: "Thursday",
+      countries: [
+        { name: "Nigeria", value: 150 },
+        { name: "Ghana", value: 120 },
+        { name: "Kenya", value: 80 },
+        { name: "South Africa", value: 65 },
+        { name: "Egypt", value: 55 },
+      ],
+    },
+    {
+      day: "Friday",
+      countries: [
+        { name: "Nigeria", value: 210 },
+        { name: "Ghana", value: 140 },
+        { name: "Kenya", value: 120 },
+        { name: "South Africa", value: 85 },
+        { name: "Egypt", value: 75 },
+      ],
+    },
+    {
+      day: "Saturday",
+      countries: [
+        { name: "Nigeria", value: 90 },
+        { name: "Ghana", value: 55 },
+        { name: "Kenya", value: 40 },
+        { name: "South Africa", value: 35 },
+        { name: "Egypt", value: 30 },
+      ],
+    },
+    {
+      day: "Sunday",
+      countries: [
+        { name: "Nigeria", value: 240 },
+        { name: "Ghana", value: 170 },
+        { name: "Kenya", value: 130 },
+        { name: "South Africa", value: 105 },
+        { name: "Egypt", value: 90 },
+      ],
+    },
+  ],
+};
+
+const countryKeyFromName = (name: string) =>
+  name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+const countrySeries = Array.from(
+  new Set(
+    countryResponse.data.flatMap((entry) =>
+      entry.countries.map((country) => country.name),
+    ),
+  ),
+).map((name) => ({ name, key: countryKeyFromName(name) }));
+
+const countryStackData = countryResponse.data.map((entry) => {
+  const values = entry.countries.reduce<Record<string, number>>((acc, item) => {
+    acc[countryKeyFromName(item.name)] = item.value;
+    return acc;
+  }, {});
+  return {
+    day: entry.day,
+    ...values,
+  };
+});
 
 const browserData = [
   { name: "Chrome", value: 807 },
@@ -274,7 +382,7 @@ const SurveyAnalysis = () => {
                 <CardContent>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={countryData} barSize={8}>
+                      <BarChart data={countryStackData} barSize={30}>
                         <CartesianGrid
                           strokeDasharray="3 3"
                           vertical={false}
@@ -298,13 +406,35 @@ const SurveyAnalysis = () => {
                           }}
                         />
                         <Tooltip />
-                        <Bar
-                          dataKey="value"
-                          fill="hsl(var(--primary))"
-                          radius={[4, 4, 0, 0]}
-                        />
+                        {countrySeries.map((country, idx) => (
+                          <Bar
+                            key={country.key}
+                            dataKey={country.key}
+                            stackId="country"
+                            fill={countryColorPalette[idx]}
+                            radius={
+                              idx === countrySeries.length - 1
+                                ? [4, 4, 0, 0]
+                                : [0, 0, 0, 0]
+                            }
+                          />
+                        ))}
                       </BarChart>
                     </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    {countrySeries.map((country, idx) => (
+                      <div
+                        key={country.key}
+                        className="flex items-center gap-2"
+                      >
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: countryColorPalette[idx] }}
+                        />
+                        <span>{country.name}</span>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -442,8 +572,6 @@ const SurveyAnalysis = () => {
 };
 
 export default SurveyAnalysis;
-
-
 
 // import { useState } from "react";
 // import { DashboardSidebar } from "@/components/DashboardSidebar";
@@ -597,7 +725,7 @@ export default SurveyAnalysis;
 //             <SidebarTrigger />
 //             <div className="flex-1" />
 //           </header>
-          
+
 //           <DashboardHeader />
 
 //           <main className="flex-1 p-6 space-y-6 bg-background">

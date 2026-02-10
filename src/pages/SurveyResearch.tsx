@@ -30,15 +30,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Search,
-  Plus,
-  Calendar,
-  Target,
-  FileText,
-  Users,
-  SearchX,
-} from "lucide-react";
+import { Search, Plus, Calendar, Target, FileText, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -46,10 +38,22 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-import { getSurveys } from "@/lib/auth";
+import { editSurvey, getSurveyDetail, getSurveys } from "@/lib/auth";
+import type { CreateSurveyPayload } from "@/lib/auth";
 import { Loader } from "@/components/ui/loader";
 import { EmptyState } from "@/components/survey/EmptyState";
+import { toast } from "@/hooks/use-toast";
 const SurveyResearch = () => {
   const [open, setOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -61,6 +65,8 @@ const SurveyResearch = () => {
   const [lastPage, setLastPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+  const [surveyToClose, setSurveyToClose] = useState<Survey | null>(null);
   const navigate = useNavigate();
 
   const handleGenerateWithAI = useCallback(() => {
@@ -92,18 +98,113 @@ const SurveyResearch = () => {
     [navigate],
   );
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+  const normalizeStatus = (status?: string) =>
+    (status ?? "").trim().toLowerCase();
+
+  const getDisplayStatus = (status: string, isPublished: number) => {
+    if (isPublished === 1) return "Published";
+    if (!status && isPublished === 0) return "Draft";
+    switch (status) {
+      case "draft":
+        return "Draft";
       case "active":
-        return "bg-green-100 text-green-600 border-green-200";
+        return "Template";
+      case "close":
+        return "Closed";
+      case "pending":
+        return "Pending";
+      default:
+        return status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
+    }
+  };
+
+  const getStatusColor = (status: string, isPublished: number) => {
+    if (isPublished === 1) {
+      return "bg-green-100 text-green-600 border-green-200";
+    }
+    if (!status && isPublished === 0) {
+      return "bg-orange-100 text-orange-600 border-orange-200";
+    }
+
+    switch (status) {
+      case "active":
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
       case "draft":
         return "bg-orange-100 text-orange-600 border-orange-200";
-      case "closed":
+      case "close":
         return "bg-gray-100 text-gray-600 border-gray-200";
+      case "pending":
+        return "bg-blue-100 text-blue-600 border-blue-200";
       default:
         return "bg-gray-100 text-gray-600 border-gray-200";
     }
   };
+
+  const handleClose = useCallback((survey: Survey) => {
+    setSurveyToClose(survey);
+    setCloseConfirmOpen(true);
+  }, []);
+
+  const handleConfirmClose = useCallback(async () => {
+    if (!surveyToClose) return;
+    try {
+      const response = await getSurveyDetail(Number(surveyToClose.id));
+      const surveyPayload = response?.data?.survey as
+        | { data?: Array<Record<string, unknown>> }
+        | Record<string, unknown>
+        | undefined;
+      const detail = Array.isArray(surveyPayload?.data)
+        ? (surveyPayload?.data?.[0] as Record<string, unknown> | undefined)
+        : (surveyPayload as Record<string, unknown> | undefined);
+      if (!detail) {
+        throw new Error("Survey not found.");
+      }
+
+      const payload: CreateSurveyPayload = {
+        title: (detail.title as string | undefined) ?? "",
+        description: (detail.description as string | undefined) ?? "",
+        survey_group: (detail.survey_group as string | undefined) ?? "all",
+        status: "close",
+        is_published: 0,
+        max_responses: Number(detail.max_responses ?? 0),
+        single_response: Number(detail.single_response ?? 0) === 1,
+        end_date: (detail.end_date as string | undefined) ?? "",
+        allow_edit_after_submit:
+          Number(detail.allow_edit_after_submit ?? 0) === 1,
+        questions:
+          ((detail.question ??
+            detail.questions ??
+            []) as CreateSurveyPayload["questions"]) ?? [],
+      };
+
+      await editSurvey(Number(surveyToClose.id), payload);
+      setSurveys((prev) =>
+        prev.map((item) => {
+          if (item.id !== surveyToClose.id) return item;
+          return {
+            ...item,
+            status: "close",
+            isPublished: 0,
+            displayStatus: "Closed",
+          };
+        }),
+      );
+      toast({
+        title: "Survey closed",
+        description: "The survey has been closed successfully.",
+      });
+      setCloseConfirmOpen(false);
+      setSurveyToClose(null);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to close survey.";
+      toast({
+        title: "Close failed",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  }, [surveyToClose, setSurveys]);
 
   useEffect(() => {
     let isActive = true;
@@ -117,14 +218,15 @@ const SurveyResearch = () => {
           const completion = Number.parseFloat(
             item.completion_percentage || "0",
           );
-          const status = item.status || "draft";
-          const formattedStatus =
-            status.charAt(0).toUpperCase() + status.slice(1);
+          const rawStatus = normalizeStatus(item.status);
+          const isPublished = Number(item.is_published ?? 0) === 1 ? 1 : 0;
+          const displayStatus = getDisplayStatus(rawStatus, isPublished);
           return {
             id: String(item.survey_id),
             title: item.title,
-            status: formattedStatus,
-            isPublished: item.is_published ?? false,
+            status: rawStatus,
+            displayStatus,
+            isPublished,
             totalResponse: item.total_responses,
             responseRate: Number.isNaN(completion) ? 0 : completion,
             createdDate: item.created_at,
@@ -151,7 +253,7 @@ const SurveyResearch = () => {
     const query = searchTerm.trim().toLowerCase();
     return surveys.filter((survey) => {
       const matchesStatus =
-        statusFilter === "all" || survey.status.toLowerCase() === statusFilter;
+        statusFilter === "all" || survey.status === statusFilter;
       const matchesSearch =
         query.length === 0 || survey.title.toLowerCase().includes(query);
       return matchesStatus && matchesSearch;
@@ -185,9 +287,10 @@ const SurveyResearch = () => {
         onView={handleView}
         onAnalytics={handleAnalytics}
         onEdit={handleEdit}
+        onClose={handleClose}
       />
     ));
-  }, [filteredSurveys, handleAnalytics, handleEdit, handleView]);
+  }, [filteredSurveys, handleAnalytics, handleClose, handleEdit, handleView]);
 
   return (
     <SidebarProvider>
@@ -233,9 +336,10 @@ const SurveyResearch = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Surveys</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="active">Template</SelectItem>
                       <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
+                      <SelectItem value="close">Closed</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -401,9 +505,10 @@ const SurveyResearch = () => {
                 <span
                   className={`px-2.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(
                     selectedSurvey.status,
+                    selectedSurvey.isPublished ?? 0,
                   )}`}
                 >
-                  {selectedSurvey.status}
+                  {selectedSurvey.displayStatus ?? selectedSurvey.status}
                 </span>
               )}
             </DialogTitle>
@@ -481,6 +586,24 @@ const SurveyResearch = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Close Survey</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to close "{surveyToClose?.title}"? This
+              survey will no longer accept responses.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmClose}>
+              Close Survey
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 };

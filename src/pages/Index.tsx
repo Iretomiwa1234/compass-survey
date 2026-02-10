@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { StatCard } from "@/components/StatCard";
@@ -36,6 +36,28 @@ const Index = () => {
       isActive = false;
     };
   }, []);
+
+  const surveyStats = useMemo(() => {
+    return surveys.reduce(
+      (acc, survey) => {
+        const status = (survey.status ?? "").trim().toLowerCase();
+        const isPublished = Number(survey.is_published ?? 0) === 1;
+
+        acc.total += 1;
+
+        if (status === "close") {
+          acc.closed += 1;
+        } else if (isPublished) {
+          acc.active += 1;
+        } else if (status === "draft") {
+          acc.draft += 1;
+        }
+
+        return acc;
+      },
+      { total: 0, active: 0, closed: 0, draft: 0 },
+    );
+  }, [surveys]);
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -52,12 +74,24 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
               <StatCard
                 title="Total Surveys"
-                value="26"
+                value={surveyStats.total.toString()}
                 icon={FileText}
                 badges={[
-                  { label: "Active", count: 7, variant: "success" },
-                  { label: "Closed", count: 16, variant: "secondary" },
-                  { label: "Draft", count: 3, variant: "warning" },
+                  {
+                    label: "Active",
+                    count: surveyStats.active,
+                    variant: "success",
+                  },
+                  {
+                    label: "Closed",
+                    count: surveyStats.closed,
+                    variant: "secondary",
+                  },
+                  {
+                    label: "Draft",
+                    count: surveyStats.draft,
+                    variant: "warning",
+                  },
                 ]}
               />
 

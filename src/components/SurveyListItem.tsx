@@ -1,13 +1,14 @@
 import { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, BarChart3, Pencil, Users } from "lucide-react";
+import { Eye, BarChart3, Pencil, Users, X } from "lucide-react";
 
 export interface Survey {
   id: string;
   title: string;
   status: string;
-  isPublished?: boolean;
+  isPublished?: number;
+  displayStatus?: string;
   totalResponse: number;
   responseRate: number;
   createdDate: string;
@@ -20,6 +21,7 @@ interface SurveyListItemProps {
   onView?: (survey: Survey) => void;
   onAnalytics?: (survey: Survey) => void;
   onEdit?: (survey: Survey) => void;
+  onClose?: (survey: Survey) => void;
 }
 
 // export const SurveyListItem = ({
@@ -29,22 +31,57 @@ interface SurveyListItemProps {
 //   onEdit,
 // }: SurveyListItemProps) => {
 export const SurveyListItem = memo(
-  ({ survey, onView, onAnalytics, onEdit }: SurveyListItemProps) => {
-    const getStatusColor = (status: string) => {
-      const statusLower = status.toLowerCase();
-      switch (statusLower) {
+  ({ survey, onView, onAnalytics, onEdit, onClose }: SurveyListItemProps) => {
+    const getDisplayStatus = (status: string, isPublished: boolean) => {
+      // Priority: is_published takes precedence
+      if (isPublished) return "Published";
+
+      // If not published, check status
+      switch (status) {
+        case "draft":
+          return "Draft";
+        case "active":
+          return "Template";
+        case "close":
+          return "Closed";
+        case "pending":
+          return "Pending";
+        default:
+          return status
+            ? status.charAt(0).toUpperCase() + status.slice(1)
+            : "Draft";
+      }
+    };
+
+    const getStatusColor = (status: string, isPublished: boolean) => {
+      if (isPublished) {
+        return "bg-green-100 text-green-600 border-green-200";
+      }
+      if (!status && !isPublished) {
+        return "bg-orange-100 text-orange-600 border-orange-200";
+      }
+
+      switch (status) {
         case "draft":
           return "bg-orange-100 text-orange-600 border-orange-200";
-        case "template":
-          return "bg-purple-100 text-purple-600 border-purple-200";
-        case "published":
-          return "bg-green-100 text-green-600 border-green-200";
+        case "active":
+          return "bg-yellow-100 text-yellow-700 border-yellow-200";
+        case "close":
+          return "bg-gray-100 text-gray-600 border-gray-200";
+        case "pending":
+          return "bg-blue-100 text-blue-600 border-blue-200";
         default:
           return "bg-gray-100 text-gray-600 border-gray-200";
       }
     };
 
-    const isDraft = survey.status.toLowerCase() === "draft";
+    const normalizedStatus = survey.status?.trim().toLowerCase() ?? "";
+    const isPublished = Number(survey.isPublished ?? 0) === 1;
+    const displayStatus =
+      survey.displayStatus ?? getDisplayStatus(normalizedStatus, isPublished);
+    const statusClass = getStatusColor(normalizedStatus, isPublished);
+    const isDraft = normalizedStatus === "draft" && !isPublished;
+    const isClosed = normalizedStatus === "close";
 
     return (
       <Card className="hover:shadow-md transition-shadow border border-border/50">
@@ -56,11 +93,9 @@ export const SurveyListItem = memo(
                   {survey.title}
                 </h3>
                 <span
-                  className={`px-2.5 py-0.5 rounded text-xs font-medium border ${getStatusColor(
-                    survey.status,
-                  )}`}
+                  className={`px-2.5 py-0.5 rounded text-xs font-medium border ${statusClass}`}
                 >
-                  {survey.status}
+                  {displayStatus}
                 </span>
               </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -105,6 +140,16 @@ export const SurveyListItem = memo(
                     Analytics
                   </Button>
                 </>
+              )}
+              {!isClosed && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-transparent"
+                  onClick={() => onClose?.(survey)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               )}
             </div>
           </div>

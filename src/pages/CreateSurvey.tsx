@@ -10,6 +10,7 @@ import {
   Hash,
   ShieldCheck,
   Users,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import { createSurvey, editSurvey, getSurveyDetail } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 import type { CreateSurveyPayload } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Loader } from "@/components/ui/loader";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +52,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const CreateSurvey = () => {
   const navigate = useNavigate();
@@ -70,8 +80,10 @@ const CreateSurvey = () => {
   const [allowEdit, setAllowEdit] = useState("false");
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isLoadingSurvey, setIsLoadingSurvey] = useState(false);
+  const [isSavingSurvey, setIsSavingSurvey] = useState(false);
   const [showEditBanner, setShowEditBanner] = useState(true);
   const [invalidQuestionIds, setInvalidQuestionIds] = useState<number[]>([]);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
 
   type QuestionType =
     | "text"
@@ -389,7 +401,7 @@ const CreateSurvey = () => {
 
   const buildPayload = (
     status: CreateSurveyPayload["status"],
-    isPublished: boolean,
+    isPublished: 0 | 1,
   ): CreateSurveyPayload => ({
     title: surveyTitle,
     description,
@@ -455,7 +467,7 @@ const CreateSurvey = () => {
 
   const handleSave = async (
     status: CreateSurveyPayload["status"],
-    isPublished: boolean,
+    isPublished: 0 | 1,
     successLabel: string,
   ) => {
     if (!surveyTitle.trim()) {
@@ -476,6 +488,7 @@ const CreateSurvey = () => {
       return;
     }
 
+    setIsSavingSurvey(true);
     try {
       const payload = buildPayload(status, isPublished);
       if (isEditing && parsedSurveyId) {
@@ -490,6 +503,11 @@ const CreateSurvey = () => {
           ? `Your survey ${successLabel.toLowerCase()} has been updated.`
           : `Your survey has been saved as ${successLabel.toLowerCase()}.`,
       });
+
+      // Redirect back to survey research after successful publish
+      if (successLabel === "Publish") {
+        setTimeout(() => navigate("/survey-research"), 1500);
+      }
     } catch (error: unknown) {
       if (error instanceof ApiError) {
         const data = error.data;
@@ -535,15 +553,26 @@ const CreateSurvey = () => {
         description: message,
         variant: "destructive",
       });
+    } finally {
+      setIsSavingSurvey(false);
     }
   };
 
-  const handleSaveDraft = () => handleSave("draft", false, "Draft");
-  const handleSaveTemplate = () => handleSave("template", false, "Template");
-  const handleSavePublish = () => handleSave("publish", true, "Publish");
+  const handleSaveDraft = () => handleSave("draft", 0, "Draft");
+  const handleSaveTemplate = () => handleSave("active", 0, "Template");
+  const handleSavePublish = () => handleSave("draft", 1, "Publish");
+  const handleConfirmClose = () => {
+    setCloseConfirmOpen(false);
+    void handleSave("close", 0, "Closed");
+  };
 
   return (
     <SidebarProvider>
+      {isSavingSurvey && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#00000033] backdrop-blur-[10px]">
+          <Loader size={24} />
+        </div>
+      )}
       <div className="flex min-h-screen w-full bg-background">
         <DashboardSidebar />
 
@@ -710,15 +739,26 @@ const CreateSurvey = () => {
                       </Select>
                     </div>
                     <div className="h-4 w-[1px] bg-slate-200 hidden md:block" />
-                    <CollapsibleTrigger asChild>
+                    <div className="flex items-center gap-2">
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-slate-400 hover:text-[#206AB5] hover:bg-slate-50"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </CollapsibleTrigger>
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-[#206AB5] hover:bg-slate-50"
+                        size="sm"
+                        className="h-8 gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => setCloseConfirmOpen(true)}
                       >
-                        <Settings className="h-4 w-4" />
+                        <X className="h-3.5 w-3.5" />
+                        Close
                       </Button>
-                    </CollapsibleTrigger>
+                    </div>
                   </div>
 
                   <CollapsibleContent>
@@ -809,6 +849,27 @@ const CreateSurvey = () => {
           </div>
         </SidebarInset>
       </div>
+      <Dialog open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Close Survey</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to close this survey?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setCloseConfirmOpen(false)}
+            >
+              No
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmClose}>
+              Yes, Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };

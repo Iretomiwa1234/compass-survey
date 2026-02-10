@@ -113,8 +113,8 @@ export type CreateSurveyPayload = {
   title: string;
   description: string;
   survey_group: string;
-  status: "draft" | "publish" | "template";
-  is_published: boolean;
+  status: "draft" | "active" | "close" | "pending" | "";
+  is_published: 0 | 1;
   max_responses: number;
   single_response: boolean;
   end_date: string;
@@ -153,7 +153,7 @@ export type SurveyListItemApi = {
   survey_id: number;
   title: string;
   status: string;
-  is_published?: boolean;
+  is_published?: 0 | 1;
   business_id: string | null;
   created_at: string;
   total_responses: number;
@@ -169,7 +169,7 @@ export type SurveyDetail = {
   description?: string;
   survey_group?: string;
   status?: string;
-  is_published?: boolean;
+  is_published?: 0 | 1;
   max_responses?: number;
   single_response?: boolean;
   end_date?: string;
