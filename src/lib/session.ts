@@ -5,6 +5,7 @@ export type AuthSession = {
 };
 
 const STORAGE_KEY = "compass.auth.session";
+const SESSION_EXPIRED_EVENT = "compass.auth.session-expired";
 
 export function setAuthSession(session: AuthSession) {
   if (typeof window === "undefined") return;
@@ -55,4 +56,34 @@ export function isSessionExpired(session: AuthSession): boolean {
   if (!session.expiresAt) return false;
   const nowSeconds = Math.floor(Date.now() / 1000);
   return nowSeconds >= session.expiresAt;
+}
+
+export type SessionExpiredDetail = {
+  reason?: string;
+};
+
+export function emitSessionExpired(detail?: SessionExpiredDetail) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent<SessionExpiredDetail>(SESSION_EXPIRED_EVENT, {
+      detail,
+    }),
+  );
+}
+
+export function onSessionExpired(
+  callback: (detail?: SessionExpiredDetail) => void,
+) {
+  if (typeof window === "undefined") return () => {};
+
+  const handler = (event: Event) => {
+    const customEvent = event as CustomEvent<SessionExpiredDetail>;
+    callback(customEvent.detail);
+  };
+
+  window.addEventListener(SESSION_EXPIRED_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(SESSION_EXPIRED_EVENT, handler as EventListener);
+  };
 }

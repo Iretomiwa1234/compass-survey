@@ -8,7 +8,12 @@ import { MentionsCard } from "@/components/MentionsCard";
 import { SentimentChart } from "@/components/SentimentChart";
 import { ActiveSurveys } from "@/components/ActiveSurveys";
 import { FileText, Users } from "lucide-react";
-import { getSurveys, SurveyListItemApi } from "@/lib/auth";
+import {
+  getDashboardMentions,
+  getDashboardSentiment,
+  getSurveys,
+  SurveyListItemApi,
+} from "@/lib/auth";
 import {
   SidebarProvider,
   SidebarInset,
@@ -17,6 +22,12 @@ import {
 
 const Index = () => {
   const [surveys, setSurveys] = useState<SurveyListItemApi[]>([]);
+  const [mentionsTotal, setMentionsTotal] = useState(0);
+  const [sentiment, setSentiment] = useState({
+    positive: 0,
+    neutral: 0,
+    negative: 0,
+  });
 
   useEffect(() => {
     let isActive = true;
@@ -30,6 +41,36 @@ const Index = () => {
       .catch(() => {
         if (!isActive) return;
         setSurveys([]);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    Promise.allSettled([getDashboardMentions(), getDashboardSentiment()])
+      .then(([mentionsResult, sentimentResult]) => {
+        if (!isActive) return;
+
+        if (mentionsResult.status === "fulfilled") {
+          setMentionsTotal(mentionsResult.value.totalMentions);
+        } else {
+          setMentionsTotal(0);
+        }
+
+        if (sentimentResult.status === "fulfilled") {
+          setSentiment(sentimentResult.value);
+        } else {
+          setSentiment({ positive: 0, neutral: 0, negative: 0 });
+        }
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setMentionsTotal(0);
+        setSentiment({ positive: 0, neutral: 0, negative: 0 });
       });
 
     return () => {
@@ -107,9 +148,13 @@ const Index = () => {
                 ]}
               />
 
-              <MentionsCard />
+              <MentionsCard totalMentions={mentionsTotal} />
 
-              <SentimentChart />
+              <SentimentChart
+                positive={sentiment.positive}
+                neutral={sentiment.neutral}
+                negative={sentiment.negative}
+              />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

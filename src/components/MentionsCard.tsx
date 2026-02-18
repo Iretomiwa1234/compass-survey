@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { Facebook, Instagram, Linkedin } from "lucide-react";
 
-export function MentionsCard() {
+type MentionsCardProps = {
+  totalMentions?: number;
+};
+
+export function MentionsCard({ totalMentions = 0 }: MentionsCardProps) {
   return (
     <Card>
       <CardContent className="p-6">
@@ -24,7 +28,9 @@ export function MentionsCard() {
 
         <div className="space-y-1 mb-6">
           <p className="text-sm text-muted-foreground">Mentions</p>
-          <p className="text-3xl font-bold text-foreground">2,345</p>
+          <p className="text-3xl font-bold text-foreground">
+            {totalMentions.toLocaleString()}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 mb-6">

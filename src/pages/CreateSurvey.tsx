@@ -399,6 +399,53 @@ const CreateSurvey = () => {
     });
   };
 
+  const reorderQuestions = (fromIndex: number, toIndex: number) => {
+    setQuestions((prev) => {
+      if (
+        fromIndex < 0 ||
+        fromIndex >= prev.length ||
+        toIndex < 0 ||
+        toIndex > prev.length
+      ) {
+        return prev;
+      }
+
+      if (fromIndex === toIndex || fromIndex + 1 === toIndex) {
+        return prev;
+      }
+
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      if (!moved) return prev;
+
+      const targetIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
+      next.splice(targetIndex, 0, moved);
+
+      const currentlySelectedOldId = selectedId;
+      const selectedIndexInNext =
+        currentlySelectedOldId == null
+          ? -1
+          : next.findIndex((q) => q.id === currentlySelectedOldId);
+
+      const idMap = new Map<number, number>();
+      const reindexed = next.map((q, idx) => {
+        const newId = idx + 1;
+        idMap.set(q.id, newId);
+        return { ...q, id: newId };
+      });
+
+      setInvalidQuestionIds((prevInvalidIds) =>
+        prevInvalidIds
+          .map((id) => idMap.get(id))
+          .filter((id): id is number => typeof id === "number"),
+      );
+
+      setSelectedId(selectedIndexInNext >= 0 ? selectedIndexInNext + 1 : null);
+
+      return reindexed;
+    });
+  };
+
   const buildPayload = (
     status: CreateSurveyPayload["status"],
     isPublished: 0 | 1,
@@ -560,7 +607,7 @@ const CreateSurvey = () => {
 
   const handleSaveDraft = () => handleSave("draft", 0, "Draft");
   const handleSaveTemplate = () => handleSave("active", 0, "Template");
-  const handleSavePublish = () => handleSave("draft", 1, "Publish");
+  const handleSavePublish = () => handleSave("active", 1, "Publish");
   const handleConfirmClose = () => {
     setCloseConfirmOpen(false);
     void handleSave("close", 0, "Closed");
@@ -827,6 +874,7 @@ const CreateSurvey = () => {
                     onDropType={(label, insertIndex) =>
                       addQuestion(label, insertIndex)
                     }
+                    onReorderQuestions={reorderQuestions}
                     questions={questions}
                     title={surveyTitle}
                     description={description}

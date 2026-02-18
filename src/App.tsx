@@ -26,6 +26,7 @@ import AudienceInsights from "./pages/AudienceInsights";
 // import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { QuickActions } from "./components/QuickActions";
+import { SessionExpiredModal } from "./components/SessionExpiredModal";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
       <Sonner />
       <UserProvider>
         <BrowserRouter>
+          <SessionExpiredModal />
           <Routes>
             {/* Public routes */}
             <Route path="/auth" element={<Auth />} />

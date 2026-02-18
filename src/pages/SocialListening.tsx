@@ -4,7 +4,7 @@ import {
   createSocialListening,
   editSocialListening,
   deleteSocialListening,
-  type SocialListening as SocialListeningType
+  type SocialListening as SocialListeningType,
 } from "@/lib/auth";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -61,7 +61,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-
 const SocialListening = () => {
   const [monitorItems, setMonitorItems] = useState<SocialListeningType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +94,7 @@ const SocialListening = () => {
     }
   };
 
-const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [newForm, setNewForm] = useState({
     title: "",
     mentions: "",
@@ -104,7 +103,9 @@ const [addModalOpen, setAddModalOpen] = useState(false);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<SocialListeningType | null>(null);
+  const [selectedItem, setSelectedItem] = useState<SocialListeningType | null>(
+    null,
+  );
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ title: "", mentions: "" });
   const [editError, setEditError] = useState<string | null>(null);
@@ -112,7 +113,10 @@ const [addModalOpen, setAddModalOpen] = useState(false);
   const handleEdit = (item: SocialListeningType, index: number) => {
     setSelectedItem(item);
     setSelectedIndex(index); // Still using index for local updates if needed, but really should rely on ID
-    setEditForm({ title: item.title, mentions: (item.mentions ?? 0).toString() });
+    setEditForm({
+      title: item.title,
+      mentions: (item.mentions ?? 0).toString(),
+    });
     setEditModalOpen(true);
   };
 
@@ -125,12 +129,18 @@ const [addModalOpen, setAddModalOpen] = useState(false);
           mentions: Number(editForm.mentions) || 0,
         });
 
-        setMonitorItems(prev => prev.map(item => item.id === selectedItem.id ? updatedItem : item));
+        setMonitorItems((prev) =>
+          prev.map((item) =>
+            item.id === selectedItem.id ? updatedItem : item,
+          ),
+        );
         setEditModalOpen(false);
         setEditError(null);
       } catch (error) {
         console.error("Failed to edit item:", error);
-        setEditError(error instanceof Error ? error.message : "Failed to edit project");
+        setEditError(
+          error instanceof Error ? error.message : "Failed to edit project",
+        );
       }
     }
   };
@@ -145,14 +155,15 @@ const [addModalOpen, setAddModalOpen] = useState(false);
     if (selectedItem) {
       try {
         await deleteSocialListening(selectedItem.id);
-        setMonitorItems(prev => prev.filter(item => item.id !== selectedItem.id));
+        setMonitorItems((prev) =>
+          prev.filter((item) => item.id !== selectedItem.id),
+        );
         setDeleteDialogOpen(false);
       } catch (error) {
         console.error("Failed to delete item:", error);
       }
     }
   };
-
 
   return (
     <SidebarProvider>
@@ -443,21 +454,41 @@ const [addModalOpen, setAddModalOpen] = useState(false);
                   <h3 className="text-lg font-semibold text-foreground">
                     Projects
                   </h3>
-                  <Button className="gap-2" onClick={() => setAddModalOpen(true)}>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <Button
+                    className="gap-2"
+                    onClick={() => setAddModalOpen(true)}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                      <path strokeLinecap="round" strokeWidth="2" d="M12 8v8M8 12h8" />
+                      <path
+                        strokeLinecap="round"
+                        strokeWidth="2"
+                        d="M12 8v8M8 12h8"
+                      />
                     </svg>
                     Create new project
                   </Button>
                 </div>
 
                 <div className="space-y-4 mb-8">
-                  {error && <div className="p-4 text-red-500 bg-red-50 rounded-lg mb-4">Error: {error}</div>}
+                  {error && (
+                    <div className="p-4 text-red-500 bg-red-50 rounded-lg mb-4">
+                      Error: {error}
+                    </div>
+                  )}
                   {loading ? (
-                    <div className="p-8 text-center text-muted-foreground">Loading projects...</div>
+                    <div className="p-8 text-center text-muted-foreground">
+                      Loading projects...
+                    </div>
                   ) : monitorItems.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground">No projects found. Create one to get started.</div>
+                    <div className="p-8 text-center text-muted-foreground">
+                      No projects found. Create one to get started.
+                    </div>
                   ) : (
                     monitorItems.map((item, idx) => (
                       <Card
@@ -470,7 +501,6 @@ const [addModalOpen, setAddModalOpen] = useState(false);
                               {item.title}
                             </h3>
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-
                               {item.mentions !== undefined && (
                                 <div className="flex items-center gap-1">
                                   <Users className="w-4 h-4" />
@@ -478,8 +508,10 @@ const [addModalOpen, setAddModalOpen] = useState(false);
                                 </div>
                               )}
 
-
-                              <span>Created: {new Date(item.created_at).toLocaleDateString()}</span>
+                              <span>
+                                Created:{" "}
+                                {new Date(item.created_at).toLocaleDateString()}
+                              </span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -504,11 +536,12 @@ const [addModalOpen, setAddModalOpen] = useState(false);
                           </div>
                         </CardContent>
                       </Card>
-                    )))}
+                    ))
+                  )}
                 </div>
               </div>
 
-              <Pagination>
+              <Pagination className="mt-4">
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious href="#" />
@@ -540,14 +573,19 @@ const [addModalOpen, setAddModalOpen] = useState(false);
         </SidebarInset>
       </div>
       {/* Create New Project Modal */}
-      <Dialog open={addModalOpen} onOpenChange={(open) => {
-        setAddModalOpen(open);
-        if (!open) setCreateError(null);
-      }}>
+      <Dialog
+        open={addModalOpen}
+        onOpenChange={(open) => {
+          setAddModalOpen(open);
+          if (!open) setCreateError(null);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Create Project</DialogTitle>
-            <DialogDescription>Fill in the details to create a new project.</DialogDescription>
+            <DialogDescription>
+              Fill in the details to create a new project.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -555,7 +593,9 @@ const [addModalOpen, setAddModalOpen] = useState(false);
               <Label>Title</Label>
               <Input
                 value={newForm.title}
-                onChange={(e) => setNewForm({ ...newForm, title: e.target.value })}
+                onChange={(e) =>
+                  setNewForm({ ...newForm, title: e.target.value })
+                }
                 placeholder="Enter project title"
               />
             </div>
@@ -564,12 +604,12 @@ const [addModalOpen, setAddModalOpen] = useState(false);
               <Label>Mentions</Label>
               <Input
                 value={newForm.mentions}
-                onChange={(e) => setNewForm({ ...newForm, mentions: e.target.value })}
+                onChange={(e) =>
+                  setNewForm({ ...newForm, mentions: e.target.value })
+                }
                 placeholder="e.g. 100 New Mentions"
               />
             </div>
-
-
 
             {createError && (
               <div className="p-3 text-red-500 bg-red-50 rounded-lg text-sm">
@@ -578,10 +618,13 @@ const [addModalOpen, setAddModalOpen] = useState(false);
             )}
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => {
-                setCreateError(null);
-                setAddModalOpen(false);
-              }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCreateError(null);
+                  setAddModalOpen(false);
+                }}
+              >
                 Cancel
               </Button>
               <Button
@@ -599,7 +642,11 @@ const [addModalOpen, setAddModalOpen] = useState(false);
                     setCreateError(null);
                   } catch (error) {
                     console.error("Failed to create item:", error);
-                    setCreateError(error instanceof Error ? error.message : "Failed to create project");
+                    setCreateError(
+                      error instanceof Error
+                        ? error.message
+                        : "Failed to create project",
+                    );
                   }
                 }}
               >
@@ -611,14 +658,19 @@ const [addModalOpen, setAddModalOpen] = useState(false);
       </Dialog>
 
       {/* Edit Modal */}
-      <Dialog open={editModalOpen} onOpenChange={(open) => {
-        setEditModalOpen(open);
-        if (!open) setEditError(null);
-      }}>
+      <Dialog
+        open={editModalOpen}
+        onOpenChange={(open) => {
+          setEditModalOpen(open);
+          if (!open) setEditError(null);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
-            <DialogDescription>Update the project details below.</DialogDescription>
+            <DialogDescription>
+              Update the project details below.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {editError && (
@@ -630,7 +682,9 @@ const [addModalOpen, setAddModalOpen] = useState(false);
               <Label className="mt-2">Title</Label>
               <Input
                 value={editForm.title}
-                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, title: e.target.value })
+                }
                 placeholder="Project title"
               />
             </div>
@@ -638,16 +692,21 @@ const [addModalOpen, setAddModalOpen] = useState(false);
               <Label className="mt-2">Mentions</Label>
               <Input
                 value={editForm.mentions}
-                onChange={(e) => setEditForm({ ...editForm, mentions: e.target.value })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, mentions: e.target.value })
+                }
                 placeholder="Mentions count"
               />
             </div>
 
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => {
-                setEditModalOpen(false);
-                setEditError(null);
-              }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setEditError(null);
+                }}
+              >
                 Cancel
               </Button>
               <Button onClick={handleSaveEdit}>Save Changes</Button>
@@ -662,18 +721,22 @@ const [addModalOpen, setAddModalOpen] = useState(false);
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedItem?.title}"? This action cannot be undone.
+              Are you sure you want to delete "{selectedItem?.title}"? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </SidebarProvider >
+    </SidebarProvider>
   );
 };
 

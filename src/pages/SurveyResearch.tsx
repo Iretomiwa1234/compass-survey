@@ -63,6 +63,8 @@ const SurveyResearch = () => {
   const [isLoadingSurveys, setIsLoadingSurveys] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  const [totalSurveys, setTotalSurveys] = useState(0);
+  const [perPage, setPerPage] = useState(20);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
@@ -214,6 +216,11 @@ const SurveyResearch = () => {
       .then((response) => {
         if (!isActive) return;
         const data = response?.data?.survey?.data ?? [];
+        const backendCurrentPage = response?.data?.survey?.current_page ?? 1;
+        const backendLastPage = response?.data?.survey?.last_page ?? 1;
+        const backendTotal = response?.data?.survey?.total ?? 0;
+        const backendPerPage = response?.data?.survey?.per_page ?? 20;
+
         const mapped = data.map((item) => {
           const completion = Number.parseFloat(
             item.completion_percentage || "0",
@@ -234,13 +241,19 @@ const SurveyResearch = () => {
         });
 
         setSurveys(mapped);
-        setLastPage(response?.data?.survey?.last_page ?? 1);
+        setCurrentPage(backendCurrentPage);
+        setLastPage(backendLastPage);
+        setTotalSurveys(backendTotal);
+        setPerPage(backendPerPage);
         setIsLoadingSurveys(false);
       })
       .catch(() => {
         if (!isActive) return;
         setSurveys([]);
+        setCurrentPage(1);
         setLastPage(1);
+        setTotalSurveys(0);
+        setPerPage(20);
         setIsLoadingSurveys(false);
       });
 
@@ -393,13 +406,18 @@ const SurveyResearch = () => {
                 )}
               </div>
             </div>
-            <Pagination>
+            <Pagination className="mt-4">
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
                     href="#"
+                    aria-disabled={currentPage <= 1}
+                    className={
+                      currentPage <= 1 ? "pointer-events-none opacity-50" : ""
+                    }
                     onClick={(event) => {
                       event.preventDefault();
+                      if (currentPage <= 1) return;
                       setCurrentPage((prev) => Math.max(1, prev - 1));
                     }}
                   />
@@ -432,14 +450,27 @@ const SurveyResearch = () => {
                 <PaginationItem>
                   <PaginationNext
                     href="#"
+                    aria-disabled={currentPage >= lastPage}
+                    className={
+                      currentPage >= lastPage
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }
                     onClick={(event) => {
                       event.preventDefault();
+                      if (currentPage >= lastPage) return;
                       setCurrentPage((prev) => Math.min(lastPage, prev + 1));
                     }}
                   />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
+            {lastPage > 1 ? (
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                Page {currentPage} of {lastPage} · {totalSurveys} total surveys
+                · {perPage} per page
+              </p>
+            ) : null}
           </main>
         </SidebarInset>
       </div>

@@ -70,24 +70,24 @@ export type VerifyResponse = {
 export type SurveyQuestionPayload = {
   id: number;
   type:
-  | "text"
-  | "multiline_text"
-  | "number"
-  | "rating"
-  | "slider"
-  | "date"
-  | "time"
-  | "date_time"
-  | "email"
-  | "website"
-  | "address"
-  | "location_list"
-  | "single_select"
-  | "multiple_select"
-  | "ranking"
-  | "drop_down"
-  | "single_select_grid"
-  | "likert_scale";
+    | "text"
+    | "multiline_text"
+    | "number"
+    | "rating"
+    | "slider"
+    | "date"
+    | "time"
+    | "date_time"
+    | "email"
+    | "website"
+    | "address"
+    | "location_list"
+    | "single_select"
+    | "multiple_select"
+    | "ranking"
+    | "drop_down"
+    | "single_select_grid"
+    | "likert_scale";
   label: string;
   placeholder?: string;
   required?: boolean;
@@ -187,12 +187,49 @@ export type GetSurveyDetailResponse = {
   };
 };
 
+export type DashboardMentionsResponse = {
+  status?: string;
+  data?: {
+    cards?: {
+      total_projects?: number | string;
+      total_mentions?: number | string;
+    };
+  };
+};
+
+export type DashboardSentimentResponse = {
+  status?: string;
+  data?: {
+    cards?: {
+      positive?: number | string;
+      neutral?: number | string;
+      negative?: number | string;
+    };
+  };
+};
+
+export type DashboardMentionsCard = {
+  totalProjects: number;
+  totalMentions: number;
+};
+
+export type DashboardSentimentCard = {
+  positive: number;
+  neutral: number;
+  negative: number;
+};
+
 function getBaseUrl() {
   const baseUrl = import.meta.env.VITE_BASE_URL;
   if (!baseUrl) {
     throw new Error("Missing BASE_URL.");
   }
   return baseUrl;
+}
+
+function toSafeNumber(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 // Register User
@@ -253,8 +290,6 @@ export async function getCurrentUser(): Promise<CurrentUser> {
     return user;
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
-      // Token expired or invalid, clear session
-      localStorage.removeItem("compass.auth.session");
       throw new Error("Session expired. Please log in again.");
     }
     throw error;
@@ -331,6 +366,53 @@ export async function getSurveyDetail(surveyId: number) {
   });
 }
 
+// Dashboard Mentions Card
+export async function getDashboardMentions(): Promise<DashboardMentionsCard> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const response = await fetchJson<DashboardMentionsResponse>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/dashboard/mentions",
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const cards = response?.data?.cards;
+  return {
+    totalProjects: toSafeNumber(cards?.total_projects),
+    totalMentions: toSafeNumber(cards?.total_mentions),
+  };
+}
+
+// Dashboard Sentiment Card
+export async function getDashboardSentiment(): Promise<DashboardSentimentCard> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const response = await fetchJson<DashboardSentimentResponse>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/dashboard/sentiment",
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const cards = response?.data?.cards;
+  return {
+    positive: toSafeNumber(cards?.positive),
+    neutral: toSafeNumber(cards?.neutral),
+    negative: toSafeNumber(cards?.negative),
+  };
+}
+
 // =========================
 // Social Listening
 // =========================
@@ -382,7 +464,9 @@ export async function getSocialListenings(): Promise<SocialListening[]> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<GetSocialListeningResponse | SocialListening[]>({
+  const response = await fetchJson<
+    GetSocialListeningResponse | SocialListening[]
+  >({
     baseUrl: getBaseUrl(),
     path: "/v1/project",
     method: "GET",
@@ -398,28 +482,43 @@ export async function getSocialListenings(): Promise<SocialListening[]> {
 
   // If it's already an array, return it
   if (Array.isArray(response)) {
-    console.log("getSocialListenings: Response is array with length:", response.length);
+    console.log(
+      "getSocialListenings: Response is array with length:",
+      response.length,
+    );
     return response;
   }
 
   // Check if it's an object with a data property
   if (typeof response === "object" && response !== null) {
     const anyResponse = response as any;
-    
+
     // Handle nested structure: response.data.survey.data
-    if (anyResponse.data?.survey?.data && Array.isArray(anyResponse.data.survey.data)) {
-      console.log("getSocialListenings: Found nested data.survey.data array with length:", anyResponse.data.survey.data.length);
+    if (
+      anyResponse.data?.survey?.data &&
+      Array.isArray(anyResponse.data.survey.data)
+    ) {
+      console.log(
+        "getSocialListenings: Found nested data.survey.data array with length:",
+        anyResponse.data.survey.data.length,
+      );
       return anyResponse.data.survey.data;
     }
-    
+
     // Handle standard wrapped response: response.data
     if (Array.isArray(anyResponse.data)) {
-      console.log("getSocialListenings: Response has data array with length:", anyResponse.data.length);
+      console.log(
+        "getSocialListenings: Response has data array with length:",
+        anyResponse.data.length,
+      );
       return anyResponse.data;
     }
-    
+
     // Log the full response structure for debugging
-    console.log("getSocialListenings: Unexpected response structure:", JSON.stringify(response, null, 2));
+    console.log(
+      "getSocialListenings: Unexpected response structure:",
+      JSON.stringify(response, null, 2),
+    );
   }
 
   console.error("getSocialListenings: Unexpected response format:", response);
@@ -436,7 +535,9 @@ export async function createSocialListening(
   console.log("createSocialListening: Sending payload:", payload);
 
   try {
-    const response = await fetchJson<CreateSocialListeningResponse | SocialListening>({
+    const response = await fetchJson<
+      CreateSocialListeningResponse | SocialListening
+    >({
       baseUrl: getBaseUrl(),
       path: "/v1/project/create",
       method: "POST",
@@ -446,11 +547,16 @@ export async function createSocialListening(
 
     console.log("createSocialListening: Raw response:", response);
     console.log("createSocialListening: Response type:", typeof response);
-    console.log("createSocialListening: Response keys:", response ? Object.keys(response) : 'null');
+    console.log(
+      "createSocialListening: Response keys:",
+      response ? Object.keys(response) : "null",
+    );
 
     if (!response) {
       // API might not return data, construct from payload
-      console.log("createSocialListening: No response, returning constructed item");
+      console.log(
+        "createSocialListening: No response, returning constructed item",
+      );
       return {
         id: Date.now(), // Generate temporary ID
         title: payload.title,
@@ -462,19 +568,25 @@ export async function createSocialListening(
     // Handle both wrapped and unwrapped responses
     let data: SocialListening | undefined;
     const anyResponse = response as any;
-    
+
     // Check for nested structure: response.data.survey.data or response.data
     if (anyResponse.data?.survey?.data && anyResponse.data.survey.data.id) {
-      console.log("createSocialListening: Found nested data.survey.data:", anyResponse.data.survey.data);
+      console.log(
+        "createSocialListening: Found nested data.survey.data:",
+        anyResponse.data.survey.data,
+      );
       data = anyResponse.data.survey.data;
     } else if (anyResponse.data?.id) {
-      console.log("createSocialListening: Found wrapped data:", anyResponse.data);
+      console.log(
+        "createSocialListening: Found wrapped data:",
+        anyResponse.data,
+      );
       data = anyResponse.data;
     } else if ((response as SocialListening).id) {
       console.log("createSocialListening: Found direct response with id");
       data = response as SocialListening;
     }
-    
+
     // Check for other possible response structures
     if (!data) {
       console.log("createSocialListening: Checking alternative structures...");
@@ -514,10 +626,17 @@ export async function editSocialListening(
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  console.log("editSocialListening: Sending payload:", payload, "for projectId:", projectId);
+  console.log(
+    "editSocialListening: Sending payload:",
+    payload,
+    "for projectId:",
+    projectId,
+  );
 
   try {
-    const response = await fetchJson<EditSocialListeningResponse | SocialListening>({
+    const response = await fetchJson<
+      EditSocialListeningResponse | SocialListening
+    >({
       baseUrl: getBaseUrl(),
       path: `/v1/project/${projectId}`,
       method: "PATCH",
@@ -527,11 +646,16 @@ export async function editSocialListening(
 
     console.log("editSocialListening: Raw response:", response);
     console.log("editSocialListening: Response type:", typeof response);
-    console.log("editSocialListening: Response keys:", response ? Object.keys(response) : 'null');
+    console.log(
+      "editSocialListening: Response keys:",
+      response ? Object.keys(response) : "null",
+    );
 
     if (!response) {
       // API might not return data, construct from payload
-      console.log("editSocialListening: No response, returning constructed item");
+      console.log(
+        "editSocialListening: No response, returning constructed item",
+      );
       return {
         id: projectId,
         title: payload.title || "",
@@ -543,7 +667,7 @@ export async function editSocialListening(
     // Handle nested response structure like create
     let data: SocialListening | undefined;
     const anyResponse = response as any;
-    
+
     if (anyResponse.data?.survey?.data && anyResponse.data.survey.data.id) {
       console.log("editSocialListening: Found nested data.survey.data");
       data = anyResponse.data.survey.data;

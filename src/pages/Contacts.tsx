@@ -27,6 +27,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const contactGroups = [
   {
@@ -129,7 +138,7 @@ const Contacts = () => {
       headers.join(","),
       ...contacts.map(
         (c) =>
-          `"${c.name}","${c.email}","${c.phone}","${c.group}","${c.tag}","${c.status}"`
+          `"${c.name}","${c.email}","${c.phone}","${c.group}","${c.tag}","${c.status}"`,
       ),
     ].join("\n");
 
@@ -140,7 +149,7 @@ const Contacts = () => {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `contacts_export_${new Date().toISOString().split("T")[0]}.csv`
+      `contacts_export_${new Date().toISOString().split("T")[0]}.csv`,
     );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
@@ -308,50 +317,34 @@ const Contacts = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex items-center justify-center gap-1 p-4 border-t">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    &lt;
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-[#206AB5] text-white hover:bg-[#1a5a9a] min-w-[32px]"
-                  >
-                    1
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-600 hover:bg-gray-100 min-w-[32px]"
-                  >
-                    2
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-600 hover:bg-gray-100 min-w-[32px]"
-                  >
-                    3
-                  </Button>
-                  <span className="px-2 text-gray-400">......</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-600 hover:bg-gray-100 min-w-[32px]"
-                  >
-                    50
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    &gt;
-                  </Button>
+                <div className="mt-4 border-t p-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious href="#" />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink href="#" isActive>
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink href="#">2</PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink href="#">3</PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink href="#">50</PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationNext href="#" />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               </CardContent>
             </Card>

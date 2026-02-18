@@ -3,19 +3,31 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Smile } from "lucide-react";
 
-const data = [
-  { name: "Positive", value: 60, count: 1404 },
-  { name: "Neutral", value: 25, count: 819 },
-  { name: "Negative", value: 15, count: 117 },
-];
-
 const COLORS = {
   Positive: "hsl(var(--success))",
   Neutral: "hsl(var(--warning))",
   Negative: "hsl(var(--destructive))",
 };
 
-export function SentimentChart() {
+type SentimentChartProps = {
+  positive?: number;
+  neutral?: number;
+  negative?: number;
+};
+
+export function SentimentChart({
+  positive = 0,
+  neutral = 0,
+  negative = 0,
+}: SentimentChartProps) {
+  const total = positive + neutral + negative;
+  const positivePercent = total > 0 ? Math.round((positive / total) * 100) : 0;
+  const data = [
+    { name: "Positive", value: positive, count: positive },
+    { name: "Neutral", value: neutral, count: neutral },
+    { name: "Negative", value: negative, count: negative },
+  ];
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -62,7 +74,9 @@ export function SentimentChart() {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-2xl font-bold text-foreground">60%</span>
+              <span className="text-2xl font-bold text-foreground">
+                {positivePercent}%
+              </span>
             </div>
           </div>
 

@@ -1,5 +1,5 @@
-import { ReactNode, useEffect } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { ReactNode } from "react";
+import { Navigate } from "react-router-dom";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getAuthToken } from "@/lib/session";
 import { Loader } from "@/components/ui/loader";
@@ -11,14 +11,6 @@ type ProtectedRouteProps = {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, isLoading, error } = useCurrentUser();
   const token = getAuthToken();
-  const navigate = useNavigate();
-
-  // If there's an error indicating session expired
-  useEffect(() => {
-    if (error && error.includes("Session expired")) {
-      navigate("/login?sessionExpired=true", { replace: true });
-    }
-  }, [error, navigate]);
 
   // If there's no token, redirect to login
   if (!token && !isLoading) {

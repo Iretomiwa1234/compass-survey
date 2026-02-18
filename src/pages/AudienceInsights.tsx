@@ -86,7 +86,7 @@ const AudienceInsights = () => {
     const csvContent = [
       headers.join(","),
       ...insights.map(
-        (c) => `"${c.date}","${c.respondent}","${c.channel}","${c.status}"`
+        (c) => `"${c.date}","${c.respondent}","${c.channel}","${c.status}"`,
       ),
     ].join("\n");
 
@@ -340,7 +340,7 @@ const AudienceInsights = () => {
                 </Table>
               </div>
 
-              <div className="flex justify-center">
+              <div className="mt-4 flex justify-center">
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>

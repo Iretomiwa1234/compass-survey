@@ -1,3 +1,5 @@
+import { emitSessionExpired } from "./session";
+
 export class ApiError extends Error {
   readonly status: number;
   readonly data: unknown;
@@ -61,6 +63,9 @@ export async function fetchJson<T>(options: FetchJsonOptions): Promise<T> {
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const hasAuthorizationHeader = Object.keys(headers ?? {}).some(
+    (headerName) => headerName.toLowerCase() === "authorization",
+  );
 
   try {
     const response = await fetch(joinUrl(baseUrl, path), {
@@ -78,6 +83,9 @@ export async function fetchJson<T>(options: FetchJsonOptions): Promise<T> {
     const data = await readJsonSafe(response);
 
     if (!response.ok) {
+      if (response.status === 401 && hasAuthorizationHeader) {
+        emitSessionExpired({ reason: "unauthorized" });
+      }
       const message =
         getErrorMessageFromData(data) ?? `Request failed (${response.status})`;
       throw new ApiError(message, response.status, data);

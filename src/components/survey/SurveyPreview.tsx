@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 
 interface SurveyPreviewProps {
   onDropType?: (label: string, insertIndex?: number) => void;
+  onReorderQuestions?: (fromIndex: number, toIndex: number) => void;
   title?: string;
   description?: string;
   questions?: Array<{
@@ -56,6 +57,7 @@ interface SurveyPreviewProps {
 
 const SurveyPreview = ({
   onDropType,
+  onReorderQuestions,
   title = "Survey Title",
   description = "",
   questions = [],
@@ -65,8 +67,25 @@ const SurveyPreview = ({
   onRemoveQuestion,
 }: SurveyPreviewProps) => {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [draggingQuestionIndex, setDraggingQuestionIndex] = useState<
+    number | null
+  >(null);
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+  };
+
+  const handleQuestionDragStart = (
+    e: React.DragEvent<HTMLDivElement>,
+    index: number,
+  ) => {
+    e.dataTransfer.setData("application/x-survey-question-index", String(index));
+    e.dataTransfer.effectAllowed = "move";
+    setDraggingQuestionIndex(index);
+  };
+
+  const handleQuestionDragEnd = () => {
+    setDraggingQuestionIndex(null);
+    setHoverIndex(null);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -81,6 +100,19 @@ const SurveyPreview = ({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    const dragIndexRaw = e.dataTransfer.getData(
+      "application/x-survey-question-index",
+    );
+    if (dragIndexRaw !== "") {
+      const fromIndex = Number.parseInt(dragIndexRaw, 10);
+      if (!Number.isNaN(fromIndex)) {
+        onReorderQuestions?.(fromIndex, insertIndex);
+      }
+      setDraggingQuestionIndex(null);
+      setHoverIndex(null);
+      return;
+    }
+
     const label = e.dataTransfer.getData("application/x-inputtype");
     if (label) onDropType?.(label, insertIndex);
     setHoverIndex(null);
@@ -132,12 +164,17 @@ const SurveyPreview = ({
                     />
                     <div
                       onClick={() => onSelectQuestion?.(q.id)}
+                      draggable
+                      onDragStart={(e) => handleQuestionDragStart(e, idx)}
+                      onDragEnd={handleQuestionDragEnd}
                       className={`cursor-pointer rounded-md p-0 border transition-colors ${
                         invalidQuestionIds.includes(q.id)
                           ? "bg-rose-50 border-rose-200"
                           : selectedQuestionId === q.id
                             ? "bg-[#EDF3FF] border-[#B5CDE6]"
                             : "border-transparent"
+                      } ${
+                        draggingQuestionIndex === idx ? "opacity-70" : ""
                       }`}
                     >
                       <div className="px-4 py-2">
