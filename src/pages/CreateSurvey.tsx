@@ -25,6 +25,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import AddInputPanel from "@/components/survey/AddInputPannel";
 import SurveyPreview from "@/components/survey/SurveyPreview";
+import { openSurveyPreview } from "@/pages/SurveyPreviewPage";
 import EditInputPanel from "@/components/survey/EditInputPanel";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -83,7 +84,14 @@ const CreateSurvey = () => {
   const [isSavingSurvey, setIsSavingSurvey] = useState(false);
   const [showEditBanner, setShowEditBanner] = useState(true);
   const [invalidQuestionIds, setInvalidQuestionIds] = useState<number[]>([]);
+  const [isPublishedSurvey, setIsPublishedSurvey] = useState(false);
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const [pendingSaveAction, setPendingSaveAction] = useState<{
+    status: CreateSurveyPayload["status"];
+    isPublished: 0 | 1;
+    successLabel: "Draft" | "Template" | "Publish" | "Update";
+  } | null>(null);
 
   type QuestionType =
     | "text"
@@ -274,6 +282,7 @@ const CreateSurvey = () => {
           ...q,
           id: idx + 1,
         }));
+        setIsPublishedSurvey(Number(survey.is_published ?? 0) === 1);
         setQuestions(ordered);
         setSelectedId(ordered[0]?.id ?? null);
       })
@@ -605,9 +614,28 @@ const CreateSurvey = () => {
     }
   };
 
-  const handleSaveDraft = () => handleSave("draft", 0, "Draft");
-  const handleSaveTemplate = () => handleSave("active", 0, "Template");
-  const handleSavePublish = () => handleSave("active", 1, "Publish");
+  const handleRequestSaveConfirmation = (
+    status: CreateSurveyPayload["status"],
+    isPublished: 0 | 1,
+    successLabel: "Draft" | "Template" | "Publish" | "Update",
+  ) => {
+    setPendingSaveAction({ status, isPublished, successLabel });
+    setSaveConfirmOpen(true);
+  };
+
+  const handleConfirmSave = () => {
+    if (!pendingSaveAction) return;
+    const { status, isPublished, successLabel } = pendingSaveAction;
+    setSaveConfirmOpen(false);
+    void handleSave(status, isPublished, successLabel);
+  };
+
+  const handleSaveDraft = () =>
+    handleRequestSaveConfirmation("draft", 0, "Draft");
+  const handleSaveTemplate = () =>
+    handleRequestSaveConfirmation("active", 0, "Template");
+  const handleSavePublish = () =>
+    handleRequestSaveConfirmation("active", 1, "Publish");
   const handleConfirmClose = () => {
     setCloseConfirmOpen(false);
     void handleSave("close", 0, "Closed");
@@ -616,7 +644,7 @@ const CreateSurvey = () => {
   return (
     <SidebarProvider>
       {isSavingSurvey && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#00000033] backdrop-blur-[10px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/45 backdrop-blur-[14px]">
           <Loader size={24} />
         </div>
       )}
@@ -648,41 +676,63 @@ const CreateSurvey = () => {
                   variant="outline"
                   size="sm"
                   className="gap-2 bg-[#EDF3FF] text-[#206AB5] rounded-[10px] px-3 py-4 border-none hover:bg-[#DCE7FF]"
+                  onClick={() =>
+                    openSurveyPreview({
+                      title: surveyTitle,
+                      description,
+                      questions,
+                    })
+                  }
                 >
                   <Eye className="h-4 w-4" />
                   Preview
                 </Button>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 bg-[#EDF3FF] text-[#206AB5] rounded-[10px] px-3 py-4 border-none hover:bg-[#DCE7FF]"
-                    >
-                      <Save className="h-4 w-4" />
-                      Save
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-white">
-                    <DropdownMenuItem onClick={handleSaveDraft}>
-                      Save as Draft
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleSaveTemplate}>
-                      Save as Template
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {isEditing && isPublishedSurvey ? (
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-[#206AB5] text-white rounded-[10px] px-3 py-4 border-none hover:bg-[#185287]"
+                    onClick={() =>
+                      handleRequestSaveConfirmation("active", 1, "Update")
+                    }
+                  >
+                    <Save className="h-4 w-4" />
+                    Update
+                  </Button>
+                ) : (
+                  <>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 bg-[#EDF3FF] text-[#206AB5] rounded-[10px] px-3 py-4 border-none hover:bg-[#DCE7FF]"
+                        >
+                          <Save className="h-4 w-4" />
+                          Save
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-white">
+                        <DropdownMenuItem onClick={handleSaveDraft}>
+                          Save as Draft
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleSaveTemplate}>
+                          Save as Template
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
-                <Button
-                  size="sm"
-                  className="gap-2 bg-[#206AB5] text-white rounded-[10px] px-3 py-4 border-none hover:bg-[#185287]"
-                  onClick={handleSavePublish}
-                >
-                  <Send className="h-4 w-4" />
-                  Publish
-                </Button>
+                    <Button
+                      size="sm"
+                      className="gap-2 bg-[#206AB5] text-white rounded-[10px] px-3 py-4 border-none hover:bg-[#185287]"
+                      onClick={handleSavePublish}
+                    >
+                      <Send className="h-4 w-4" />
+                      Publish
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
             {isEditing && isLoadingSurvey ? (
@@ -897,6 +947,44 @@ const CreateSurvey = () => {
           </div>
         </SidebarInset>
       </div>
+      <Dialog
+        open={saveConfirmOpen}
+        onOpenChange={(open) => {
+          setSaveConfirmOpen(open);
+          if (!open) {
+            setPendingSaveAction(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Action</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to{" "}
+              {pendingSaveAction?.successLabel === "Update"
+                ? "update this survey"
+                : pendingSaveAction?.successLabel === "Publish"
+                  ? "publish this survey"
+                  : pendingSaveAction?.successLabel === "Template"
+                    ? "save this survey as a template"
+                    : "save this survey as a draft"}
+              ?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSaveConfirmOpen(false);
+                setPendingSaveAction(null);
+              }}
+            >
+              No
+            </Button>
+            <Button onClick={handleConfirmSave}>Yes, Continue</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

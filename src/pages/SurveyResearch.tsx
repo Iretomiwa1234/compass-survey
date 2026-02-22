@@ -607,10 +607,12 @@ const SurveyResearch = () => {
                   className="bg-[#206AB5] hover:bg-[#185287] text-white"
                   onClick={() => {
                     setViewModalOpen(false);
-                    navigate("/survey-analysis");
+                    if (selectedSurvey) {
+                      navigate(`/create-survey/edit/${selectedSurvey.id}`);
+                    }
                   }}
                 >
-                  View Analytics
+                  Edit Survey
                 </Button>
               </div>
             </div>

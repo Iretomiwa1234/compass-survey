@@ -27,6 +27,7 @@ import AudienceInsights from "./pages/AudienceInsights";
 import NotFound from "./pages/NotFound";
 import { QuickActions } from "./components/QuickActions";
 import { SessionExpiredModal } from "./components/SessionExpiredModal";
+import SurveyPreviewPage from "./pages/SurveyPreviewPage";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verification" element={<Verification />} />
+            <Route path="/survey-preview" element={<SurveyPreviewPage />} />
 
             {/* Protected routes */}
             <Route

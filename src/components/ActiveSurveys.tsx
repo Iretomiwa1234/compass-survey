@@ -270,11 +270,11 @@ export function ActiveSurveys({ surveys = [] }: ActiveSurveysProps) {
                 <Button
                   onClick={() => {
                     setDetailsOpen(false);
-                    handleAnalytics();
+                    handleEdit(selectedSurvey);
                   }}
                 >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  View Analytics
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Survey
                 </Button>
               </div>
             </div>
