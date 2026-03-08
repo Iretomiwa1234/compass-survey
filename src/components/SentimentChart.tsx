@@ -35,14 +35,14 @@ export function SentimentChart({
           <div className="p-2 rounded-lg bg-success/10">
             <Smile className="w-5 h-5 text-success" />
           </div>
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             className="h-8 !border-none !text-[0.6em]"
           >
             Optimal Brand
             <ChevronDown className="w-4 h-4 ml-2" />
-          </Button>
+          </Button> */}
         </div>
 
         <div className="space-y-1 mb-6">

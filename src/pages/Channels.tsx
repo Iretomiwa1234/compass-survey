@@ -73,15 +73,26 @@ const Channels = () => {
   const [demoAgeMin, setDemoAgeMin] = useState("");
   const [demoAgeMax, setDemoAgeMax] = useState("");
   const [demoGenders, setDemoGenders] = useState<string[]>([]);
+  const [demoMaritalStatus, setDemoMaritalStatus] = useState<string[]>([]);
   const [demoLocations, setDemoLocations] = useState<string[]>([]);
-  const toggleGender = (g: string) =>
-    setDemoGenders((prev) =>
-      prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g],
+  const [demoLanguages, setDemoLanguages] = useState<string[]>([]);
+  const [demoEducation, setDemoEducation] = useState<string[]>([]);
+  const [demoEmployment, setDemoEmployment] = useState<string[]>([]);
+  const [demoOccupation, setDemoOccupation] = useState("");
+  const [demoIndustry, setDemoIndustry] = useState<string[]>([]);
+  const [demoDeviceType, setDemoDeviceType] = useState<string[]>([]);
+  const [demoDeviceOS, setDemoDeviceOS] = useState<string[]>([]);
+
+  const toggleDemoItem = (
+    setter: React.Dispatch<React.SetStateAction<string[]>>,
+    value: string,
+  ) =>
+    setter((prev) =>
+      prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value],
     );
-  const toggleLocation = (l: string) =>
-    setDemoLocations((prev) =>
-      prev.includes(l) ? prev.filter((x) => x !== l) : [...prev, l],
-    );
+
+  const toggleGender = (g: string) => toggleDemoItem(setDemoGenders, g);
+  const toggleLocation = (l: string) => toggleDemoItem(setDemoLocations, l);
 
   // Upload states
   const [emailRecipients, setEmailRecipients] = useState("");
@@ -1042,15 +1053,32 @@ Thank you!`}
                                 <span className="flex items-center gap-2">
                                   <Users className="w-4 h-4 text-[#206AB5]" />
                                   Demographic targeting
-                                  {(demoGenders.length > 0 ||
-                                    demoLocations.length > 0 ||
-                                    demoAgeMin ||
-                                    demoAgeMax) && (
+                                  {[
+                                    demoGenders.length > 0,
+                                    demoMaritalStatus.length > 0,
+                                    demoLocations.length > 0,
+                                    demoLanguages.length > 0,
+                                    demoEducation.length > 0,
+                                    demoEmployment.length > 0,
+                                    !!demoOccupation,
+                                    demoIndustry.length > 0,
+                                    demoDeviceType.length > 0,
+                                    demoDeviceOS.length > 0,
+                                    !!(demoAgeMin || demoAgeMax),
+                                  ].filter(Boolean).length > 0 && (
                                     <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#206AB5] text-white text-[9px] font-bold">
                                       {
                                         [
                                           demoGenders.length > 0,
+                                          demoMaritalStatus.length > 0,
                                           demoLocations.length > 0,
+                                          demoLanguages.length > 0,
+                                          demoEducation.length > 0,
+                                          demoEmployment.length > 0,
+                                          !!demoOccupation,
+                                          demoIndustry.length > 0,
+                                          demoDeviceType.length > 0,
+                                          demoDeviceOS.length > 0,
                                           !!(demoAgeMin || demoAgeMax),
                                         ].filter(Boolean).length
                                       }
@@ -1065,7 +1093,7 @@ Thank you!`}
                               </button>
 
                               {showDemographics && (
-                                <div className="px-4 py-4 space-y-4 border-t border-border bg-white">
+                                <div className="px-4 py-4 space-y-5 border-t border-border bg-white">
                                   {/* Age range */}
                                   <div className="space-y-2">
                                     <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
@@ -1121,11 +1149,7 @@ Thank you!`}
                                             key={g}
                                             type="button"
                                             onClick={() => toggleGender(g)}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                                              active
-                                                ? "bg-[#206AB5] border-[#206AB5] text-white"
-                                                : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"
-                                            }`}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
                                           >
                                             {active && (
                                               <Check className="inline w-3 h-3 mr-1" />
@@ -1140,20 +1164,62 @@ Thank you!`}
                                     </p>
                                   </div>
 
-                                  {/* Location */}
+                                  {/* Marital status */}
                                   <div className="space-y-2">
                                     <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Location / Region
+                                      Marital status
                                     </label>
                                     <div className="flex flex-wrap gap-2">
                                       {[
-                                        "North America",
-                                        "Europe",
-                                        "Africa",
-                                        "Asia",
-                                        "Oceania",
-                                        "Latin America",
-                                        "Middle East",
+                                        "Single",
+                                        "Married",
+                                        "Divorced",
+                                        "Widowed",
+                                        "Separated",
+                                      ].map((m) => {
+                                        const active =
+                                          demoMaritalStatus.includes(m);
+                                        return (
+                                          <button
+                                            key={m}
+                                            type="button"
+                                            onClick={() =>
+                                              toggleDemoItem(
+                                                setDemoMaritalStatus,
+                                                m,
+                                              )
+                                            }
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
+                                          >
+                                            {active && (
+                                              <Check className="inline w-3 h-3 mr-1" />
+                                            )}
+                                            {m}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Select none to include all.
+                                    </p>
+                                  </div>
+
+                                  {/* Location — country & state */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                      Location (Country / State)
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[
+                                        "Nigeria",
+                                        "Ghana",
+                                        "Kenya",
+                                        "South Africa",
+                                        "United States",
+                                        "United Kingdom",
+                                        "Canada",
+                                        "India",
+                                        "Other",
                                       ].map((loc) => {
                                         const active =
                                           demoLocations.includes(loc);
@@ -1162,11 +1228,7 @@ Thank you!`}
                                             key={loc}
                                             type="button"
                                             onClick={() => toggleLocation(loc)}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                                              active
-                                                ? "bg-[#206AB5] border-[#206AB5] text-white"
-                                                : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"
-                                            }`}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
                                           >
                                             {active && (
                                               <Check className="inline w-3 h-3 mr-1" />
@@ -1177,19 +1239,310 @@ Thank you!`}
                                       })}
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                      Select none to include all regions.
+                                      Select none to include all locations.
                                     </p>
                                   </div>
 
-                                  {(demoGenders.length > 0 ||
-                                    demoLocations.length > 0 ||
-                                    demoAgeMin ||
-                                    demoAgeMax) && (
+                                  {/* Language */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                      Language
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[
+                                        "English",
+                                        "French",
+                                        "Arabic",
+                                        "Spanish",
+                                        "Portuguese",
+                                        "Swahili",
+                                        "Hausa",
+                                        "Yoruba",
+                                        "Igbo",
+                                      ].map((lang) => {
+                                        const active =
+                                          demoLanguages.includes(lang);
+                                        return (
+                                          <button
+                                            key={lang}
+                                            type="button"
+                                            onClick={() =>
+                                              toggleDemoItem(
+                                                setDemoLanguages,
+                                                lang,
+                                              )
+                                            }
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
+                                          >
+                                            {active && (
+                                              <Check className="inline w-3 h-3 mr-1" />
+                                            )}
+                                            {lang}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Select none to include all languages.
+                                    </p>
+                                  </div>
+
+                                  {/* Education level */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                      Education level
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[
+                                        "No formal education",
+                                        "Primary",
+                                        "Secondary / High school",
+                                        "Vocational / Technical",
+                                        "Undergraduate",
+                                        "Postgraduate",
+                                        "PhD",
+                                      ].map((edu) => {
+                                        const active =
+                                          demoEducation.includes(edu);
+                                        return (
+                                          <button
+                                            key={edu}
+                                            type="button"
+                                            onClick={() =>
+                                              toggleDemoItem(
+                                                setDemoEducation,
+                                                edu,
+                                              )
+                                            }
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
+                                          >
+                                            {active && (
+                                              <Check className="inline w-3 h-3 mr-1" />
+                                            )}
+                                            {edu}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Select none to include all education
+                                      levels.
+                                    </p>
+                                  </div>
+
+                                  {/* Employment status */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                      Employment status
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[
+                                        "Employed (full-time)",
+                                        "Employed (part-time)",
+                                        "Self-employed",
+                                        "Freelancer",
+                                        "Unemployed",
+                                        "Student",
+                                        "Retired",
+                                      ].map((emp) => {
+                                        const active =
+                                          demoEmployment.includes(emp);
+                                        return (
+                                          <button
+                                            key={emp}
+                                            type="button"
+                                            onClick={() =>
+                                              toggleDemoItem(
+                                                setDemoEmployment,
+                                                emp,
+                                              )
+                                            }
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
+                                          >
+                                            {active && (
+                                              <Check className="inline w-3 h-3 mr-1" />
+                                            )}
+                                            {emp}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Select none to include all employment
+                                      statuses.
+                                    </p>
+                                  </div>
+
+                                  {/* Occupation (free text) */}
+                                  {/* <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                      Occupation
+                                    </label>
+                                    <Input
+                                      placeholder="e.g. Software Engineer, Teacher, Doctor…"
+                                      value={demoOccupation}
+                                      onChange={(e) =>
+                                        setDemoOccupation(e.target.value)
+                                      }
+                                      className="h-9 bg-card border border-border text-sm"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Leave blank to include all occupations.
+                                    </p>
+                                  </div> */}
+
+                                  {/* Industry */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                      Industry
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[
+                                        "Technology",
+                                        "Healthcare",
+                                        "Finance / Banking",
+                                        "Education",
+                                        "Retail / E-commerce",
+                                        "Agriculture",
+                                        "Manufacturing",
+                                        "Media / Entertainment",
+                                        "Government / Public sector",
+                                        "NGO / Non-profit",
+                                        "Hospitality / Tourism",
+                                        "Other",
+                                      ].map((ind) => {
+                                        const active =
+                                          demoIndustry.includes(ind);
+                                        return (
+                                          <button
+                                            key={ind}
+                                            type="button"
+                                            onClick={() =>
+                                              toggleDemoItem(
+                                                setDemoIndustry,
+                                                ind,
+                                              )
+                                            }
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
+                                          >
+                                            {active && (
+                                              <Check className="inline w-3 h-3 mr-1" />
+                                            )}
+                                            {ind}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Select none to include all industries.
+                                    </p>
+                                  </div>
+
+                                  {/* Device type */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                      Device type
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                      {["Mobile", "Tablet", "Desktop"].map(
+                                        (dt) => {
+                                          const active =
+                                            demoDeviceType.includes(dt);
+                                          return (
+                                            <button
+                                              key={dt}
+                                              type="button"
+                                              onClick={() =>
+                                                toggleDemoItem(
+                                                  setDemoDeviceType,
+                                                  dt,
+                                                )
+                                              }
+                                              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
+                                            >
+                                              {active && (
+                                                <Check className="inline w-3 h-3 mr-1" />
+                                              )}
+                                              {dt}
+                                            </button>
+                                          );
+                                        },
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Select none to include all device types.
+                                    </p>
+                                  </div>
+
+                                  {/* Device OS / brand */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                      Device OS / Platform
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[
+                                        "Android",
+                                        "iOS",
+                                        "Windows",
+                                        "macOS",
+                                        "Linux",
+                                        "HarmonyOS",
+                                      ].map((os) => {
+                                        const active =
+                                          demoDeviceOS.includes(os);
+                                        return (
+                                          <button
+                                            key={os}
+                                            type="button"
+                                            onClick={() =>
+                                              toggleDemoItem(
+                                                setDemoDeviceOS,
+                                                os,
+                                              )
+                                            }
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
+                                          >
+                                            {active && (
+                                              <Check className="inline w-3 h-3 mr-1" />
+                                            )}
+                                            {os}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Select none to include all platforms.
+                                    </p>
+                                  </div>
+
+                                  {/* Clear all */}
+                                  {[
+                                    demoGenders,
+                                    demoMaritalStatus,
+                                    demoLocations,
+                                    demoLanguages,
+                                    demoEducation,
+                                    demoEmployment,
+                                    demoIndustry,
+                                    demoDeviceType,
+                                    demoDeviceOS,
+                                  ].some((a) => a.length > 0) ||
+                                  demoAgeMin ||
+                                  demoAgeMax ||
+                                  demoOccupation ? (
                                     <button
                                       type="button"
                                       onClick={() => {
                                         setDemoGenders([]);
+                                        setDemoMaritalStatus([]);
                                         setDemoLocations([]);
+                                        setDemoLanguages([]);
+                                        setDemoEducation([]);
+                                        setDemoEmployment([]);
+                                        setDemoOccupation("");
+                                        setDemoIndustry([]);
+                                        setDemoDeviceType([]);
+                                        setDemoDeviceOS([]);
                                         setDemoAgeMin("");
                                         setDemoAgeMax("");
                                       }}
@@ -1197,82 +1550,9 @@ Thank you!`}
                                     >
                                       Clear all filters
                                     </button>
-                                  )}
+                                  ) : null}
                                 </div>
                               )}
-                            </div>
-
-                            {/* Notification push */}
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium block text-foreground">
-                                Push notification
-                              </label>
-                              <Select defaultValue="none">
-                                <SelectTrigger className="w-full h-10 bg-card border border-border">
-                                  <SelectValue placeholder="Select option" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="none">
-                                    No notification
-                                  </SelectItem>
-                                  <SelectItem value="now">
-                                    Send notification now
-                                  </SelectItem>
-                                  <SelectItem value="scheduled">
-                                    Schedule notification
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <p className="text-xs text-muted-foreground">
-                                Optionally nudge users in the app when this
-                                survey goes live.
-                              </p>
-                            </div>
-
-                            <div className="border-t border-border pt-4 space-y-2">
-                              <label className="text-sm font-medium block text-foreground">
-                                Direct survey link
-                              </label>
-                              <p className="text-xs text-muted-foreground">
-                                Share this link directly — it opens the survey
-                                inside the app if installed, or in the browser
-                                otherwise.
-                              </p>
-                              <div className="flex gap-2">
-                                <Input
-                                  readOnly
-                                  value={surveyLink}
-                                  className="h-10 bg-muted border border-border font-mono text-xs"
-                                />
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-10 px-3 gap-1.5 border-primary text-primary hover:bg-[#206AB5]/5 shrink-0"
-                                  onClick={() => {
-                                    navigator.clipboard
-                                      .writeText(surveyLink)
-                                      .catch(() => {});
-                                    toast({
-                                      title: "Link copied!",
-                                      description:
-                                        "Survey link copied to clipboard.",
-                                    });
-                                  }}
-                                >
-                                  <Copy className="w-4 h-4" />
-                                  Copy
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="h-10 px-3 gap-1.5 bg-[#206AB5] hover:bg-[#185287] text-white shrink-0"
-                                  onClick={() =>
-                                    window.open(surveyLink, "_blank")
-                                  }
-                                >
-                                  <Smartphone className="w-4 h-4" />
-                                  Open
-                                </Button>
-                              </div>
                             </div>
                           </CardContent>
                         </Card>

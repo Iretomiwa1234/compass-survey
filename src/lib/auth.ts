@@ -366,6 +366,289 @@ export async function getSurveyDetail(surveyId: number) {
   });
 }
 
+// =========================
+// Survey Cards / Stats
+// =========================
+
+export type SurveyCardsData = {
+  totalResponses: number;
+  completed: number;
+  inProgress: number;
+  abandoned: number;
+};
+
+export type SurveyCompletionRateData = {
+  completionRatePercentage: number;
+  completed: number;
+  abandoned: number;
+  inProgress: number;
+};
+
+export type SurveyAverageRateData = {
+  avgResponseRatePercentage: number;
+  totalInviteSent: number;
+  totalResponds: number;
+};
+
+export type CountryReachItem = {
+  countryId: number;
+  countryName: string;
+  totalResponses: number;
+};
+
+export type SurveyCountryReachData = {
+  totalCountries: number;
+  top4: CountryReachItem[];
+};
+
+function parsePercentageStr(value: unknown): number {
+  const parsed = parseFloat(String(value ?? "0").replace("%", ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+// GET /v1/survey/cards
+export async function getSurveyCards(
+  surveyId?: number,
+): Promise<SurveyCardsData> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/cards${qs}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const cards = response?.data?.cards ?? {};
+  return {
+    totalResponses: toSafeNumber(cards.total_responses),
+    completed: toSafeNumber(cards.completed),
+    inProgress: toSafeNumber(cards.in_progress),
+    abandoned: toSafeNumber(cards.abandoned),
+  };
+}
+
+// GET /v1/survey/cards/completion-rate
+export async function getSurveyCompletionRate(
+  surveyId?: number,
+): Promise<SurveyCompletionRateData> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/cards/completion-rate${qs}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const stats = response?.data?.completion_stats ?? {};
+  return {
+    completionRatePercentage: parsePercentageStr(stats.completion_rate),
+    completed: toSafeNumber(stats.completed),
+    abandoned: toSafeNumber(stats.abandoned),
+    inProgress: toSafeNumber(stats.in_progress),
+  };
+}
+
+// GET /v1/survey/cards/average-rate
+export async function getSurveyAverageRate(
+  surveyId?: number,
+): Promise<SurveyAverageRateData> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/cards/average-rate${qs}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const metrics = response?.data?.metrics ?? {};
+  return {
+    avgResponseRatePercentage: parsePercentageStr(metrics.avg_response_rate),
+    totalInviteSent: toSafeNumber(metrics.total_invite_sent),
+    totalResponds: toSafeNumber(metrics.total_responds),
+  };
+}
+
+// GET /v1/survey/country/reach
+export async function getSurveyCountryReach(
+  surveyId?: number,
+): Promise<SurveyCountryReachData> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/country/reach${qs}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const raw: Array<{
+    country_id: number;
+    country_name: string;
+    total_responses: number;
+  }> = response?.data?.cards_by_country ?? [];
+
+  const countries: CountryReachItem[] = raw.map((c) => ({
+    countryId: c.country_id,
+    countryName: c.country_name,
+    totalResponses: toSafeNumber(c.total_responses),
+  }));
+
+  const top4 = [...countries]
+    .sort((a, b) => b.totalResponses - a.totalResponses)
+    .slice(0, 4);
+
+  return {
+    totalCountries: countries.length,
+    top4,
+  };
+}
+
+// GET /v1/survey/response-trend
+export async function getSurveyResponseTrend(
+  surveyId: number,
+  start: string,
+  end: string,
+): Promise<any> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  return fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/response-trend?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&survey_id=${surveyId}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export type SurveyDeviceUsageData = {
+  desktop: number;
+  mobile: number;
+  tablet: number;
+};
+
+// GET /v1/survey/device-usage
+export async function getSurveyDeviceUsage(
+  surveyId?: number,
+): Promise<SurveyDeviceUsageData> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/device-usage${qs}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const cards = response?.data?.cards ?? {};
+  return {
+    desktop: toSafeNumber(cards.desktop),
+    mobile: toSafeNumber(cards.mobile),
+    tablet: toSafeNumber(cards.tablet),
+  };
+}
+
+export type SurveyBrowserUsageData = Record<string, number>;
+
+// GET /v1/survey/browser-usage
+export async function getSurveyBrowserUsage(
+  surveyId?: number,
+): Promise<SurveyBrowserUsageData> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/browser-usage${qs}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const cards = response?.data?.cards ?? {};
+  return Object.fromEntries(
+    Object.entries(cards).map(([k, v]) => [k, toSafeNumber(v)]),
+  ) as SurveyBrowserUsageData;
+}
+
+export type SurveyRespondentItem = {
+  customerId: string;
+  fname: string;
+  sname: string;
+  totalResponses: number;
+};
+
+// GET /v1/survey/respondent
+export async function getSurveyRespondents(
+  surveyId?: number,
+): Promise<SurveyRespondentItem[]> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/respondent${qs}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const raw: any[] = response?.data?.top_customers ?? [];
+  return raw.map((c) => ({
+    customerId: String(c.customer_id ?? ""),
+    fname: String(c.fname ?? ""),
+    sname: String(c.sname ?? ""),
+    totalResponses: toSafeNumber(c.total_responses),
+  }));
+}
+
+export type CountryByDayItem = {
+  date: string;
+  day: string;
+  countries: { name: string; value: number }[];
+};
+
+// GET /v1/survey/response-by-country
+export async function getSurveyResponseByCountry(
+  surveyId: number,
+  start: string,
+  end: string,
+): Promise<CountryByDayItem[]> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/response-by-country?survey_id=${surveyId}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const raw: any[] = response?.data?.data ?? [];
+  return raw.map((entry) => ({
+    date: String(entry.date ?? ""),
+    day: String(entry.day ?? ""),
+    countries: Array.isArray(entry.countries)
+      ? entry.countries.map((c: any) => ({
+          name: String(c.name ?? ""),
+          value: toSafeNumber(c.value),
+        }))
+      : [],
+  }));
+}
+
 // Dashboard Mentions Card
 export async function getDashboardMentions(): Promise<DashboardMentionsCard> {
   const token = getAuthToken();

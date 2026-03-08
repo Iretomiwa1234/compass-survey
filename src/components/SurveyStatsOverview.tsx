@@ -6,7 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface SurveyStatsOverviewProps {
   totalResponses?: string;
+  completedBadgeCount?: number;
+  inProgressBadgeCount?: number;
+  abandonedBadgeCount?: number;
   avgResponsePercentage?: number;
+  totalInviteSent?: string;
+  totalResponds?: string;
   completionPercentage?: number;
   completedCount?: string;
   abandonedCount?: string;
@@ -16,18 +21,18 @@ interface SurveyStatsOverviewProps {
 }
 
 export function SurveyStatsOverview({
-  totalResponses = "1,500",
-  avgResponsePercentage = 72,
-  completionPercentage = 10,
-  completedCount = "1,300",
-  abandonedCount = "200",
-  countryReach = 16,
-  countryData = [
-    { name: "Africa", count: 5 },
-    { name: "Asia", count: 3 },
-    { name: "Europe", count: 3 },
-    { name: "America", count: 4 },
-  ],
+  totalResponses = "0",
+  completedBadgeCount = 0,
+  inProgressBadgeCount = 0,
+  abandonedBadgeCount = 0,
+  avgResponsePercentage = 0,
+  totalInviteSent = "0",
+  totalResponds = "0",
+  completionPercentage = 0,
+  completedCount = "0",
+  abandonedCount = "0",
+  countryReach = 0,
+  countryData = [],
   variant = "research",
 }: SurveyStatsOverviewProps) {
   return (
@@ -40,9 +45,21 @@ export function SurveyStatsOverview({
         iconBgColor="bg-purple-500/10"
         iconColor="text-purple-500"
         badges={[
-          { label: "Completed", count: 1100, variant: "success" },
-          { label: "In Progress", count: 200, variant: "warning" },
-          { label: "Abandoned", count: 200, variant: "destructive" },
+          {
+            label: "Completed",
+            count: completedBadgeCount,
+            variant: "success",
+          },
+          {
+            label: "In Progress",
+            count: inProgressBadgeCount,
+            variant: "warning",
+          },
+          {
+            label: "Abandoned",
+            count: abandonedBadgeCount,
+            variant: "destructive",
+          },
         ]}
       />
 
@@ -56,10 +73,10 @@ export function SurveyStatsOverview({
         iconColor="text-amber-500"
         rotation={0}
         data={[
-          { label: "Total Invite Sent", value: "1,500" },
+          { label: "Total Invite Sent", value: totalInviteSent },
           {
             label: "Total Responds",
-            value: "1,300",
+            value: totalResponds,
             color: "text-blue-600",
           },
         ]}

@@ -16,14 +16,14 @@ export function MentionsCard({ totalMentions = 0 }: MentionsCardProps) {
           <div className="p-2 rounded-lg bg-warning/10">
             <MessageSquare className="w-5 h-5 text-warning" />
           </div>
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             className="h-8 !border-none !text-[0.6em]"
           >
             Optimal Brand
             <ChevronDown className="w-4 h-4 ml-2" />
-          </Button>
+          </Button> */}
         </div>
 
         <div className="space-y-1 mb-6">
@@ -33,12 +33,12 @@ export function MentionsCard({ totalMentions = 0 }: MentionsCardProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 mb-6">
+        {/* <div className="flex items-center gap-2 mb-6">
           <TrendingUp className="w-4 h-4 text-success" />
           <span className="text-sm text-success font-medium">
             +23% vs last week
           </span>
-        </div>
+        </div> */}
 
         <div className="flex items-center gap-3 justify-between mt-auto">
           <Button

@@ -49,8 +49,22 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { editSurvey, getSurveyDetail, getSurveys } from "@/lib/auth";
-import type { CreateSurveyPayload } from "@/lib/auth";
+import {
+  editSurvey,
+  getSurveyDetail,
+  getSurveys,
+  getSurveyCards,
+  getSurveyCompletionRate,
+  getSurveyAverageRate,
+  getSurveyCountryReach,
+} from "@/lib/auth";
+import type {
+  CreateSurveyPayload,
+  SurveyCardsData,
+  SurveyCompletionRateData,
+  SurveyAverageRateData,
+  SurveyCountryReachData,
+} from "@/lib/auth";
 import { Loader } from "@/components/ui/loader";
 import { EmptyState } from "@/components/survey/EmptyState";
 import { toast } from "@/hooks/use-toast";
@@ -69,6 +83,15 @@ const SurveyResearch = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const [surveyToClose, setSurveyToClose] = useState<Survey | null>(null);
+
+  const [surveyCards, setSurveyCards] = useState<SurveyCardsData | null>(null);
+  const [completionRate, setCompletionRate] =
+    useState<SurveyCompletionRateData | null>(null);
+  const [averageRate, setAverageRate] = useState<SurveyAverageRateData | null>(
+    null,
+  );
+  const [countryReach, setCountryReach] =
+    useState<SurveyCountryReachData | null>(null);
   const navigate = useNavigate();
 
   const handleGenerateWithAI = useCallback(() => {
@@ -88,7 +111,7 @@ const SurveyResearch = () => {
 
   const handleAnalytics = useCallback(
     (survey: Survey) => {
-      navigate("/survey-analysis");
+      navigate(`/survey-analysis?survey_id=${survey.id}`);
     },
     [navigate],
   );
@@ -262,6 +285,29 @@ const SurveyResearch = () => {
     };
   }, [currentPage]);
 
+  // Fetch survey stats cards on mount
+  useEffect(() => {
+    let isActive = true;
+
+    Promise.allSettled([
+      getSurveyCards(),
+      getSurveyCompletionRate(),
+      getSurveyAverageRate(),
+      getSurveyCountryReach(),
+    ]).then(([cardsRes, completionRes, avgRateRes, countryRes]) => {
+      if (!isActive) return;
+      if (cardsRes.status === "fulfilled") setSurveyCards(cardsRes.value);
+      if (completionRes.status === "fulfilled")
+        setCompletionRate(completionRes.value);
+      if (avgRateRes.status === "fulfilled") setAverageRate(avgRateRes.value);
+      if (countryRes.status === "fulfilled") setCountryReach(countryRes.value);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const filteredSurveys = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     return surveys.filter((survey) => {
@@ -326,7 +372,50 @@ const SurveyResearch = () => {
               </div>
             </div>
 
-            <SurveyStatsOverview variant="research" />
+            <SurveyStatsOverview
+              variant="research"
+              totalResponses={
+                surveyCards
+                  ? surveyCards.totalResponses.toLocaleString()
+                  : undefined
+              }
+              completedBadgeCount={surveyCards?.completed ?? 0}
+              inProgressBadgeCount={surveyCards?.inProgress ?? 0}
+              abandonedBadgeCount={surveyCards?.abandoned ?? 0}
+              completionPercentage={
+                completionRate?.completionRatePercentage ?? 0
+              }
+              completedCount={
+                completionRate
+                  ? completionRate.completed.toLocaleString()
+                  : undefined
+              }
+              abandonedCount={
+                completionRate
+                  ? completionRate.abandoned.toLocaleString()
+                  : undefined
+              }
+              avgResponsePercentage={
+                averageRate?.avgResponseRatePercentage ?? 0
+              }
+              totalInviteSent={
+                averageRate
+                  ? averageRate.totalInviteSent.toLocaleString()
+                  : undefined
+              }
+              totalResponds={
+                averageRate
+                  ? averageRate.totalResponds.toLocaleString()
+                  : undefined
+              }
+              countryReach={countryReach?.totalCountries ?? 0}
+              countryData={
+                countryReach?.top4.map((c) => ({
+                  name: c.countryName,
+                  count: c.totalResponses,
+                })) ?? []
+              }
+            />
             <div className="mt-6 rounded-xl border border-[#dce8f5] bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row">
                 <div className="flex w-full items-center gap-4 sm:w-auto">

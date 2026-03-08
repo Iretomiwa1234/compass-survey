@@ -11,8 +11,11 @@ import { FileText, Users } from "lucide-react";
 import {
   getDashboardMentions,
   getDashboardSentiment,
+  getSurveyCards,
+  getSurveyResponseTrend,
   getSurveys,
   SurveyListItemApi,
+  SurveyCardsData,
 } from "@/lib/auth";
 import {
   SidebarProvider,
@@ -28,6 +31,31 @@ const Index = () => {
     neutral: 0,
     negative: 0,
   });
+  const [surveyCards, setSurveyCards] = useState<SurveyCardsData | null>(null);
+
+  // Fire response-trend request for network inspection (no logging)
+  useEffect(() => {
+    let isActive = true;
+
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+    if (surveys.length > 0) {
+      getSurveyResponseTrend(
+        surveys[0].survey_id,
+        fmt(startDate),
+        fmt(endDate),
+      ).catch(() => {
+        /* ignore errors; request visible in Network tab */
+      });
+    }
+
+    return () => {
+      isActive = false;
+    };
+  }, [surveys]);
 
   useEffect(() => {
     let isActive = true;
@@ -41,6 +69,25 @@ const Index = () => {
       .catch(() => {
         if (!isActive) return;
         setSurveys([]);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  // Fetch survey response cards
+  useEffect(() => {
+    let isActive = true;
+
+    getSurveyCards()
+      .then((data) => {
+        if (!isActive) return;
+        setSurveyCards(data);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setSurveyCards(null);
       });
 
     return () => {
@@ -138,13 +185,29 @@ const Index = () => {
 
               <StatCard
                 title="Total Responses"
-                value="3,250"
+                value={
+                  surveyCards
+                    ? surveyCards.totalResponses.toLocaleString()
+                    : "0"
+                }
                 icon={Users}
                 iconBgColor="bg-purple-500/10"
                 badges={[
-                  { label: "Completed", count: 1872, variant: "success" },
-                  { label: "In Progress", count: 234, variant: "warning" },
-                  { label: "Abandoned", count: 234, variant: "destructive" },
+                  {
+                    label: "Completed",
+                    count: surveyCards?.completed ?? 0,
+                    variant: "success",
+                  },
+                  {
+                    label: "In Progress",
+                    count: surveyCards?.inProgress ?? 0,
+                    variant: "warning",
+                  },
+                  {
+                    label: "Abandoned",
+                    count: surveyCards?.abandoned ?? 0,
+                    variant: "destructive",
+                  },
                 ]}
               />
 

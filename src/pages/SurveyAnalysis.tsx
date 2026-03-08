@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { SurveyStatsOverview } from "@/components/SurveyStatsOverview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -10,8 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   SidebarProvider,
   SidebarInset,
@@ -25,7 +26,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Download } from "lucide-react";
+import {
+  Search,
+  Download,
+  FileText,
+  Users,
+  TrendingUp,
+  CheckCircle2,
+  Globe2,
+} from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -41,21 +50,44 @@ import {
   Bar,
 } from "recharts";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import {
+  getSurveys,
+  getSurveyCards,
+  getSurveyCompletionRate,
+  getSurveyAverageRate,
+  getSurveyCountryReach,
+  getSurveyResponseTrend,
+  getSurveyDeviceUsage,
+  getSurveyBrowserUsage,
+  getSurveyRespondents,
+  getSurveyResponseByCountry,
+  type SurveyListItemApi,
+  type SurveyCardsData,
+  type SurveyCompletionRateData,
+  type SurveyAverageRateData,
+  type SurveyCountryReachData,
+  type SurveyRespondentItem,
+  type CountryByDayItem,
+} from "@/lib/auth";
+import { StatCard } from "@/components/StatCard";
+import { DonutMetricCard } from "@/components/DonutMetricCard";
+import { CompletionRateCard } from "@/components/CompletionRateCard";
 
-const responseTrendData = [
-  { day: "Monday", value: 1800 },
-  { day: "Tuesday", value: 1000 },
-  { day: "Wednesday", value: 1600 },
-  { day: "Thursday", value: 1500 },
-  { day: "Friday", value: 1900 },
-  { day: "Saturday", value: 900 },
-  { day: "Sunday", value: 1200 },
+const defaultTrendData = [
+  { day: "Monday", value: 0 },
+  { day: "Tuesday", value: 0 },
+  { day: "Wednesday", value: 0 },
+  { day: "Thursday", value: 0 },
+  { day: "Friday", value: 0 },
+  { day: "Saturday", value: 0 },
+  { day: "Sunday", value: 0 },
 ];
 
-const deviceUsageData = [
-  { name: "Desktop", value: 410, color: "#5B8FF9" },
-  { name: "Mobile", value: 142, color: "#FF9D4D" },
-  { name: "Tablet", value: 340, color: "#313C4A" },
+const defaultDeviceData = [
+  { name: "Desktop", value: 0, color: "#5B8FF9" },
+  { name: "Mobile", value: 0, color: "#FF9D4D" },
+  { name: "Tablet", value: 0, color: "#313C4A" },
 ];
 
 const countryColorPalette = [
@@ -76,121 +108,11 @@ const countryColorPalette = [
   "#0288D1",
 ];
 
-const countryResponse = {
-  data: [
-    {
-      day: "Monday",
-      countries: [
-        { name: "Nigeria", value: 120 },
-        { name: "Ghana", value: 60 },
-        { name: "Kenya", value: 40 },
-        { name: "South Africa", value: 55 },
-        { name: "Egypt", value: 35 },
-      ],
-    },
-    {
-      day: "Tuesday",
-      countries: [
-        { name: "Nigeria", value: 260 },
-        { name: "Ghana", value: 160 },
-        { name: "Kenya", value: 110 },
-        { name: "South Africa", value: 95 },
-        { name: "Egypt", value: 80 },
-      ],
-    },
-    {
-      day: "Wednesday",
-      countries: [
-        { name: "Nigeria", value: 180 },
-        { name: "Ghana", value: 130 },
-        { name: "Kenya", value: 90 },
-        { name: "South Africa", value: 70 },
-        { name: "Egypt", value: 60 },
-      ],
-    },
-    {
-      day: "Thursday",
-      countries: [
-        { name: "Nigeria", value: 150 },
-        { name: "Ghana", value: 120 },
-        { name: "Kenya", value: 80 },
-        { name: "South Africa", value: 65 },
-        { name: "Egypt", value: 55 },
-      ],
-    },
-    {
-      day: "Friday",
-      countries: [
-        { name: "Nigeria", value: 210 },
-        { name: "Ghana", value: 140 },
-        { name: "Kenya", value: 120 },
-        { name: "South Africa", value: 85 },
-        { name: "Egypt", value: 75 },
-      ],
-    },
-    {
-      day: "Saturday",
-      countries: [
-        { name: "Nigeria", value: 90 },
-        { name: "Ghana", value: 55 },
-        { name: "Kenya", value: 40 },
-        { name: "South Africa", value: 35 },
-        { name: "Egypt", value: 30 },
-      ],
-    },
-    {
-      day: "Sunday",
-      countries: [
-        { name: "Nigeria", value: 240 },
-        { name: "Ghana", value: 170 },
-        { name: "Kenya", value: 130 },
-        { name: "South Africa", value: 105 },
-        { name: "Egypt", value: 90 },
-      ],
-    },
-  ],
-};
-
 const countryKeyFromName = (name: string) =>
   name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-
-const countrySeries = Array.from(
-  new Set(
-    countryResponse.data.flatMap((entry) =>
-      entry.countries.map((country) => country.name),
-    ),
-  ),
-).map((name) => ({ name, key: countryKeyFromName(name) }));
-
-const countryStackData = countryResponse.data.map((entry) => {
-  const values = entry.countries.reduce<Record<string, number>>((acc, item) => {
-    acc[countryKeyFromName(item.name)] = item.value;
-    return acc;
-  }, {});
-  return {
-    day: entry.day,
-    ...values,
-  };
-});
-
-const browserData = [
-  { name: "Chrome", value: 807 },
-  { name: "Safari", value: 455 },
-  { name: "Firefox", value: 253 },
-  { name: "Edge", value: 57 },
-];
-
-const respondentData = [
-  "Ronald Richards",
-  "Jerome Bell",
-  "Floyd Miles",
-  "Brooklyn Simmons",
-  "Darlene Robertson",
-  "Robert Fox",
-];
 
 const ageData = [
   { range: "18 - 24", value: 3.3 },
@@ -201,10 +123,290 @@ const ageData = [
 ];
 
 const SurveyAnalysis = () => {
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const searchRef = useRef<HTMLDivElement>(null);
+
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
+  // Survey listing
+  const [surveys, setSurveys] = useState<SurveyListItemApi[]>([]);
+  const [isLoadingSurveys, setIsLoadingSurveys] = useState(false);
+
+  // Survey selection
+  const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
+  const [selectedSurveyTitle, setSelectedSurveyTitle] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Card data
+  const [isLoadingCards, setIsLoadingCards] = useState(false);
+  const [surveyCards, setSurveyCards] = useState<SurveyCardsData | null>(null);
+  const [completionRate, setCompletionRate] =
+    useState<SurveyCompletionRateData | null>(null);
+  const [averageRate, setAverageRate] = useState<SurveyAverageRateData | null>(
+    null,
+  );
+  const [countryReach, setCountryReach] =
+    useState<SurveyCountryReachData | null>(null);
+
+  // Response trend
+  const [trendData, setTrendData] = useState(defaultTrendData);
+
+  // Device / Browser / Respondent
+  const [deviceUsageData, setDeviceUsageData] = useState(defaultDeviceData);
+  const [browserData, setBrowserData] = useState<
+    { name: string; value: number }[]
+  >([]);
+  const [respondentData, setRespondentData] = useState<SurveyRespondentItem[]>(
+    [],
+  );
+
+  // Country chart
+  const [countryChartRaw, setCountryChartRaw] = useState<CountryByDayItem[]>(
+    [],
+  );
+  const [countryDateOffset, setCountryDateOffset] = useState(0);
+  const [isLoadingCountryChart, setIsLoadingCountryChart] = useState(false);
+
+  // Load surveys on mount
+  useEffect(() => {
+    let isActive = true;
+    setIsLoadingSurveys(true);
+    getSurveys(1)
+      .then((res) => {
+        if (!isActive) return;
+        setSurveys(res?.data?.survey?.data ?? []);
+        setIsLoadingSurveys(false);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setSurveys([]);
+        setIsLoadingSurveys(false);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  // Pre-select from ?survey_id= query param once surveys are loaded
+  useEffect(() => {
+    if (!surveys.length) return;
+    const idParam = searchParams.get("survey_id");
+    if (!idParam) return;
+    const id = Number(idParam);
+    const found = surveys.find((s) => s.survey_id === id);
+    if (found) {
+      setSelectedSurveyId(id);
+      setSelectedSurveyTitle(found.title);
+    }
+  }, [surveys, searchParams]);
+
+  // Click-outside to close suggestions
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Fetch cards / trend / device / browser / respondent when selected survey changes
+  useEffect(() => {
+    if (!selectedSurveyId) return;
+    let isActive = true;
+
+    setIsLoadingCards(true);
+    setSurveyCards(null);
+    setCompletionRate(null);
+    setAverageRate(null);
+    setCountryReach(null);
+    setTrendData(defaultTrendData);
+    setDeviceUsageData(defaultDeviceData);
+    setBrowserData([]);
+    setRespondentData([]);
+
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+    Promise.allSettled([
+      getSurveyCards(selectedSurveyId),
+      getSurveyCompletionRate(selectedSurveyId),
+      getSurveyAverageRate(selectedSurveyId),
+      getSurveyCountryReach(selectedSurveyId),
+      getSurveyResponseTrend(selectedSurveyId, fmt(startDate), fmt(endDate)),
+      getSurveyDeviceUsage(selectedSurveyId),
+      getSurveyBrowserUsage(selectedSurveyId),
+      getSurveyRespondents(selectedSurveyId),
+    ]).then(
+      ([
+        cardsRes,
+        completionRes,
+        avgRes,
+        countryRes,
+        trendRes,
+        deviceRes,
+        browserRes,
+        respondentRes,
+      ]) => {
+        if (!isActive) return;
+
+        if (cardsRes.status === "fulfilled") setSurveyCards(cardsRes.value);
+        else
+          toast({
+            title: "Failed to load response data",
+            description: "Could not fetch total responses for this survey.",
+            variant: "destructive",
+          });
+
+        if (completionRes.status === "fulfilled")
+          setCompletionRate(completionRes.value);
+        else
+          toast({
+            title: "Failed to load completion rate",
+            description: "Could not fetch completion rate for this survey.",
+            variant: "destructive",
+          });
+
+        if (avgRes.status === "fulfilled") setAverageRate(avgRes.value);
+        else
+          toast({
+            title: "Failed to load average response rate",
+            description:
+              "Could not fetch average response rate for this survey.",
+            variant: "destructive",
+          });
+
+        if (countryRes.status === "fulfilled")
+          setCountryReach(countryRes.value);
+        else
+          toast({
+            title: "Failed to load country reach",
+            description: "Could not fetch country reach data for this survey.",
+            variant: "destructive",
+          });
+
+        if (trendRes.status === "fulfilled") {
+          const raw = trendRes.value?.data?.data;
+          if (Array.isArray(raw) && raw.length > 0) {
+            setTrendData(
+              raw.map((item: any) => ({
+                day: item.day ?? item.date ?? "",
+                value: Number(item.value ?? 0),
+              })),
+            );
+          }
+        }
+
+        if (deviceRes.status === "fulfilled") {
+          const d = deviceRes.value;
+          setDeviceUsageData([
+            { name: "Desktop", value: d.desktop, color: "#5B8FF9" },
+            { name: "Mobile", value: d.mobile, color: "#FF9D4D" },
+            { name: "Tablet", value: d.tablet, color: "#313C4A" },
+          ]);
+        }
+
+        if (browserRes.status === "fulfilled") {
+          setBrowserData(
+            Object.entries(browserRes.value).map(([name, value]) => ({
+              name,
+              value: value as number,
+            })),
+          );
+        }
+
+        if (respondentRes.status === "fulfilled") {
+          setRespondentData(respondentRes.value);
+        }
+
+        setIsLoadingCards(false);
+      },
+    );
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedSurveyId, toast]);
+
+  // Fetch response-by-country when survey or date window changes
+  useEffect(() => {
+    if (!selectedSurveyId) return;
+    let isActive = true;
+    setIsLoadingCountryChart(true);
+    setCountryChartRaw([]);
+
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - countryDateOffset);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - 6);
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+    getSurveyResponseByCountry(selectedSurveyId, fmt(startDate), fmt(endDate))
+      .then((data) => {
+        if (!isActive) return;
+        setCountryChartRaw(data);
+        setIsLoadingCountryChart(false);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setIsLoadingCountryChart(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedSurveyId, countryDateOffset]);
+
+  const sortedSurveys = useMemo(() => {
+    return [...surveys].sort((a, b) => b.survey_id - a.survey_id);
+  }, [surveys]);
+
+  const filteredSurveys = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return [];
+    return surveys
+      .filter((s) => s.title.toLowerCase().includes(q))
+      .sort((a, b) => b.survey_id - a.survey_id)
+      .slice(0, 10);
+  }, [surveys, searchTerm]);
+
+  const countrySeries = useMemo(() => {
+    const names = new Set<string>();
+    countryChartRaw.forEach((d) =>
+      d.countries.forEach((c) => names.add(c.name)),
+    );
+    return Array.from(names).map((name) => ({
+      name,
+      key: countryKeyFromName(name),
+    }));
+  }, [countryChartRaw]);
+
+  const countryStackData = useMemo(() => {
+    return countryChartRaw.map((entry) => {
+      const values = entry.countries.reduce<Record<string, number>>(
+        (acc, c) => {
+          acc[countryKeyFromName(c.name)] = c.value;
+          return acc;
+        },
+        {},
+      );
+      return { day: entry.day, ...values };
+    });
+  }, [countryChartRaw]);
+
+  const handleSelectSurvey = useCallback((survey: SurveyListItemApi) => {
+    setSelectedSurveyId(survey.survey_id);
+    setSelectedSurveyTitle(survey.title);
+    setSearchTerm("");
+    setShowSuggestions(false);
+  }, []);
+
   const handleExport = () => {
-    // CSV export logic would go here
     setExportModalOpen(false);
   };
 
@@ -225,27 +427,106 @@ const SurveyAnalysis = () => {
             <Card>
               <CardContent className="!py-2 px-3">
                 <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                  <h2 className="text-md font-normal">
-                    Customer Satisfaction Survey
+                  <h2 className="text-md font-normal text-muted-foreground">
+                    {selectedSurveyTitle ? (
+                      <span className="font-semibold text-foreground">
+                        {selectedSurveyTitle}
+                      </span>
+                    ) : (
+                      <span className="italic">No survey selected</span>
+                    )}
                   </h2>
                   <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                    <div className="relative flex-1 sm:w-64">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search for survey" className="pl-9" />
+                    {/* Live search + dropdown */}
+                    <div className="relative flex-1 sm:w-72" ref={searchRef}>
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        placeholder="Search for survey…"
+                        className="pl-9"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setShowSuggestions(true);
+                        }}
+                        onFocus={() => setShowSuggestions(true)}
+                      />
+                      {showSuggestions && (
+                        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white border border-border rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto">
+                          {isLoadingSurveys ? (
+                            <div className="p-3 space-y-2">
+                              {[1, 2, 3].map((i) => (
+                                <Skeleton
+                                  key={i}
+                                  className="h-8 w-full rounded"
+                                />
+                              ))}
+                            </div>
+                          ) : filteredSurveys.length === 0 ? (
+                            <p className="text-sm text-muted-foreground p-3 text-center">
+                              {searchTerm
+                                ? "No surveys match your search."
+                                : "No surveys found."}
+                            </p>
+                          ) : (
+                            filteredSurveys.map((survey) => (
+                              <button
+                                key={survey.survey_id}
+                                type="button"
+                                onMouseDown={() => handleSelectSurvey(survey)}
+                                className={`w-full text-left px-3 py-2.5 text-sm hover:bg-[#F1F5FB] transition-colors flex items-center justify-between gap-2 ${
+                                  selectedSurveyId === survey.survey_id
+                                    ? "bg-[#EEF4FC] font-medium text-[#206AB5]"
+                                    : "text-foreground"
+                                }`}
+                              >
+                                <span className="truncate">{survey.title}</span>
+                                <span className="text-xs text-muted-foreground shrink-0 capitalize">
+                                  {survey.status}
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <Select defaultValue="survey1">
-                      <SelectTrigger className="w-full sm:w-[180px]">
+                    <Select
+                      value={
+                        selectedSurveyId ? String(selectedSurveyId) : undefined
+                      }
+                      onValueChange={(value) => {
+                        const survey = surveys.find(
+                          (s) => s.survey_id === Number(value),
+                        );
+                        if (survey) handleSelectSurvey(survey);
+                      }}
+                    >
+                      <SelectTrigger className="w-full sm:w-[180px] h-9 bg-card border border-border">
                         <SelectValue placeholder="Select Survey" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="survey1">Select Survey</SelectItem>
-                        <SelectItem value="survey2">
-                          Product Feedback
-                        </SelectItem>
+                        {isLoadingSurveys && (
+                          <SelectItem value="loading" disabled>
+                            Loading surveys…
+                          </SelectItem>
+                        )}
+                        {!isLoadingSurveys && sortedSurveys.length === 0 && (
+                          <SelectItem value="empty" disabled>
+                            No surveys found
+                          </SelectItem>
+                        )}
+                        {sortedSurveys.map((survey) => (
+                          <SelectItem
+                            key={survey.survey_id}
+                            value={String(survey.survey_id)}
+                          >
+                            {survey.title}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <Button
                       className="w-full sm:w-auto gap-2"
+                      disabled={!selectedSurveyId}
                       onClick={() => setExportModalOpen(true)}
                     >
                       <Download className="w-4 h-4" />
@@ -256,298 +537,556 @@ const SurveyAnalysis = () => {
               </CardContent>
             </Card>
 
-            <SurveyStatsOverview variant="analysis" />
-
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <Card className="xl:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-base">Response Trend</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={responseTrendData}>
-                        <defs>
-                          <linearGradient
-                            id="colorValue"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="5%"
-                              stopColor="hsl(var(--primary))"
-                              stopOpacity={0.3}
-                            />
-                            <stop
-                              offset="95%"
-                              stopColor="hsl(var(--primary))"
-                              stopOpacity={0}
-                            />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="hsl(var(--border))"
-                        />
-                        <XAxis
-                          dataKey="day"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{
-                            fontSize: 12,
-                            fill: "hsl(var(--muted-foreground))",
-                          }}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{
-                            fontSize: 12,
-                            fill: "hsl(var(--muted-foreground))",
-                          }}
-                        />
-                        <Tooltip />
-                        <Area
-                          type="monotone"
-                          dataKey="value"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#colorValue)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
+            {/* Empty state when no survey is selected */}
+            {!selectedSurveyId ? (
+              <Card className="border border-dashed border-border bg-card">
+                <CardContent className="flex flex-col items-center justify-center py-20 gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                    <FileText className="h-7 w-7 text-muted-foreground" />
+                  </div>
+                  <div className="text-center space-y-1">
+                    <p className="text-base font-semibold text-foreground">
+                      No survey selected
+                    </p>
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                      Search for a survey above to view its analysis, or open
+                      this page from the survey list.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
+            ) : (
+              <>
+                {/* 4 stat cards with skeleton loaders */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                  {/* Total Responses */}
+                  {isLoadingCards ? (
+                    <Card className="border-[#dce8f5] shadow-sm rounded-xl">
+                      <CardContent className="p-5 md:p-6 space-y-3">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-8 w-20" />
+                        <div className="flex gap-3">
+                          <Skeleton className="h-8 flex-1 rounded-full" />
+                          <Skeleton className="h-8 flex-1 rounded-full" />
+                          <Skeleton className="h-8 flex-1 rounded-full" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <StatCard
+                      title="Total Responses"
+                      value={
+                        surveyCards
+                          ? surveyCards.totalResponses.toLocaleString()
+                          : "0"
+                      }
+                      icon={Users}
+                      iconBgColor="bg-purple-500/10"
+                      iconColor="text-purple-500"
+                      badges={[
+                        {
+                          label: "Completed",
+                          count: surveyCards?.completed ?? 0,
+                          variant: "success",
+                        },
+                        {
+                          label: "In Progress",
+                          count: surveyCards?.inProgress ?? 0,
+                          variant: "warning",
+                        },
+                        {
+                          label: "Abandoned",
+                          count: surveyCards?.abandoned ?? 0,
+                          variant: "destructive",
+                        },
+                      ]}
+                    />
+                  )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Device Usage</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[200px] relative">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={deviceUsageData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={0}
-                          dataKey="value"
-                        >
-                          {deviceUsageData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                  {/* Avg Response Rate */}
+                  {isLoadingCards ? (
+                    <Card className="border-[#dce8f5] shadow-sm rounded-xl">
+                      <CardContent className="p-5 md:p-6 space-y-3">
+                        <Skeleton className="h-5 w-36" />
+                        <div className="flex gap-4">
+                          <Skeleton className="h-28 w-28 rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <DonutMetricCard
+                      title="Avg Response Rate"
+                      icon={TrendingUp}
+                      percentage={averageRate?.avgResponseRatePercentage ?? 0}
+                      chartColor="#6A9CCE"
+                      iconBgColor="bg-amber-500/10"
+                      iconColor="text-amber-500"
+                      rotation={0}
+                      data={[
+                        {
+                          label: "Total Invite Sent",
+                          value: averageRate
+                            ? averageRate.totalInviteSent.toLocaleString()
+                            : "0",
+                        },
+                        {
+                          label: "Total Responds",
+                          value: averageRate
+                            ? averageRate.totalResponds.toLocaleString()
+                            : "0",
+                          color: "text-blue-600",
+                        },
+                      ]}
+                    />
+                  )}
+
+                  {/* Completion Rate */}
+                  {isLoadingCards ? (
+                    <Card className="border-[#dce8f5] shadow-sm rounded-xl">
+                      <CardContent className="p-5 md:p-6 space-y-3">
+                        <Skeleton className="h-5 w-36" />
+                        <div className="flex gap-4">
+                          <Skeleton className="h-28 w-28 rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <CompletionRateCard
+                      percentage={completionRate?.completionRatePercentage ?? 0}
+                      completedValue={
+                        completionRate
+                          ? completionRate.completed.toLocaleString()
+                          : "0"
+                      }
+                      abandonedValue={
+                        completionRate
+                          ? completionRate.abandoned.toLocaleString()
+                          : "0"
+                      }
+                    />
+                  )}
+
+                  {/* Country Reach */}
+                  {isLoadingCards ? (
+                    <Card className="border-[#dce8f5] shadow-sm rounded-xl">
+                      <CardContent className="p-5 md:p-6 space-y-3">
+                        <Skeleton className="h-5 w-28" />
+                        <Skeleton className="h-8 w-12" />
+                        <div className="grid grid-cols-4 gap-2">
+                          {[1, 2, 3, 4].map((i) => (
+                            <Skeleton key={i} className="h-10 rounded-full" />
                           ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-2xl font-bold">892</div>
-                    </div>
-                  </div>
-                  <div className="mt-6 space-y-3">
-                    {deviceUsageData.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: item.color }}
-                          />
-                          <span>{item.name}</span>
                         </div>
-                        <span className="font-medium">{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="border-[#dce8f5] shadow-sm rounded-xl">
+                      <CardContent className="p-5 md:p-6">
+                        <div className="mb-3 flex items-center gap-2">
+                          <Globe2 className="h-4 w-4 text-blue-500" />
+                          <p className="text-sm font-semibold text-[#5a6b80]">
+                            Country Reach
+                          </p>
+                        </div>
+                        <p className="text-xl font-black leading-tight text-[#0b1526] sm:text-2xl mb-3">
+                          {countryReach?.totalCountries ?? 0}
+                        </p>
+                        {(countryReach?.top4.length ?? 0) > 0 ? (
+                          <div className="grid grid-cols-4 gap-2 text-center">
+                            {countryReach!.top4.map((c) => (
+                              <div key={c.countryId} className="space-y-1">
+                                <span className="block max-w-[88px] truncate rounded-full bg-[#EEF2F8] px-3 py-[6px] text-[11px] font-semibold text-[#65758B] mx-auto">
+                                  {c.countryName}
+                                </span>
+                                <span className="block text-base font-black text-[#65758B]">
+                                  {c.totalResponses}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            No country data for this survey yet.
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <Card className="xl:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-base">
-                    Response By Country
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={countryStackData} barSize={30}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="hsl(var(--border))"
-                        />
-                        <XAxis
-                          dataKey="day"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{
-                            fontSize: 12,
-                            fill: "hsl(var(--muted-foreground))",
-                          }}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{
-                            fontSize: 12,
-                            fill: "hsl(var(--muted-foreground))",
-                          }}
-                        />
-                        <Tooltip />
-                        {countrySeries.map((country, idx) => (
-                          <Bar
-                            key={country.key}
-                            dataKey={country.key}
-                            stackId="country"
-                            fill={countryColorPalette[idx]}
-                            radius={
-                              idx === countrySeries.length - 1
-                                ? [4, 4, 0, 0]
-                                : [0, 0, 0, 0]
-                            }
-                          />
+                {/* Response Trend + Device Usage */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Response Trend */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">
+                        Response Trend
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={trendData}>
+                            <defs>
+                              <linearGradient
+                                id="colorValue"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor="hsl(var(--primary))"
+                                  stopOpacity={0.3}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor="hsl(var(--primary))"
+                                  stopOpacity={0}
+                                />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              vertical={false}
+                              stroke="hsl(var(--border))"
+                            />
+                            <XAxis
+                              dataKey="day"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{
+                                fontSize: 12,
+                                fill: "hsl(var(--muted-foreground))",
+                              }}
+                            />
+                            <YAxis
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{
+                                fontSize: 12,
+                                fill: "hsl(var(--muted-foreground))",
+                              }}
+                            />
+                            <Tooltip />
+                            <Area
+                              type="monotone"
+                              dataKey="value"
+                              stroke="hsl(var(--primary))"
+                              strokeWidth={2}
+                              fillOpacity={1}
+                              fill="url(#colorValue)"
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Device Usage</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[200px] relative">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={deviceUsageData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={0}
+                              dataKey="value"
+                            >
+                              {deviceUsageData.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={entry.color}
+                                />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-2xl font-bold">
+                            {deviceUsageData
+                              .reduce((s, d) => s + d.value, 0)
+                              .toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-6 space-y-3">
+                        {deviceUsageData.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: item.color }}
+                              />
+                              <span>{item.name}</span>
+                            </div>
+                            <span className="font-medium">
+                              {item.value.toLocaleString()}
+                            </span>
+                          </div>
                         ))}
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                    {countrySeries.map((country, idx) => (
-                      <div
-                        key={country.key}
-                        className="flex items-center gap-2"
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                  <Card className="xl:col-span-2">
+                    <CardHeader className="flex flex-row items-center justify-between gap-2">
+                      <CardTitle className="text-base">
+                        Response By Country
+                      </CardTitle>
+                      <Select
+                        value={String(countryDateOffset)}
+                        onValueChange={(v) => setCountryDateOffset(Number(v))}
                       >
-                        <span
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{ backgroundColor: countryColorPalette[idx] }}
-                        />
-                        <span>{country.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Browser Usage</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {browserData.map((item, idx) => (
-                      <div key={idx}>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span>{item.name}</span>
-                          <span className="text-primary font-medium">
-                            {item.value}
-                          </span>
+                        <SelectTrigger className="h-8 w-[140px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Last 7 days</SelectItem>
+                          <SelectItem value="7">Previous 7 days</SelectItem>
+                          <SelectItem value="14">2 weeks ago</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </CardHeader>
+                    <CardContent>
+                      {isLoadingCountryChart ? (
+                        <div className="h-[300px] flex items-center justify-center">
+                          <div className="space-y-3 w-full">
+                            {[1, 2, 3].map((i) => (
+                              <Skeleton key={i} className="h-8 w-full" />
+                            ))}
+                          </div>
                         </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#206AB5]/40 rounded-full"
-                            style={{ width: `${(item.value / 1000) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex justify-between text-xs text-muted-foreground pt-2">
-                      <span>0</span>
-                      <span>500</span>
-                      <span>1k</span>
-                      <span>1.5k</span>
-                      <span>2k</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                      ) : (
+                        <>
+                          <div className="h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={countryStackData} barSize={30}>
+                                <CartesianGrid
+                                  strokeDasharray="3 3"
+                                  vertical={false}
+                                  stroke="hsl(var(--border))"
+                                />
+                                <XAxis
+                                  dataKey="day"
+                                  axisLine={false}
+                                  tickLine={false}
+                                  tick={{
+                                    fontSize: 12,
+                                    fill: "hsl(var(--muted-foreground))",
+                                  }}
+                                />
+                                <YAxis
+                                  axisLine={false}
+                                  tickLine={false}
+                                  tick={{
+                                    fontSize: 12,
+                                    fill: "hsl(var(--muted-foreground))",
+                                  }}
+                                />
+                                <Tooltip />
+                                {countrySeries.map((country, idx) => (
+                                  <Bar
+                                    key={country.key}
+                                    dataKey={country.key}
+                                    stackId="country"
+                                    fill={
+                                      countryColorPalette[
+                                        idx % countryColorPalette.length
+                                      ]
+                                    }
+                                    radius={
+                                      idx === countrySeries.length - 1
+                                        ? [4, 4, 0, 0]
+                                        : [0, 0, 0, 0]
+                                    }
+                                  />
+                                ))}
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                          {countrySeries.length === 0 ? (
+                            <p className="mt-4 text-center text-xs text-muted-foreground">
+                              No country data for this period.
+                            </p>
+                          ) : (
+                            <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                              {countrySeries.map((country, idx) => (
+                                <div
+                                  key={country.key}
+                                  className="flex items-center gap-2"
+                                >
+                                  <span
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{
+                                      backgroundColor:
+                                        countryColorPalette[
+                                          idx % countryColorPalette.length
+                                        ],
+                                    }}
+                                  />
+                                  <span>{country.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
 
-            <Card>
-              <CardContent className="p-0">
-                <div className="flex">
-                  <div className="w-48 p-6 border-r">
-                    <h3 className="text-base font-semibold">Full Name</h3>
-                  </div>
-                  <div className="flex-1">
-                    <Table>
-                      <TableBody>
-                        <TableRow className="bg-muted/30 hover:bg-muted/30">
-                          <TableCell className="font-medium text-center py-3">
-                            Respondent
-                          </TableCell>
-                        </TableRow>
-                        {respondentData.map((name, idx) => (
-                          <TableRow key={idx} className="hover:bg-muted/20">
-                            <TableCell className="text-center text-muted-foreground py-3">
-                              {name}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Browser Usage</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {browserData.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-8">
+                          No browser data yet.
+                        </p>
+                      ) : (
+                        <div className="space-y-5">
+                          {(() => {
+                            const max = Math.max(
+                              ...browserData.map((d) => d.value),
+                              1,
+                            );
+                            return browserData.map((item, idx) => (
+                              <div key={idx}>
+                                <div className="flex justify-between text-sm mb-1.5">
+                                  <span>{item.name}</span>
+                                  <span className="text-primary font-medium">
+                                    {item.value.toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-[#206AB5]/40 rounded-full transition-all"
+                                    style={{
+                                      width: `${(item.value / max) * 100}%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Top Respondents</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {respondentData.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-8">
+                        No respondent data yet.
+                      </p>
+                    ) : (
+                      <Table>
+                        <TableBody>
+                          <TableRow className="bg-muted/30 hover:bg-muted/30">
+                            <TableCell className="font-medium py-3 pl-6">
+                              Full Name
+                            </TableCell>
+                            <TableCell className="font-medium py-3 text-right pr-6">
+                              Total Responses
                             </TableCell>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                          {respondentData.map((r) => (
+                            <TableRow
+                              key={r.customerId}
+                              className="hover:bg-muted/20"
+                            >
+                              <TableCell className="text-muted-foreground py-3 pl-6">
+                                {r.fname} {r.sname}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground py-3 text-right pr-6 font-medium">
+                                {r.totalResponses.toLocaleString()}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardContent className="p-0">
-                <div className="flex">
-                  <div className="w-48 p-6 border-r">
-                    <h3 className="text-base font-semibold mb-6">Age</h3>
-                    <div className="space-y-3">
-                      {ageData.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-2 text-sm text-muted-foreground"
-                        >
-                          <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
-                          <span>{item.range}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex-1 p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-base font-semibold">Age</h3>
-                      <div className="text-sm font-medium">Total: 1,300</div>
-                    </div>
-                    <div className="space-y-4">
-                      {ageData.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-4 text-sm"
-                        >
-                          <div className="w-12 text-muted-foreground">
-                            {item.range.replace(" - ", "-")}
-                          </div>
-                          <div className="flex-1 h-3 bg-[#206AB5]/10 rounded overflow-hidden relative">
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="flex">
+                      <div className="w-48 p-6 border-r">
+                        <h3 className="text-base font-semibold mb-6">Age</h3>
+                        <div className="space-y-3">
+                          {ageData.map((item, idx) => (
                             <div
-                              className="h-full bg-[#206AB5]/60 rounded"
-                              style={{ width: `${item.value * 2.5}%` }}
-                            />
-                          </div>
-                          <div className="w-12 text-right text-muted-foreground">
-                            {item.value}%
+                              key={idx}
+                              className="flex items-center gap-2 text-sm text-muted-foreground"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                              <span>{item.range}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex-1 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-base font-semibold">Age</h3>
+                          <div className="text-sm font-medium">
+                            Total: 1,300
                           </div>
                         </div>
-                      ))}
+                        <div className="space-y-4">
+                          {ageData.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-4 text-sm"
+                            >
+                              <div className="w-12 text-muted-foreground">
+                                {item.range.replace(" - ", "-")}
+                              </div>
+                              <div className="flex-1 h-3 bg-[#206AB5]/10 rounded overflow-hidden relative">
+                                <div
+                                  className="h-full bg-[#206AB5]/60 rounded"
+                                  style={{ width: `${item.value * 2.5}%` }}
+                                />
+                              </div>
+                              <div className="w-12 text-right text-muted-foreground">
+                                {item.value}%
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </main>
         </SidebarInset>
       </div>
