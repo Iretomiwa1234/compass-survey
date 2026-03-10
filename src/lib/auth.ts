@@ -696,6 +696,22 @@ export async function getDashboardSentiment(): Promise<DashboardSentimentCard> {
   };
 }
 
+// ========================
+// CHANNELS
+// =======================
+
+// GET /demography/options
+export async function getDemographyOptions(): Promise<any> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+  return fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/demography/options",
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 // =========================
 // Social Listening
 // =========================
@@ -741,6 +757,45 @@ export type DeleteSocialListeningResponse = {
   status?: string;
   message?: string;
 };
+
+export type CountryApiItem = {
+  id: number;
+  country_code: string;
+  country_name: string;
+  currency: string;
+  language: string;
+  timezone: string;
+  status: string;
+  created_at: string;
+};
+
+export type GetCountriesResponse = {
+  status?: string;
+  data?: {
+    country?: {
+      data?: CountryApiItem[];
+      total?: number;
+      per_page?: number;
+      current_page?: number;
+      last_page?: number;
+    };
+  };
+};
+
+// GET /v1/country
+export async function getCountries(page = 1): Promise<CountryApiItem[]> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetchJson<GetCountriesResponse>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/country?page=${page}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return response?.data?.country?.data ?? [];
+}
 
 // Get all Social Listening projects
 export async function getSocialListenings(): Promise<SocialListening[]> {

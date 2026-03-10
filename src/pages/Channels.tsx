@@ -39,7 +39,12 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { getSurveys, SurveyListItemApi } from "@/lib/auth";
+import {
+  getSurveys,
+  SurveyListItemApi,
+  getDemographyOptions,
+  getCountries,
+} from "@/lib/auth";
 import whatsappChat from "/assets/Whatsapp Chat.png?url";
 
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -52,6 +57,171 @@ function WhatsAppIcon({ className }: { className?: string }) {
     >
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
+  );
+}
+
+type OptionMap = Record<string, string>;
+
+type DemographyOptionsData = {
+  platform?: OptionMap;
+  gender?: OptionMap;
+  marital_status?: OptionMap;
+  language?: OptionMap;
+  highest_education_level?: OptionMap;
+  employment_status?: OptionMap;
+  occupation?: OptionMap;
+  industry?: OptionMap;
+  device_type?: OptionMap;
+};
+
+type SelectOption = {
+  value: string;
+  label: string;
+};
+
+function mapOptionMap(optionMap?: OptionMap): SelectOption[] {
+  if (!optionMap) return [];
+  return Object.entries(optionMap).map(([value, label]) => ({ value, label }));
+}
+
+function MultiSelectChips({
+  label,
+  options,
+  selected,
+  onToggle,
+  helperText,
+}: {
+  label: string;
+  options: SelectOption[];
+  selected: string[];
+  onToggle: (value: string) => void;
+  helperText?: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+        {label}
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const active = selected.includes(option.value);
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onToggle(option.value)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
+            >
+              {active && <Check className="inline w-3 h-3 mr-1" />}
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+      {helperText ? (
+        <p className="text-xs text-muted-foreground">{helperText}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function SearchableMultiSelect({
+  label,
+  options,
+  selected,
+  onToggle,
+  placeholder,
+  helperText,
+}: {
+  label: string;
+  options: SelectOption[];
+  selected: string[];
+  onToggle: (value: string) => void;
+  placeholder: string;
+  helperText?: string;
+}) {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    const base = options.filter((o) =>
+      o.label.toLowerCase().includes(normalized),
+    );
+    return base.slice(0, 5);
+  }, [options, query]);
+
+  const addOption = (value: string) => {
+    if (!selected.includes(value)) onToggle(value);
+    setQuery("");
+  };
+
+  const selectedItems = useMemo(
+    () => options.filter((o) => selected.includes(o.value)),
+    [options, selected],
+  );
+
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+        {label}
+      </label>
+      <div className="relative">
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={placeholder}
+          className="h-9 bg-card border border-border text-sm"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (filtered.length > 0) {
+                addOption(filtered[0].value);
+              }
+            }
+          }}
+        />
+        {query.trim() ? (
+          <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 rounded-md border border-border bg-white p-1 shadow-md">
+            {filtered.length > 0 ? (
+              filtered.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => addOption(option.value)}
+                  className="flex w-full items-center rounded-sm px-2 py-2 text-left text-sm text-foreground hover:bg-accent"
+                >
+                  {option.label}
+                </button>
+              ))
+            ) : (
+              <div className="px-2 py-2 text-sm text-muted-foreground">
+                No matches found
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+
+      {selectedItems.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {selectedItems.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => onToggle(item.value)}
+              className="inline-flex items-center gap-1 rounded-full bg-[#206AB5]/10 border border-[#206AB5]/30 text-[#185287] px-2 py-1 text-xs"
+            >
+              {item.label}
+              <X className="w-3 h-3" />
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {helperText ? (
+        <p className="text-xs text-muted-foreground">{helperText}</p>
+      ) : null}
+    </div>
   );
 }
 
@@ -78,10 +248,13 @@ const Channels = () => {
   const [demoLanguages, setDemoLanguages] = useState<string[]>([]);
   const [demoEducation, setDemoEducation] = useState<string[]>([]);
   const [demoEmployment, setDemoEmployment] = useState<string[]>([]);
-  const [demoOccupation, setDemoOccupation] = useState("");
+  const [demoOccupation, setDemoOccupation] = useState<string[]>([]);
   const [demoIndustry, setDemoIndustry] = useState<string[]>([]);
   const [demoDeviceType, setDemoDeviceType] = useState<string[]>([]);
   const [demoDeviceOS, setDemoDeviceOS] = useState<string[]>([]);
+  const [demographyOptions, setDemographyOptions] =
+    useState<DemographyOptionsData>({});
+  const [countryOptions, setCountryOptions] = useState<SelectOption[]>([]);
 
   const toggleDemoItem = (
     setter: React.Dispatch<React.SetStateAction<string[]>>,
@@ -110,20 +283,73 @@ const Channels = () => {
   const surveyLink = "https://msurvey123.com/customerfeedback";
   const websiteUrl = "https://msurvey123.com";
 
+  const platformOptions = useMemo(
+    () => mapOptionMap(demographyOptions.platform),
+    [demographyOptions.platform],
+  );
+  const genderOptions = useMemo(
+    () => mapOptionMap(demographyOptions.gender),
+    [demographyOptions.gender],
+  );
+  const maritalStatusOptions = useMemo(
+    () => mapOptionMap(demographyOptions.marital_status),
+    [demographyOptions.marital_status],
+  );
+  const languageOptions = useMemo(
+    () => mapOptionMap(demographyOptions.language),
+    [demographyOptions.language],
+  );
+  const educationOptions = useMemo(
+    () => mapOptionMap(demographyOptions.highest_education_level),
+    [demographyOptions.highest_education_level],
+  );
+  const employmentOptions = useMemo(
+    () => mapOptionMap(demographyOptions.employment_status),
+    [demographyOptions.employment_status],
+  );
+  const occupationOptions = useMemo(
+    () => mapOptionMap(demographyOptions.occupation),
+    [demographyOptions.occupation],
+  );
+  const industryOptions = useMemo(
+    () => mapOptionMap(demographyOptions.industry),
+    [demographyOptions.industry],
+  );
+  const deviceTypeOptions = useMemo(
+    () => mapOptionMap(demographyOptions.device_type),
+    [demographyOptions.device_type],
+  );
+
   useEffect(() => {
     let isActive = true;
     setIsLoadingSurveys(true);
 
-    getSurveys(1)
-      .then((response) => {
+    Promise.allSettled([getSurveys(1), getDemographyOptions(), getCountries(1)])
+      .then(([surveysRes, demographyRes, countriesRes]) => {
         if (!isActive) return;
-        const items = response?.data?.survey?.data ?? [];
-        setSurveys(items);
+
+        if (surveysRes.status === "fulfilled") {
+          setSurveys(surveysRes.value?.data?.survey?.data ?? []);
+        } else {
+          setSurveys([]);
+        }
         setIsLoadingSurveys(false);
+
+        if (demographyRes.status === "fulfilled") {
+          setDemographyOptions(demographyRes.value?.data ?? {});
+        }
+
+        if (countriesRes.status === "fulfilled") {
+          setCountryOptions(
+            (countriesRes.value ?? []).map((country) => ({
+              value: country.country_code,
+              label: country.country_name,
+            })),
+          );
+        }
       })
       .catch(() => {
         if (!isActive) return;
-        setSurveys([]);
         setIsLoadingSurveys(false);
       });
 
@@ -1013,36 +1239,6 @@ Thank you!`}
                               </p>
                             </div>
 
-                            {/* Audience visibility */}
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium block text-foreground">
-                                Who can see this survey?
-                              </label>
-                              <Select defaultValue="all">
-                                <SelectTrigger className="w-full h-10 bg-card border border-border">
-                                  <SelectValue placeholder="Select audience" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="all">
-                                    All mobile app users
-                                  </SelectItem>
-                                  <SelectItem value="registered">
-                                    Registered users only
-                                  </SelectItem>
-                                  <SelectItem value="segment">
-                                    Specific user segment
-                                  </SelectItem>
-                                  <SelectItem value="invite">
-                                    Invited users only
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <p className="text-xs text-muted-foreground">
-                                This controls which users will see the survey
-                                card in the app's survey feed.
-                              </p>
-                            </div>
-
                             {/* Demographic targeting */}
                             <div className="rounded-xl border border-border overflow-hidden">
                               <button
@@ -1054,31 +1250,31 @@ Thank you!`}
                                   <Users className="w-4 h-4 text-[#206AB5]" />
                                   Demographic targeting
                                   {[
+                                    demoDeviceOS.length > 0,
                                     demoGenders.length > 0,
                                     demoMaritalStatus.length > 0,
                                     demoLocations.length > 0,
                                     demoLanguages.length > 0,
                                     demoEducation.length > 0,
                                     demoEmployment.length > 0,
-                                    !!demoOccupation,
+                                    demoOccupation.length > 0,
                                     demoIndustry.length > 0,
                                     demoDeviceType.length > 0,
-                                    demoDeviceOS.length > 0,
                                     !!(demoAgeMin || demoAgeMax),
                                   ].filter(Boolean).length > 0 && (
                                     <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#206AB5] text-white text-[9px] font-bold">
                                       {
                                         [
+                                          demoDeviceOS.length > 0,
                                           demoGenders.length > 0,
                                           demoMaritalStatus.length > 0,
                                           demoLocations.length > 0,
                                           demoLanguages.length > 0,
                                           demoEducation.length > 0,
                                           demoEmployment.length > 0,
-                                          !!demoOccupation,
+                                          demoOccupation.length > 0,
                                           demoIndustry.length > 0,
                                           demoDeviceType.length > 0,
-                                          demoDeviceOS.length > 0,
                                           !!(demoAgeMin || demoAgeMax),
                                         ].filter(Boolean).length
                                       }
@@ -1132,388 +1328,115 @@ Thank you!`}
                                   </div>
 
                                   {/* Gender */}
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Gender
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                      {[
-                                        "Male",
-                                        "Female",
-                                        "Non-binary",
-                                        "Prefer not to say",
-                                      ].map((g) => {
-                                        const active = demoGenders.includes(g);
-                                        return (
-                                          <button
-                                            key={g}
-                                            type="button"
-                                            onClick={() => toggleGender(g)}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
-                                          >
-                                            {active && (
-                                              <Check className="inline w-3 h-3 mr-1" />
-                                            )}
-                                            {g}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Select none to include all genders.
-                                    </p>
-                                  </div>
+                                  <MultiSelectChips
+                                    label="Gender"
+                                    options={genderOptions}
+                                    selected={demoGenders}
+                                    onToggle={toggleGender}
+                                    helperText="Select none to include all genders."
+                                  />
 
                                   {/* Marital status */}
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Marital status
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                      {[
-                                        "Single",
-                                        "Married",
-                                        "Divorced",
-                                        "Widowed",
-                                        "Separated",
-                                      ].map((m) => {
-                                        const active =
-                                          demoMaritalStatus.includes(m);
-                                        return (
-                                          <button
-                                            key={m}
-                                            type="button"
-                                            onClick={() =>
-                                              toggleDemoItem(
-                                                setDemoMaritalStatus,
-                                                m,
-                                              )
-                                            }
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
-                                          >
-                                            {active && (
-                                              <Check className="inline w-3 h-3 mr-1" />
-                                            )}
-                                            {m}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Select none to include all.
-                                    </p>
-                                  </div>
+                                  <MultiSelectChips
+                                    label="Marital status"
+                                    options={maritalStatusOptions}
+                                    selected={demoMaritalStatus}
+                                    onToggle={(value) =>
+                                      toggleDemoItem(
+                                        setDemoMaritalStatus,
+                                        value,
+                                      )
+                                    }
+                                    helperText="Select none to include all."
+                                  />
 
                                   {/* Location — country & state */}
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Location (Country / State)
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                      {[
-                                        "Nigeria",
-                                        "Ghana",
-                                        "Kenya",
-                                        "South Africa",
-                                        "United States",
-                                        "United Kingdom",
-                                        "Canada",
-                                        "India",
-                                        "Other",
-                                      ].map((loc) => {
-                                        const active =
-                                          demoLocations.includes(loc);
-                                        return (
-                                          <button
-                                            key={loc}
-                                            type="button"
-                                            onClick={() => toggleLocation(loc)}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
-                                          >
-                                            {active && (
-                                              <Check className="inline w-3 h-3 mr-1" />
-                                            )}
-                                            {loc}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Select none to include all locations.
-                                    </p>
-                                  </div>
+                                  <SearchableMultiSelect
+                                    label="Location (Country)"
+                                    options={countryOptions}
+                                    selected={demoLocations}
+                                    onToggle={toggleLocation}
+                                    placeholder="Search and select countries"
+                                    helperText="Type to filter countries. Press Enter to add first match."
+                                  />
 
                                   {/* Language */}
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Language
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                      {[
-                                        "English",
-                                        "French",
-                                        "Arabic",
-                                        "Spanish",
-                                        "Portuguese",
-                                        "Swahili",
-                                        "Hausa",
-                                        "Yoruba",
-                                        "Igbo",
-                                      ].map((lang) => {
-                                        const active =
-                                          demoLanguages.includes(lang);
-                                        return (
-                                          <button
-                                            key={lang}
-                                            type="button"
-                                            onClick={() =>
-                                              toggleDemoItem(
-                                                setDemoLanguages,
-                                                lang,
-                                              )
-                                            }
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
-                                          >
-                                            {active && (
-                                              <Check className="inline w-3 h-3 mr-1" />
-                                            )}
-                                            {lang}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Select none to include all languages.
-                                    </p>
-                                  </div>
+                                  <MultiSelectChips
+                                    label="Language"
+                                    options={languageOptions}
+                                    selected={demoLanguages}
+                                    onToggle={(value) =>
+                                      toggleDemoItem(setDemoLanguages, value)
+                                    }
+                                    helperText="Select none to include all languages."
+                                  />
 
                                   {/* Education level */}
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Education level
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                      {[
-                                        "No formal education",
-                                        "Primary",
-                                        "Secondary / High school",
-                                        "Vocational / Technical",
-                                        "Undergraduate",
-                                        "Postgraduate",
-                                        "PhD",
-                                      ].map((edu) => {
-                                        const active =
-                                          demoEducation.includes(edu);
-                                        return (
-                                          <button
-                                            key={edu}
-                                            type="button"
-                                            onClick={() =>
-                                              toggleDemoItem(
-                                                setDemoEducation,
-                                                edu,
-                                              )
-                                            }
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
-                                          >
-                                            {active && (
-                                              <Check className="inline w-3 h-3 mr-1" />
-                                            )}
-                                            {edu}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Select none to include all education
-                                      levels.
-                                    </p>
-                                  </div>
+                                  <MultiSelectChips
+                                    label="Education level"
+                                    options={educationOptions}
+                                    selected={demoEducation}
+                                    onToggle={(value) =>
+                                      toggleDemoItem(setDemoEducation, value)
+                                    }
+                                    helperText="Select none to include all education levels."
+                                  />
 
                                   {/* Employment status */}
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Employment status
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                      {[
-                                        "Employed (full-time)",
-                                        "Employed (part-time)",
-                                        "Self-employed",
-                                        "Freelancer",
-                                        "Unemployed",
-                                        "Student",
-                                        "Retired",
-                                      ].map((emp) => {
-                                        const active =
-                                          demoEmployment.includes(emp);
-                                        return (
-                                          <button
-                                            key={emp}
-                                            type="button"
-                                            onClick={() =>
-                                              toggleDemoItem(
-                                                setDemoEmployment,
-                                                emp,
-                                              )
-                                            }
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
-                                          >
-                                            {active && (
-                                              <Check className="inline w-3 h-3 mr-1" />
-                                            )}
-                                            {emp}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Select none to include all employment
-                                      statuses.
-                                    </p>
-                                  </div>
+                                  <MultiSelectChips
+                                    label="Employment status"
+                                    options={employmentOptions}
+                                    selected={demoEmployment}
+                                    onToggle={(value) =>
+                                      toggleDemoItem(setDemoEmployment, value)
+                                    }
+                                    helperText="Select none to include all employment statuses."
+                                  />
 
-                                  {/* Occupation (free text) */}
-                                  {/* <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Occupation
-                                    </label>
-                                    <Input
-                                      placeholder="e.g. Software Engineer, Teacher, Doctor…"
-                                      value={demoOccupation}
-                                      onChange={(e) =>
-                                        setDemoOccupation(e.target.value)
-                                      }
-                                      className="h-9 bg-card border border-border text-sm"
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                      Leave blank to include all occupations.
-                                    </p>
-                                  </div> */}
+                                  <SearchableMultiSelect
+                                    label="Occupation"
+                                    options={occupationOptions}
+                                    selected={demoOccupation}
+                                    onToggle={(value) =>
+                                      toggleDemoItem(setDemoOccupation, value)
+                                    }
+                                    placeholder="Type to search occupations"
+                                    helperText="Only valid occupations can be selected."
+                                  />
 
                                   {/* Industry */}
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Industry
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                      {[
-                                        "Technology",
-                                        "Healthcare",
-                                        "Finance / Banking",
-                                        "Education",
-                                        "Retail / E-commerce",
-                                        "Agriculture",
-                                        "Manufacturing",
-                                        "Media / Entertainment",
-                                        "Government / Public sector",
-                                        "NGO / Non-profit",
-                                        "Hospitality / Tourism",
-                                        "Other",
-                                      ].map((ind) => {
-                                        const active =
-                                          demoIndustry.includes(ind);
-                                        return (
-                                          <button
-                                            key={ind}
-                                            type="button"
-                                            onClick={() =>
-                                              toggleDemoItem(
-                                                setDemoIndustry,
-                                                ind,
-                                              )
-                                            }
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
-                                          >
-                                            {active && (
-                                              <Check className="inline w-3 h-3 mr-1" />
-                                            )}
-                                            {ind}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Select none to include all industries.
-                                    </p>
-                                  </div>
+                                  <SearchableMultiSelect
+                                    label="Industry"
+                                    options={industryOptions}
+                                    selected={demoIndustry}
+                                    onToggle={(value) =>
+                                      toggleDemoItem(setDemoIndustry, value)
+                                    }
+                                    placeholder="Type to search industries"
+                                    helperText="Only valid industries can be selected."
+                                  />
 
                                   {/* Device type */}
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Device type
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                      {["Mobile", "Tablet", "Desktop"].map(
-                                        (dt) => {
-                                          const active =
-                                            demoDeviceType.includes(dt);
-                                          return (
-                                            <button
-                                              key={dt}
-                                              type="button"
-                                              onClick={() =>
-                                                toggleDemoItem(
-                                                  setDemoDeviceType,
-                                                  dt,
-                                                )
-                                              }
-                                              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
-                                            >
-                                              {active && (
-                                                <Check className="inline w-3 h-3 mr-1" />
-                                              )}
-                                              {dt}
-                                            </button>
-                                          );
-                                        },
-                                      )}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Select none to include all device types.
-                                    </p>
-                                  </div>
+                                  <MultiSelectChips
+                                    label="Device type"
+                                    options={deviceTypeOptions}
+                                    selected={demoDeviceType}
+                                    onToggle={(value) =>
+                                      toggleDemoItem(setDemoDeviceType, value)
+                                    }
+                                    helperText="Select none to include all device types."
+                                  />
 
                                   {/* Device OS / brand */}
-                                  <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                                      Device OS / Platform
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                      {[
-                                        "Android",
-                                        "iOS",
-                                        "Windows",
-                                        "macOS",
-                                        "Linux",
-                                        "HarmonyOS",
-                                      ].map((os) => {
-                                        const active =
-                                          demoDeviceOS.includes(os);
-                                        return (
-                                          <button
-                                            key={os}
-                                            type="button"
-                                            onClick={() =>
-                                              toggleDemoItem(
-                                                setDemoDeviceOS,
-                                                os,
-                                              )
-                                            }
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? "bg-[#206AB5] border-[#206AB5] text-white" : "bg-white border-border text-muted-foreground hover:border-[#206AB5]/50"}`}
-                                          >
-                                            {active && (
-                                              <Check className="inline w-3 h-3 mr-1" />
-                                            )}
-                                            {os}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                      Select none to include all platforms.
-                                    </p>
-                                  </div>
+                                  <MultiSelectChips
+                                    label="Platform"
+                                    options={platformOptions}
+                                    selected={demoDeviceOS}
+                                    onToggle={(value) =>
+                                      toggleDemoItem(setDemoDeviceOS, value)
+                                    }
+                                    helperText="Select one or both available platforms."
+                                  />
 
                                   {/* Clear all */}
                                   {[
@@ -1529,7 +1452,7 @@ Thank you!`}
                                   ].some((a) => a.length > 0) ||
                                   demoAgeMin ||
                                   demoAgeMax ||
-                                  demoOccupation ? (
+                                  demoOccupation.length > 0 ? (
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -1539,7 +1462,7 @@ Thank you!`}
                                         setDemoLanguages([]);
                                         setDemoEducation([]);
                                         setDemoEmployment([]);
-                                        setDemoOccupation("");
+                                        setDemoOccupation([]);
                                         setDemoIndustry([]);
                                         setDemoDeviceType([]);
                                         setDemoDeviceOS([]);
