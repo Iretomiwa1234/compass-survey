@@ -364,13 +364,13 @@ const SurveyResearch = () => {
           <DashboardHeader headerTitle="Surveys" hideGreeting />
 
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-            <div className="mb-4 sm:mb-6">
+            {/* <div className="mb-4 sm:mb-6">
               <div className="rounded-xl border border-[#dce8f5] bg-white px-4 py-4 shadow-sm sm:px-6 sm:py-5">
                 <h2 className="text-md font-semibold text-[#2b3a4f]">
                   Customer Satisfaction Survey
                 </h2>
               </div>
-            </div>
+            </div> */}
 
             <SurveyStatsOverview
               variant="research"

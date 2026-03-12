@@ -11,17 +11,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 
-const data = [
-  { day: "Monday", value: 1800 },
-  { day: "Tuesday", value: 1200 },
-  { day: "Wednesday", value: 1600 },
-  { day: "Thursday", value: 2400 },
-  { day: "Friday", value: 2000 },
-  { day: "Saturday", value: 1700 },
-  { day: "Sunday", value: 1400 },
+const fallbackData = [
+  { day: "Monday", value: 0 },
+  { day: "Tuesday", value: 0 },
+  { day: "Wednesday", value: 0 },
+  { day: "Thursday", value: 0 },
+  { day: "Friday", value: 0 },
+  { day: "Saturday", value: 0 },
+  { day: "Sunday", value: 0 },
 ];
 
-export function ResponseTrendChart() {
+interface ResponseTrendChartProps {
+  data?: { day: string; value: number }[];
+}
+
+export function ResponseTrendChart({ data }: ResponseTrendChartProps) {
+  const chartData = data && data.length > 0 ? data : fallbackData;
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -43,7 +48,7 @@ export function ResponseTrendChart() {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={data}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                 <stop

@@ -3,16 +3,16 @@ import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { StatCard } from "@/components/StatCard";
 import { ResponseTrendChart } from "@/components/ResponseTrendChart";
-import { RecentProjects } from "@/components/RecentProjects";
 import { MentionsCard } from "@/components/MentionsCard";
 import { SentimentChart } from "@/components/SentimentChart";
 import { ActiveSurveys } from "@/components/ActiveSurveys";
+import { RecentProjects } from "@/components/RecentProjects";
 import { FileText, Users } from "lucide-react";
 import {
   getDashboardMentions,
   getDashboardSentiment,
   getSurveyCards,
-  getSurveyResponseTrend,
+  getDashboardResponseTrend,
   getSurveys,
   SurveyListItemApi,
   SurveyCardsData,
@@ -32,30 +32,24 @@ const Index = () => {
     negative: 0,
   });
   const [surveyCards, setSurveyCards] = useState<SurveyCardsData | null>(null);
+  const [trendData, setTrendData] = useState<{ day: string; value: number }[]>(
+    [],
+  );
 
-  // Fire response-trend request for network inspection (no logging)
+  // Fire dashboard response-trend on mount (no survey_id — returns totals)
   useEffect(() => {
-    let isActive = true;
-
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
     const fmt = (d: Date) => d.toISOString().slice(0, 10);
-
-    if (surveys.length > 0) {
-      getSurveyResponseTrend(
-        surveys[0].survey_id,
-        fmt(startDate),
-        fmt(endDate),
-      ).catch(() => {
-        /* ignore errors; request visible in Network tab */
-      });
-    }
-
-    return () => {
-      isActive = false;
-    };
-  }, [surveys]);
+    getDashboardResponseTrend(fmt(startDate), fmt(endDate))
+      .then((res) => {
+        const rows: { date: string; day: string; value: number }[] =
+          res?.data?.data ?? [];
+        setTrendData(rows.map(({ day, value }) => ({ day, value })));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -222,7 +216,7 @@ const Index = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <div className="lg:col-span-2">
-                <ResponseTrendChart />
+                <ResponseTrendChart data={trendData} />
               </div>
               <RecentProjects />
             </div>

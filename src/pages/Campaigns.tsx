@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,16 +10,9 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Users } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { Search, Plus, Users, Inbox } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -34,44 +28,125 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getSurveys, SurveyListItemApi } from "@/lib/auth";
+
+const performanceData = [
+  {
+    channel: "Email",
+    sent: "1,340",
+    viewed: "1,278",
+    responses: "1,229",
+    conversion: "80%",
+    status: "Active",
+  },
+  {
+    channel: "SMS",
+    sent: "570",
+    viewed: "486",
+    responses: "476",
+    conversion: "76%",
+    status: "Active",
+  },
+  {
+    channel: "Whatsapp",
+    sent: "256",
+    viewed: "230",
+    responses: "212",
+    conversion: "88%",
+    status: "Active",
+  },
+  {
+    channel: "QR-Code",
+    sent: "0",
+    viewed: "195",
+    responses: "184",
+    conversion: "96%",
+    status: "Active",
+  },
+];
+
+const formatDate = (dateStr: string) => {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-GB");
+};
 
 const Campaigns = () => {
-  const performanceData = [
-    {
-      channel: "Email",
-      sent: "1,340",
-      viewed: "1,278",
-      responses: "1,229",
-      conversion: "80%",
-      status: "Active",
-    },
-    {
-      channel: "SMS",
-      sent: "570",
-      viewed: "486",
-      responses: "476",
-      conversion: "76%",
-      status: "Active",
-    },
-    {
-      channel: "Whatsapp",
-      sent: "256",
-      viewed: "230",
-      responses: "212",
-      conversion: "88%",
-      status: "Active",
-    },
-    {
-      channel: "QR-Code",
-      sent: "0",
-      viewed: "195",
-      responses: "184",
-      conversion: "96%",
-      status: "Active",
-    },
-  ];
+  const navigate = useNavigate();
+  const searchRef = useRef<HTMLDivElement>(null);
 
-  const [createOpen, setCreateOpen] = useState(false);
+  const [surveys, setSurveys] = useState<SurveyListItemApi[]>([]);
+  const [isLoadingSurveys, setIsLoadingSurveys] = useState(true);
+  const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    let page = 1;
+    const all: SurveyListItemApi[] = [];
+    const fetchAll = async () => {
+      try {
+        while (true) {
+          const res = await getSurveys(page);
+          const items: SurveyListItemApi[] =
+            (res as any)?.data?.survey?.data ?? [];
+          if (!items.length) break;
+          all.push(...items);
+          if (items.length < 10) break;
+          page++;
+        }
+        setSurveys(all);
+      } finally {
+        setIsLoadingSurveys(false);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleSelectSurvey = (id: number) => {
+    setSelectedSurveyId(id);
+    const match = surveys.find((s) => s.survey_id === id);
+    if (match) setSearchTerm(match.title);
+    setShowSuggestions(false);
+  };
+
+  const filteredSurveys = useMemo(() => {
+    if (!searchTerm.trim()) return surveys;
+    return surveys.filter((s) =>
+      s.title.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [surveys, searchTerm]);
+
+  const selectedSurvey = useMemo(
+    () => surveys.find((s) => s.survey_id === selectedSurveyId) ?? null,
+    [surveys, selectedSurveyId],
+  );
+
+  const surveyStatus = selectedSurvey
+    ? selectedSurvey.is_published
+      ? {
+          label: "Active",
+          className: "bg-green-100 text-green-700 hover:bg-green-200",
+        }
+      : selectedSurvey.status === "draft"
+        ? {
+            label: "Draft",
+            className: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200",
+          }
+        : {
+            label: selectedSurvey.status,
+            className: "bg-gray-100 text-gray-700 hover:bg-gray-200",
+          }
+    : null;
 
   return (
     <SidebarProvider>
@@ -87,190 +162,208 @@ const Campaigns = () => {
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="mb-8">
+              {/* Survey search bar */}
               <div className="rounded-xl flex items-center justify-between border border-[#dce8f5] bg-white px-2 py-2 shadow-sm sm:px-3 sm:py-3 mb-6">
-                <h2 className="text-md font-normal text-[#2b3a4f]">
-                  Customer Satisfaction Survey
+                <h2 className="text-md font-normal text-[#2b3a4f] hidden md:block">
+                  {selectedSurvey ? selectedSurvey.title : "Select a Survey"}
                 </h2>
 
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="relative flex-1">
+                <div className="flex items-center gap-2 ml-auto">
+                  <div className="relative w-[200px]" ref={searchRef}>
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search for survey"
-                      className="pl-9 bg-background"
+                      placeholder="Search for survey…"
+                      className="pl-9 bg-background h-9"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() =>
+                        window.setTimeout(() => setShowSuggestions(false), 150)
+                      }
                     />
+                    {showSuggestions && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {isLoadingSurveys ? (
+                          <div className="p-3 space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                          </div>
+                        ) : filteredSurveys.length === 0 ? (
+                          <p className="p-3 text-sm text-muted-foreground">
+                            No surveys found
+                          </p>
+                        ) : (
+                          filteredSurveys.map((s) => (
+                            <button
+                              key={s.survey_id}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => handleSelectSurvey(s.survey_id)}
+                            >
+                              {s.title}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <Select defaultValue="survey1">
-                    <SelectTrigger className="w-full md:w-[200px]">
+                  <Select
+                    value={
+                      selectedSurveyId ? String(selectedSurveyId) : undefined
+                    }
+                    onValueChange={(v) => handleSelectSurvey(Number(v))}
+                  >
+                    <SelectTrigger className="w-[160px] h-9 bg-white border border-border">
                       <SelectValue placeholder="Select Survey" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="survey1">
-                        Customer Satisfaction Survey
-                      </SelectItem>
-                      <SelectItem value="survey2">Product Feedback</SelectItem>
+                      {isLoadingSurveys && (
+                        <SelectItem value="loading" disabled>
+                          Loading…
+                        </SelectItem>
+                      )}
+                      {!isLoadingSurveys && surveys.length === 0 && (
+                        <SelectItem value="empty" disabled>
+                          No surveys found
+                        </SelectItem>
+                      )}
+                      {surveys.map((s) => (
+                        <SelectItem
+                          key={s.survey_id}
+                          value={String(s.survey_id)}
+                        >
+                          {s.title}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-lg">
-                <Card className="mb-8 ">
-                  <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <h2 className="text-md font-normal text-foreground">
-                          Customer Satisfaction Survey
-                        </h2>
-                        <Badge
-                          variant="success"
-                          className="bg-green-100 text-green-700 hover:bg-green-200"
-                        >
-                          Active
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <Users className="w-4 h-4" />
-                          <span>1,520 Total Response</span>
-                        </div>
-                        <span>Response rate: 68%</span>
-                        <span>Created: 20/09/2025</span>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => setCreateOpen(true)}
-                      className="gap-2 bg-[#206AB5]"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Channel
-                    </Button>
-                  </CardContent>
-                </Card>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Distribution Performance
-                  </h3>
-                  <div className="rounded-md border bg-card">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="w-[200px]">Channel</TableHead>
-                          <TableHead className="text-center">Sent</TableHead>
-                          <TableHead className="text-center">Viewed</TableHead>
-                          <TableHead className="text-center">
-                            Responses
-                          </TableHead>
-                          <TableHead className="text-center">
-                            Conversion Rate
-                          </TableHead>
-                          <TableHead className="text-center">Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {performanceData.map((row, idx) => (
-                          <TableRow key={idx} className="even:bg-muted/50">
-                            <TableCell className="font-medium">
-                              {row.channel}
-                            </TableCell>
-                            <TableCell className="text-center text-muted-foreground">
-                              {row.sent}
-                            </TableCell>
-                            <TableCell className="text-center text-muted-foreground">
-                              {row.viewed}
-                            </TableCell>
-                            <TableCell className="text-center text-muted-foreground">
-                              {row.responses}
-                            </TableCell>
-                            <TableCell className="text-center text-muted-foreground">
-                              {row.conversion}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge
-                                variant="success"
-                                className="bg-green-100 text-green-700 hover:bg-green-200 font-normal"
-                              >
-                                {row.status}
-                              </Badge>
-                            </TableCell>
+              {/* Survey detail + table */}
+              {!selectedSurvey ? (
+                <div className="bg-white p-6 rounded-lg flex flex-col items-center justify-center py-18 text-center max-w-md border border-border shadow-sm mx-auto mt-[8%]">
+                  <Inbox className="w-12 h-12 text-muted-foreground mb-4 opacity-40" />
+                  <p className="text-muted-foreground text-sm">
+                    Search and select a survey above to view its campaign
+                    performance.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-white p-6 rounded-lg">
+                  <Card className="mb-8">
+                    <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <h2 className="text-md font-normal text-foreground">
+                            {selectedSurvey.title}
+                          </h2>
+                          {surveyStatus && (
+                            <Badge className={surveyStatus.className}>
+                              {surveyStatus.label}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <Users className="w-4 h-4" />
+                            <span>
+                              {(
+                                selectedSurvey.total_responses ?? 0
+                              ).toLocaleString()}{" "}
+                              Total Response
+                            </span>
+                          </div>
+                          <span>
+                            Response rate:{" "}
+                            {selectedSurvey.completion_percentage != null
+                              ? `${selectedSurvey.completion_percentage}%`
+                              : "—"}
+                          </span>
+                          <span>
+                            Created:{" "}
+                            {selectedSurvey.created_at
+                              ? formatDate(selectedSurvey.created_at)
+                              : "—"}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() =>
+                          navigate(
+                            `/channels?survey_id=${selectedSurvey.survey_id}`,
+                          )
+                        }
+                        className="gap-2 bg-[#206AB5]"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Channel
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">
+                      Distribution Performance
+                    </h3>
+                    <div className="rounded-md border bg-card">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="w-[200px]">Channel</TableHead>
+                            <TableHead className="text-center">Sent</TableHead>
+                            <TableHead className="text-center">
+                              Viewed
+                            </TableHead>
+                            <TableHead className="text-center">
+                              Responses
+                            </TableHead>
+                            <TableHead className="text-center">
+                              Conversion Rate
+                            </TableHead>
+                            <TableHead className="text-center">
+                              Status
+                            </TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {performanceData.map((row, idx) => (
+                            <TableRow key={idx} className="even:bg-muted/50">
+                              <TableCell className="font-medium">
+                                {row.channel}
+                              </TableCell>
+                              <TableCell className="text-center text-muted-foreground">
+                                {row.sent}
+                              </TableCell>
+                              <TableCell className="text-center text-muted-foreground">
+                                {row.viewed}
+                              </TableCell>
+                              <TableCell className="text-center text-muted-foreground">
+                                {row.responses}
+                              </TableCell>
+                              <TableCell className="text-center text-muted-foreground">
+                                {row.conversion}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-normal">
+                                  {row.status}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </main>
         </SidebarInset>
       </div>
-
-      {/* Create Campaign Modal */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create Campaign</DialogTitle>
-            <DialogDescription>
-              Set up a new campaign to distribute your surveys
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Campaign Name</Label>
-              <Input placeholder="Q1 Customer Feedback" className="mt-2" />
-            </div>
-            <div>
-              <Label>Survey</Label>
-              <Select defaultValue="satisfaction">
-                <SelectTrigger className="mt-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="satisfaction">
-                    Customer Satisfaction Survey
-                  </SelectItem>
-                  <SelectItem value="product">
-                    Product Feedback Collection
-                  </SelectItem>
-                  <SelectItem value="employee">
-                    Employee Engagement Study
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Target Group</Label>
-              <Select defaultValue="all">
-                <SelectTrigger className="mt-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Contacts</SelectItem>
-                  <SelectItem value="vip">VIP Customers</SelectItem>
-                  <SelectItem value="marketing">Marketing List</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Start Date</Label>
-                <Input type="date" className="mt-2" />
-              </div>
-              <div>
-                <Label>End Date</Label>
-                <Input type="date" className="mt-2" />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>
-                Cancel
-              </Button>
-              <Button>Create Campaign</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </SidebarProvider>
   );
 };

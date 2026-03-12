@@ -539,8 +539,8 @@ const SurveyAnalysis = () => {
 
             {/* Empty state when no survey is selected */}
             {!selectedSurveyId ? (
-              <Card className="border border-dashed border-border bg-card">
-                <CardContent className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="bg-white p-6 rounded-lg flex flex-col items-center justify-center py-18 text-center max-w-md border border-border shadow-sm mx-auto mt-[10%]">
+                <CardContent className="flex flex-col items-center justify-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                     <FileText className="h-7 w-7 text-muted-foreground" />
                   </div>
@@ -554,7 +554,7 @@ const SurveyAnalysis = () => {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
+              </div>
             ) : (
               <>
                 {/* 4 stat cards with skeleton loaders */}

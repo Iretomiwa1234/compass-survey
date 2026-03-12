@@ -531,6 +531,22 @@ export async function getSurveyResponseTrend(
   });
 }
 
+// GET /v1/survey/response-trend (dashboard total — no survey_id)
+export async function getDashboardResponseTrend(
+  start: string,
+  end: string,
+): Promise<any> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  return fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/response-trend?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export type SurveyDeviceUsageData = {
   desktop: number;
   mobile: number;

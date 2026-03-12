@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -132,6 +133,7 @@ function SearchableMultiSelect({
   onToggle,
   placeholder,
   helperText,
+  initialLimit = 0,
 }: {
   label: string;
   options: SelectOption[];
@@ -139,16 +141,18 @@ function SearchableMultiSelect({
   onToggle: (value: string) => void;
   placeholder: string;
   helperText?: string;
+  initialLimit?: number;
 }) {
   const [query, setQuery] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    const base = options.filter((o) =>
-      o.label.toLowerCase().includes(normalized),
-    );
-    return base.slice(0, 5);
-  }, [options, query]);
+    if (!normalized) {
+      return initialLimit > 0 ? options.slice(0, initialLimit) : options;
+    }
+    return options.filter((o) => o.label.toLowerCase().includes(normalized));
+  }, [options, query, initialLimit]);
 
   const addOption = (value: string) => {
     if (!selected.includes(value)) onToggle(value);
@@ -171,6 +175,8 @@ function SearchableMultiSelect({
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
           className="h-9 bg-card border border-border text-sm"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => window.setTimeout(() => setIsFocused(false), 150)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -180,13 +186,14 @@ function SearchableMultiSelect({
             }
           }}
         />
-        {query.trim() ? (
-          <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 rounded-md border border-border bg-white p-1 shadow-md">
+        {isFocused ? (
+          <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 rounded-md border border-border bg-white p-1 shadow-md max-h-48 overflow-y-auto">
             {filtered.length > 0 ? (
               filtered.map((option) => (
                 <button
                   key={option.value}
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => addOption(option.value)}
                   className="flex w-full items-center rounded-sm px-2 py-2 text-left text-sm text-foreground hover:bg-accent"
                 >
@@ -226,7 +233,7 @@ function SearchableMultiSelect({
 }
 
 const Channels = () => {
-  const [activeTab, setActiveTab] = useState("email");
+  const [activeTab, setActiveTab] = useState("qrcode");
   const [qrGenerated, setQrGenerated] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const { toast } = useToast();
@@ -255,6 +262,8 @@ const Channels = () => {
   const [demographyOptions, setDemographyOptions] =
     useState<DemographyOptionsData>({});
   const [countryOptions, setCountryOptions] = useState<SelectOption[]>([]);
+
+  const [searchParams] = useSearchParams();
 
   const toggleDemoItem = (
     setter: React.Dispatch<React.SetStateAction<string[]>>,
@@ -328,12 +337,24 @@ const Channels = () => {
       .then(([surveysRes, demographyRes, countriesRes]) => {
         if (!isActive) return;
 
-        if (surveysRes.status === "fulfilled") {
-          setSurveys(surveysRes.value?.data?.survey?.data ?? []);
-        } else {
-          setSurveys([]);
-        }
+        const items =
+          surveysRes.status === "fulfilled"
+            ? (surveysRes.value?.data?.survey?.data ?? [])
+            : [];
+        setSurveys(items);
         setIsLoadingSurveys(false);
+
+        // Auto-select survey from URL param (?survey_id=X)
+        const urlSurveyId = searchParams.get("survey_id");
+        if (urlSurveyId) {
+          const id = Number(urlSurveyId);
+          const match = items.find((s) => s.survey_id === id);
+          if (match) {
+            setSelectedSurveyId(id);
+            setSearchTerm(match.title);
+            setActiveTab("mobileapp");
+          }
+        }
 
         if (demographyRes.status === "fulfilled") {
           setDemographyOptions(demographyRes.value?.data ?? {});
@@ -722,27 +743,9 @@ const Channels = () => {
                   <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <div className="flex flex-col min-[1090px]:flex-row min-[1090px]:items-center min-[1090px]:justify-between gap-3">
                       <TabsList className="bg-transparent p-0 h-auto gap-1 flex-wrap">
-                        <TabsTrigger
-                          value="email"
-                          className="gap-2 px-5 py-2.5 rounded-md bg-white text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
-                        >
-                          <Mail className="w-4 h-4" />
-                          Email
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="sms"
-                          className="gap-2 px-5 py-2.5 rounded-md bg-white text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                          SMS
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="whatsapp"
-                          className="gap-2 px-5 py-2.5 rounded-md bg-white text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
-                        >
-                          <WhatsAppIcon className="w-4 h-4" />
-                          WhatsApp
-                        </TabsTrigger>
+                        <TabsTrigger value="email" className="hidden" />
+                        <TabsTrigger value="sms" className="hidden" />
+                        <TabsTrigger value="whatsapp" className="hidden" />
                         <TabsTrigger
                           value="qrcode"
                           className="gap-2 px-5 py-2.5 rounded-md bg-white text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
@@ -794,7 +797,7 @@ const Channels = () => {
                       </div>
                     </div>
 
-                    <TabsContent value="email" className="mt-6">
+                    <TabsContent value="email" className="hidden">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <Card className="border border-border bg-card shadow-sm">
                           <CardHeader>
@@ -909,7 +912,7 @@ const Channels = () => {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="sms" className="mt-6">
+                    <TabsContent value="sms" className="hidden">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <Card className="border border-border bg-card shadow-sm">
                           <CardHeader>
@@ -1014,7 +1017,7 @@ Thank you!`}
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="whatsapp" className="mt-6">
+                    <TabsContent value="whatsapp" className="hidden">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <Card className="border border-border bg-card shadow-sm">
                           <CardHeader>
@@ -1400,8 +1403,9 @@ Thank you!`}
                                     onToggle={(value) =>
                                       toggleDemoItem(setDemoOccupation, value)
                                     }
-                                    placeholder="Type to search occupations"
+                                    placeholder="Search occupations…"
                                     helperText="Only valid occupations can be selected."
+                                    initialLimit={5}
                                   />
 
                                   {/* Industry */}
@@ -1412,8 +1416,9 @@ Thank you!`}
                                     onToggle={(value) =>
                                       toggleDemoItem(setDemoIndustry, value)
                                     }
-                                    placeholder="Type to search industries"
+                                    placeholder="Search industries…"
                                     helperText="Only valid industries can be selected."
+                                    initialLimit={5}
                                   />
 
                                   {/* Device type */}
@@ -1477,6 +1482,15 @@ Thank you!`}
                                 </div>
                               )}
                             </div>
+
+                            <Button
+                              className="w-full bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2 mt-4"
+                              onClick={() => {
+                                // Apply demographic filters (POST wired later)
+                              }}
+                            >
+                              Apply Filters
+                            </Button>
                           </CardContent>
                         </Card>
 
