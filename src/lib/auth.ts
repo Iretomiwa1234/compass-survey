@@ -606,6 +606,40 @@ export type SurveyRespondentItem = {
   totalResponses: number;
 };
 
+export type SurveyResponseAnswerItem = {
+  questionId: string;
+  answer: string;
+};
+
+export type SurveyResponseQuestionItem = {
+  id: string;
+  type: string;
+  label: string;
+  scale?: number;
+  required?: boolean;
+  placeholder?: string;
+};
+
+export type SurveyResponseItem = {
+  surveyId: number;
+  surveyTitle: string;
+  responseId: number;
+  customerId: string;
+  fname: string;
+  sname: string;
+  email: string;
+  answer: SurveyResponseAnswerItem[];
+  question: SurveyResponseQuestionItem[];
+};
+
+export type SurveyResponsesPayload = {
+  rows: SurveyResponseItem[];
+  total: number;
+  perPage: number;
+  currentPage: number;
+  lastPage: number;
+};
+
 // GET /v1/survey/respondent
 export async function getSurveyRespondents(
   surveyId?: number,
@@ -628,6 +662,68 @@ export async function getSurveyRespondents(
     sname: String(c.sname ?? ""),
     totalResponses: toSafeNumber(c.total_responses),
   }));
+}
+
+// GET /v1/survey/responses/{survey_id}
+export async function getSurveyResponses(
+  surveyId: number,
+  page = 1,
+): Promise<SurveyResponsesPayload> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path:
+      page > 1
+        ? `/v1/survey/responses/${surveyId}?page=${page}`
+        : `/v1/survey/responses/${surveyId}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const payload =
+    response?.data?.survey?.reponses ?? response?.data?.survey?.responses ?? {};
+  const rows: any[] = Array.isArray(payload?.data) ? payload.data : [];
+
+  return {
+    rows: rows.map((r) => ({
+      surveyId: toSafeNumber(r?.survey_id),
+      surveyTitle: String(r?.survey_title ?? ""),
+      responseId: toSafeNumber(r?.response_id),
+      customerId: String(r?.customer_id ?? ""),
+      fname: String(r?.fname ?? ""),
+      sname: String(r?.sname ?? ""),
+      email: String(r?.email ?? ""),
+      answer: Array.isArray(r?.answer)
+        ? r.answer.map((a: any) => ({
+            questionId: String(a?.question_id ?? ""),
+            answer: String(a?.answer ?? ""),
+          }))
+        : [],
+      question: Array.isArray(r?.question)
+        ? r.question.map((q: any) => ({
+            id: String(q?.id ?? ""),
+            type: String(q?.type ?? ""),
+            label: String(q?.label ?? ""),
+            scale:
+              q?.scale != null && q?.scale !== ""
+                ? toSafeNumber(q.scale)
+                : undefined,
+            required:
+              q?.required != null && q?.required !== ""
+                ? String(q.required) === "1"
+                : undefined,
+            placeholder:
+              q?.placeholder != null ? String(q.placeholder) : undefined,
+          }))
+        : [],
+    })),
+    total: toSafeNumber(payload?.total),
+    perPage: toSafeNumber(payload?.per_page),
+    currentPage: toSafeNumber(payload?.current_page),
+    lastPage: toSafeNumber(payload?.last_page),
+  };
 }
 
 export type CountryByDayItem = {
@@ -726,6 +822,133 @@ export async function getDemographyOptions(): Promise<any> {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
+}
+
+export type SurveyDemographyPayload = {
+  survey_id: number | string;
+  gender?: string[];
+  age_range_min?: number;
+  age_range_max?: number;
+  marital_status?: string[];
+  language?: string[];
+  location?: string[];
+  education_level?: string[];
+  employment_status?: string[];
+  occupation?: string[];
+  industry?: string[];
+  device_type?: string[];
+  platform?: string[];
+};
+
+export type SurveyDemographyRecord = {
+  survey_id: number;
+  gender: string[];
+  age_range_min?: number;
+  age_range_max?: number;
+  marital_status: string[];
+  language: string[];
+  location: string[];
+  education_level: string[];
+  employment_status: string[];
+  occupation: string[];
+  industry: string[];
+  device_type: string[];
+  platform: string[];
+};
+
+const toStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value.map((v) => String(v ?? "")).filter((v) => v.length > 0);
+};
+
+const mapSurveyDemography = (raw: any): SurveyDemographyRecord => ({
+  survey_id: toSafeNumber(raw?.survey_id),
+  gender: toStringArray(raw?.gender),
+  age_range_min:
+    raw?.age_range_min != null && raw?.age_range_min !== ""
+      ? toSafeNumber(raw?.age_range_min)
+      : undefined,
+  age_range_max:
+    raw?.age_range_max != null && raw?.age_range_max !== ""
+      ? toSafeNumber(raw?.age_range_max)
+      : undefined,
+  marital_status: toStringArray(raw?.marital_status),
+  language: toStringArray(raw?.language),
+  location: toStringArray(raw?.location),
+  education_level: toStringArray(
+    raw?.education_level ?? raw?.highest_education_level,
+  ),
+  employment_status: toStringArray(raw?.employment_status),
+  occupation: toStringArray(raw?.occupation),
+  industry: toStringArray(raw?.industry),
+  device_type: toStringArray(raw?.device_type),
+  platform: toStringArray(raw?.platform),
+});
+
+// POST /v1/channel/survey-demography
+export async function postSurveyDemography(
+  payload: SurveyDemographyPayload,
+): Promise<SurveyDemographyRecord> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/channel/survey-demography",
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: payload,
+  });
+
+  const raw =
+    response?.data?.demography ??
+    response?.data?.survey_demography ??
+    response?.data ??
+    payload;
+  return mapSurveyDemography(raw);
+}
+
+// GET /v1/channel/survey-demography/by-survey/{survey_id}
+export async function getSurveyDemographyBySurvey(
+  surveyId: number,
+): Promise<SurveyDemographyRecord> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/channel/survey-demography/by-survey/${surveyId}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const raw =
+    response?.data?.demography ?? response?.data?.survey_demography ?? {};
+  return mapSurveyDemography({ ...raw, survey_id: raw?.survey_id ?? surveyId });
+}
+
+// PATCH /v1/channel/survey-demography/by-survey/{survey_id}
+export async function patchSurveyDemographyBySurvey(
+  surveyId: number,
+  payload: Omit<SurveyDemographyPayload, "survey_id">,
+): Promise<SurveyDemographyRecord> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/channel/survey-demography/by-survey/${surveyId}`,
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: payload,
+  });
+
+  const raw =
+    response?.data?.demography ??
+    response?.data?.survey_demography ??
+    response?.data ??
+    payload;
+  return mapSurveyDemography({ ...raw, survey_id: raw?.survey_id ?? surveyId });
 }
 
 // =========================

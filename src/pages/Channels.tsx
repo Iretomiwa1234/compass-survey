@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -45,7 +45,48 @@ import {
   SurveyListItemApi,
   getDemographyOptions,
   getCountries,
+  getSurveyDemographyBySurvey,
+  patchSurveyDemographyBySurvey,
+  postSurveyDemography,
+  type SurveyDemographyPayload,
 } from "@/lib/auth";
+
+const isPublishedSurvey = (survey: SurveyListItemApi) =>
+  Number(survey.is_published ?? 0) === 1;
+
+type DemographyFormState = {
+  ageMin: string;
+  ageMax: string;
+  genders: string[];
+  maritalStatus: string[];
+  locations: string[];
+  languages: string[];
+  education: string[];
+  employment: string[];
+  occupation: string[];
+  industry: string[];
+  deviceType: string[];
+  platform: string[];
+};
+
+const sortArray = (values: string[]) =>
+  [...values].sort((a, b) => a.localeCompare(b));
+
+const normalizeDemographyState = (state: DemographyFormState) => ({
+  ...state,
+  ageMin: state.ageMin.trim(),
+  ageMax: state.ageMax.trim(),
+  genders: sortArray(state.genders),
+  maritalStatus: sortArray(state.maritalStatus),
+  locations: sortArray(state.locations),
+  languages: sortArray(state.languages),
+  education: sortArray(state.education),
+  employment: sortArray(state.employment),
+  occupation: sortArray(state.occupation),
+  industry: sortArray(state.industry),
+  deviceType: sortArray(state.deviceType),
+  platform: sortArray(state.platform),
+});
 import whatsappChat from "/assets/Whatsapp Chat.png?url";
 
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -79,6 +120,19 @@ type SelectOption = {
   value: string;
   label: string;
 };
+
+function resolveSelectedLabels(
+  selected: string[],
+  options: SelectOption[],
+): string[] {
+  if (!selected.length) return [];
+  const optionMap = new Map(options.map((o) => [o.value, o.label]));
+  return selected.map((value) => {
+    const mapped = optionMap.get(value);
+    if (mapped) return mapped;
+    return value.replace(/_/g, " ");
+  });
+}
 
 function mapOptionMap(optionMap?: OptionMap): SelectOption[] {
   if (!optionMap) return [];
@@ -262,6 +316,10 @@ const Channels = () => {
   const [demographyOptions, setDemographyOptions] =
     useState<DemographyOptionsData>({});
   const [countryOptions, setCountryOptions] = useState<SelectOption[]>([]);
+  const [isSavingDemography, setIsSavingDemography] = useState(false);
+  const [isLoadingDemography, setIsLoadingDemography] = useState(false);
+  const [initialDemographyState, setInitialDemographyState] =
+    useState<DemographyFormState | null>(null);
 
   const [searchParams] = useSearchParams();
 
@@ -275,6 +333,39 @@ const Channels = () => {
 
   const toggleGender = (g: string) => toggleDemoItem(setDemoGenders, g);
   const toggleLocation = (l: string) => toggleDemoItem(setDemoLocations, l);
+
+  const resetDemographyFilters = useCallback(() => {
+    setDemoGenders([]);
+    setDemoMaritalStatus([]);
+    setDemoLocations([]);
+    setDemoLanguages([]);
+    setDemoEducation([]);
+    setDemoEmployment([]);
+    setDemoOccupation([]);
+    setDemoIndustry([]);
+    setDemoDeviceType([]);
+    setDemoDeviceOS([]);
+    setDemoAgeMin("");
+    setDemoAgeMax("");
+  }, []);
+
+  const mapCountrySelections = useCallback(
+    (incoming: string[]) => {
+      if (!incoming.length) return incoming;
+      if (!countryOptions.length) return incoming;
+
+      return incoming.map((value) => {
+        const normalized = String(value).trim().toLowerCase();
+        const match = countryOptions.find(
+          (option) =>
+            option.value.toLowerCase() === normalized ||
+            option.label.toLowerCase() === normalized,
+        );
+        return match?.value ?? value;
+      });
+    },
+    [countryOptions],
+  );
 
   // Upload states
   const [emailRecipients, setEmailRecipients] = useState("");
@@ -329,6 +420,46 @@ const Channels = () => {
     [demographyOptions.device_type],
   );
 
+  const summaryItems = useMemo(() => {
+    const genderLabels = resolveSelectedLabels(demoGenders, genderOptions);
+    const languageLabels = resolveSelectedLabels(demoLanguages, languageOptions);
+    const maritalLabels = resolveSelectedLabels(
+      demoMaritalStatus,
+      maritalStatusOptions,
+    );
+    const deviceLabels = resolveSelectedLabels(
+      demoDeviceType,
+      deviceTypeOptions,
+    );
+    const platformLabels = resolveSelectedLabels(demoDeviceOS, platformOptions);
+
+    const ageText =
+      demoAgeMin || demoAgeMax
+        ? `between ages ${demoAgeMin || "any"} and ${demoAgeMax || "any"}`
+        : "across all age groups";
+
+    return [
+      `People ${ageText}${genderLabels.length ? `, with gender: ${genderLabels.join(", ")}` : ""}.`,
+      `${demoLocations.length ? `People in ${demoLocations.join(", ")}` : "People in all locations"}${languageLabels.length ? ` who speak ${languageLabels.join(", ")}` : ""}.`,
+      `${maritalLabels.length ? `People with marital status: ${maritalLabels.join(", ")}` : "People of any marital status"}.`,
+      `${deviceLabels.length ? `People using ${deviceLabels.join(", ")}` : "People using any device type"}${platformLabels.length ? ` on ${platformLabels.join(", ")}` : ""}.`,
+    ];
+  }, [
+    demoAgeMax,
+    demoAgeMin,
+    demoDeviceOS,
+    demoDeviceType,
+    demoGenders,
+    demoLanguages,
+    demoLocations,
+    demoMaritalStatus,
+    deviceTypeOptions,
+    genderOptions,
+    languageOptions,
+    maritalStatusOptions,
+    platformOptions,
+  ]);
+
   useEffect(() => {
     let isActive = true;
     setIsLoadingSurveys(true);
@@ -341,14 +472,15 @@ const Channels = () => {
           surveysRes.status === "fulfilled"
             ? (surveysRes.value?.data?.survey?.data ?? [])
             : [];
-        setSurveys(items);
+        const publishedItems = items.filter(isPublishedSurvey);
+        setSurveys(publishedItems);
         setIsLoadingSurveys(false);
 
         // Auto-select survey from URL param (?survey_id=X)
         const urlSurveyId = searchParams.get("survey_id");
         if (urlSurveyId) {
           const id = Number(urlSurveyId);
-          const match = items.find((s) => s.survey_id === id);
+          const match = publishedItems.find((s) => s.survey_id === id);
           if (match) {
             setSelectedSurveyId(id);
             setSearchTerm(match.title);
@@ -388,6 +520,119 @@ const Channels = () => {
     return () => window.clearTimeout(timer);
   }, [searchTerm, showSuggestions]);
 
+  useEffect(() => {
+    if (!selectedSurveyId) {
+      resetDemographyFilters();
+      setInitialDemographyState(null);
+      return;
+    }
+
+    let isActive = true;
+    setIsLoadingDemography(true);
+
+    getSurveyDemographyBySurvey(selectedSurveyId)
+      .then((data) => {
+        if (!isActive) return;
+
+        setDemoGenders(data.gender ?? []);
+        setDemoMaritalStatus(data.marital_status ?? []);
+        setDemoLocations(mapCountrySelections(data.location ?? []));
+        setDemoLanguages(data.language ?? []);
+        setDemoEducation(data.education_level ?? []);
+        setDemoEmployment(data.employment_status ?? []);
+        setDemoOccupation(data.occupation ?? []);
+        setDemoIndustry(data.industry ?? []);
+        setDemoDeviceType(data.device_type ?? []);
+        setDemoDeviceOS(data.platform ?? []);
+        setDemoAgeMin(
+          data.age_range_min != null ? String(data.age_range_min) : "",
+        );
+        setDemoAgeMax(
+          data.age_range_max != null ? String(data.age_range_max) : "",
+        );
+
+        setInitialDemographyState({
+          ageMin: data.age_range_min != null ? String(data.age_range_min) : "",
+          ageMax: data.age_range_max != null ? String(data.age_range_max) : "",
+          genders: data.gender ?? [],
+          maritalStatus: data.marital_status ?? [],
+          locations: mapCountrySelections(data.location ?? []),
+          languages: data.language ?? [],
+          education: data.education_level ?? [],
+          employment: data.employment_status ?? [],
+          occupation: data.occupation ?? [],
+          industry: data.industry ?? [],
+          deviceType: data.device_type ?? [],
+          platform: data.platform ?? [],
+        });
+      })
+      .catch(() => {
+        if (!isActive) return;
+        resetDemographyFilters();
+        setInitialDemographyState({
+          ageMin: "",
+          ageMax: "",
+          genders: [],
+          maritalStatus: [],
+          locations: [],
+          languages: [],
+          education: [],
+          employment: [],
+          occupation: [],
+          industry: [],
+          deviceType: [],
+          platform: [],
+        });
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsLoadingDemography(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedSurveyId, mapCountrySelections, resetDemographyFilters]);
+
+  const currentDemographyState = useMemo<DemographyFormState>(
+    () => ({
+      ageMin: demoAgeMin,
+      ageMax: demoAgeMax,
+      genders: demoGenders,
+      maritalStatus: demoMaritalStatus,
+      locations: demoLocations,
+      languages: demoLanguages,
+      education: demoEducation,
+      employment: demoEmployment,
+      occupation: demoOccupation,
+      industry: demoIndustry,
+      deviceType: demoDeviceType,
+      platform: demoDeviceOS,
+    }),
+    [
+      demoAgeMin,
+      demoAgeMax,
+      demoGenders,
+      demoMaritalStatus,
+      demoLocations,
+      demoLanguages,
+      demoEducation,
+      demoEmployment,
+      demoOccupation,
+      demoIndustry,
+      demoDeviceType,
+      demoDeviceOS,
+    ],
+  );
+
+  const hasDemographyChanges = useMemo(() => {
+    if (!initialDemographyState) return false;
+    return (
+      JSON.stringify(normalizeDemographyState(currentDemographyState)) !==
+      JSON.stringify(normalizeDemographyState(initialDemographyState))
+    );
+  }, [currentDemographyState, initialDemographyState]);
+
   const sortedSurveys = useMemo(() => {
     return [...surveys].sort((a, b) => b.survey_id - a.survey_id);
   }, [surveys]);
@@ -413,6 +658,78 @@ const Channels = () => {
     setSelectedSurveyId(surveyId);
     setSearchTerm(survey?.title ?? "");
     setShowSuggestions(false);
+  };
+
+  const handleApplyDemography = async () => {
+    if (!selectedSurveyId) {
+      toast({
+        title: "Select a survey first",
+        description: "Choose a survey before applying demographic filters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload: SurveyDemographyPayload = {
+      survey_id: selectedSurveyId,
+    };
+
+    const allDeviceTypeValues = deviceTypeOptions.map((o) => o.value);
+    const allPlatformValues = platformOptions.map((o) => o.value);
+
+    if (demoGenders.length) payload.gender = demoGenders;
+    if (demoMaritalStatus.length) payload.marital_status = demoMaritalStatus;
+    if (demoLocations.length) payload.location = demoLocations;
+    if (demoLanguages.length) payload.language = demoLanguages;
+    if (demoEducation.length) payload.education_level = demoEducation;
+    if (demoEmployment.length) payload.employment_status = demoEmployment;
+    if (demoOccupation.length) payload.occupation = demoOccupation;
+    if (demoIndustry.length) payload.industry = demoIndustry;
+    payload.device_type =
+      demoDeviceType.length > 0 ? demoDeviceType : allDeviceTypeValues;
+    payload.platform =
+      demoDeviceOS.length > 0 ? demoDeviceOS : allPlatformValues;
+
+    const ageMin = demoAgeMin.trim();
+    const ageMax = demoAgeMax.trim();
+    if (ageMin !== "") payload.age_range_min = Number(ageMin);
+    if (ageMax !== "") payload.age_range_max = Number(ageMax);
+
+    if (!payload.device_type.length || !payload.platform.length) {
+      toast({
+        title: "Demography options not ready",
+        description:
+          "Device type and platform options are required. Please wait for options to load and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingDemography(true);
+
+    try {
+      const { survey_id: _surveyId, ...patchPayload } = payload;
+      try {
+        await patchSurveyDemographyBySurvey(selectedSurveyId, patchPayload);
+      } catch {
+        await postSurveyDemography(payload);
+      }
+
+      setInitialDemographyState(currentDemographyState);
+
+      toast({
+        title: "Demography saved",
+        description: "Survey demographic filters have been applied.",
+      });
+    } catch {
+      toast({
+        title: "Failed to save demography",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingDemography(false);
+    }
   };
 
   const handleFileUpload = (
@@ -1224,7 +1541,7 @@ Thank you!`}
                     </TabsContent>
 
                     <TabsContent value="mobileapp" className="mt-6">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 gap-6">
                         <Card className="border border-border bg-card shadow-sm">
                           <CardHeader className="pb-4">
                             <CardTitle className="text-base font-semibold">
@@ -1460,20 +1777,7 @@ Thank you!`}
                                   demoOccupation.length > 0 ? (
                                     <button
                                       type="button"
-                                      onClick={() => {
-                                        setDemoGenders([]);
-                                        setDemoMaritalStatus([]);
-                                        setDemoLocations([]);
-                                        setDemoLanguages([]);
-                                        setDemoEducation([]);
-                                        setDemoEmployment([]);
-                                        setDemoOccupation([]);
-                                        setDemoIndustry([]);
-                                        setDemoDeviceType([]);
-                                        setDemoDeviceOS([]);
-                                        setDemoAgeMin("");
-                                        setDemoAgeMax("");
-                                      }}
+                                      onClick={resetDemographyFilters}
                                       className="text-xs text-red-500 hover:text-red-600 underline"
                                     >
                                       Clear all filters
@@ -1483,72 +1787,29 @@ Thank you!`}
                               )}
                             </div>
 
+                            {isLoadingDemography ? (
+                              <p className="text-xs text-muted-foreground">
+                                Loading existing demography for this survey...
+                              </p>
+                            ) : null}
+
                             <Button
                               className="w-full bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2 mt-4"
-                              onClick={() => {
-                                // Apply demographic filters (POST wired later)
-                              }}
+                              onClick={handleApplyDemography}
+                              disabled={
+                                isSavingDemography ||
+                                isLoadingDemography ||
+                                !selectedSurveyId ||
+                                !hasDemographyChanges
+                              }
                             >
-                              Apply Filters
+                              {isSavingDemography
+                                ? "Applying Filters..."
+                                : "Apply Filters"}
                             </Button>
                           </CardContent>
                         </Card>
 
-                        <Card className="border border-border bg-card shadow-sm">
-                          <CardHeader className="pb-4">
-                            <CardTitle className="text-base font-semibold">
-                              Preview
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="flex items-center justify-center py-10">
-                            <div className="flex flex-col items-center gap-5">
-                              {/* Phone mockup */}
-                              <div className="relative w-[160px] h-[290px] rounded-[28px] border-[6px] border-slate-800 bg-white shadow-xl overflow-hidden flex flex-col">
-                                {/* Status bar */}
-                                <div className="bg-slate-800 h-5 w-full flex items-center justify-center shrink-0">
-                                  <div className="w-10 h-1.5 bg-slate-600 rounded-full" />
-                                </div>
-                                {/* App chrome */}
-                                <div className="bg-[#206AB5] px-3 py-2 shrink-0">
-                                  <p className="text-white text-[9px] font-semibold">
-                                    Survey
-                                  </p>
-                                </div>
-                                {/* Content */}
-                                <div className="flex-1 bg-[#F7FBFF] p-2.5 overflow-hidden space-y-2">
-                                  <div className="bg-white rounded-lg p-2 shadow-sm">
-                                    <div className="h-1.5 bg-[#206AB5] rounded-full mb-1.5 w-3/4" />
-                                    <div className="h-1 bg-slate-200 rounded-full w-full" />
-                                    <div className="h-1 bg-slate-200 rounded-full w-2/3 mt-1" />
-                                  </div>
-                                  <div className="bg-white rounded-lg p-2 shadow-sm">
-                                    <div className="h-1 bg-slate-300 rounded-full w-1/2 mb-2" />
-                                    <div className="space-y-1">
-                                      {[1, 2, 3].map((i) => (
-                                        <div
-                                          key={i}
-                                          className="flex items-center gap-1.5"
-                                        >
-                                          <div className="w-2 h-2 rounded-full border border-slate-300 shrink-0" />
-                                          <div className="h-1 bg-slate-200 rounded-full flex-1" />
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <div className="bg-[#206AB5] rounded-lg p-1.5 text-center">
-                                    <p className="text-white text-[8px] font-semibold">
-                                      Submit
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                              <p className="text-xs text-muted-foreground text-center max-w-[180px]">
-                                The survey opens in-app via a WebView or
-                                external browser link.
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
                       </div>
                     </TabsContent>
                   </Tabs>

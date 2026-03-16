@@ -19,14 +19,6 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Search,
   Download,
   FileText,
@@ -49,7 +41,14 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import {
   getSurveys,
@@ -61,6 +60,7 @@ import {
   getSurveyDeviceUsage,
   getSurveyBrowserUsage,
   getSurveyRespondents,
+  getSurveyResponses,
   getSurveyResponseByCountry,
   type SurveyListItemApi,
   type SurveyCardsData,
@@ -69,6 +69,8 @@ import {
   type SurveyCountryReachData,
   type SurveyRespondentItem,
   type CountryByDayItem,
+  type SurveyResponseItem,
+  type SurveyResponseQuestionItem,
 } from "@/lib/auth";
 import { StatCard } from "@/components/StatCard";
 import { DonutMetricCard } from "@/components/DonutMetricCard";
@@ -122,12 +124,18 @@ const ageData = [
   { range: "65+", value: 33.5 },
 ];
 
+const likertScale5: Record<string, string> = {
+  "1": "Strongly Disagree",
+  "2": "Disagree",
+  "3": "Neutral",
+  "4": "Agree",
+  "5": "Strongly Agree",
+};
+
 const SurveyAnalysis = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const searchRef = useRef<HTMLDivElement>(null);
-
-  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   // Survey listing
   const [surveys, setSurveys] = useState<SurveyListItemApi[]>([]);
@@ -161,6 +169,11 @@ const SurveyAnalysis = () => {
   const [respondentData, setRespondentData] = useState<SurveyRespondentItem[]>(
     [],
   );
+  const [responsesData, setResponsesData] = useState<SurveyResponseItem[]>([]);
+  const [responsesLoading, setResponsesLoading] = useState(false);
+  const [responsesTotal, setResponsesTotal] = useState(0);
+  const [responsesPage, setResponsesPage] = useState(1);
+  const [responsesLastPage, setResponsesLastPage] = useState(1);
 
   // Country chart
   const [countryChartRaw, setCountryChartRaw] = useState<CountryByDayItem[]>(
@@ -333,6 +346,35 @@ const SurveyAnalysis = () => {
     };
   }, [selectedSurveyId, toast]);
 
+  // Fetch survey responses when selected survey or response page changes
+  useEffect(() => {
+    if (!selectedSurveyId) return;
+    let isActive = true;
+    setResponsesLoading(true);
+
+    getSurveyResponses(selectedSurveyId, responsesPage)
+      .then((payload) => {
+        if (!isActive) return;
+        setResponsesData(payload.rows);
+        setResponsesTotal(payload.total || 0);
+        setResponsesLastPage(payload.lastPage || 1);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setResponsesData([]);
+        setResponsesTotal(0);
+        setResponsesLastPage(1);
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setResponsesLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedSurveyId, responsesPage]);
+
   // Fetch response-by-country when survey or date window changes
   useEffect(() => {
     if (!selectedSurveyId) return;
@@ -404,18 +446,106 @@ const SurveyAnalysis = () => {
     setSelectedSurveyTitle(survey.title);
     setSearchTerm("");
     setShowSuggestions(false);
+    setResponsesPage(1);
   }, []);
 
-  const handleExport = () => {
-    setExportModalOpen(false);
-  };
+  const responseQuestions = useMemo(() => {
+    const map = new Map<string, SurveyResponseQuestionItem>();
+    responsesData.forEach((row) => {
+      row.question.forEach((q) => {
+        if (!map.has(q.id)) map.set(q.id, q);
+      });
+    });
+    return Array.from(map.values());
+  }, [responsesData]);
+
+  const getAnswerValue = useCallback(
+    (row: SurveyResponseItem, questionId: string) => {
+      const found = row.answer.find((a) => a.questionId === questionId);
+      return found?.answer ?? "";
+    },
+    [],
+  );
+
+  const getStyledAnswer = useCallback(
+    (question: SurveyResponseQuestionItem, rawValue: string) => {
+      if (!rawValue) return "-";
+
+      const type = question.type.toLowerCase();
+      if (type === "likert") {
+        if ((question.scale ?? 5) === 5 && likertScale5[rawValue]) {
+          return likertScale5[rawValue];
+        }
+        return rawValue;
+      }
+
+      if (type === "rating") {
+        const scale = question.scale ?? 5;
+        return `${rawValue}/${scale}`;
+      }
+
+      return rawValue;
+    },
+    [],
+  );
+
+  const exportResponsesCsv = useCallback(() => {
+    if (!responsesData.length || !responseQuestions.length) {
+      toast({
+        title: "No responses to export",
+        description: "Select a survey with responses and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = [
+      "Respondent Name",
+      "Email",
+      "Customer ID",
+      ...responseQuestions.map((q) => q.label),
+    ];
+
+    const rows = responsesData.map((row) => [
+      `${row.fname} ${row.sname}`.trim(),
+      row.email,
+      row.customerId,
+      ...responseQuestions.map((q) => getAnswerValue(row, q.id)),
+    ]);
+
+    const escapeCsv = (v: string | number) => {
+      const s = String(v ?? "");
+      if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+
+    const csv = [headers, ...rows]
+      .map((line) => line.map(escapeCsv).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `survey-responses-${selectedSurveyId ?? "all"}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [
+    getAnswerValue,
+    responseQuestions,
+    responsesData,
+    selectedSurveyId,
+    toast,
+  ]);
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full overflow-x-hidden">
         <DashboardSidebar />
 
-        <SidebarInset className="flex-1">
+        <SidebarInset className="flex-1 min-w-0 overflow-x-hidden">
           <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-card px-4 h-14">
             <SidebarTrigger />
             <div className="flex-1" />
@@ -423,7 +553,7 @@ const SurveyAnalysis = () => {
 
           <DashboardHeader hideGreeting headerTitle="Survey Analysis" />
 
-          <main className="flex-1 p-6 space-y-6">
+          <main className="flex-1 w-full min-w-0 p-6 space-y-6 overflow-x-hidden">
             <Card>
               <CardContent className="!py-2 px-3">
                 <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
@@ -524,14 +654,6 @@ const SurveyAnalysis = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button
-                      className="w-full sm:w-auto gap-2"
-                      disabled={!selectedSurveyId}
-                      onClick={() => setExportModalOpen(true)}
-                    >
-                      <Download className="w-4 h-4" />
-                      Export
-                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -1085,27 +1207,144 @@ const SurveyAnalysis = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                <Card className="min-w-0">
+                  <CardHeader className="flex flex-row items-center justify-between gap-2">
+                    <CardTitle className="text-base">
+                      Survey Responses
+                    </CardTitle>
+                    <Button
+                      variant="outline"
+                      className="h-8 gap-2"
+                      disabled={!responsesData.length}
+                      onClick={exportResponsesCsv}
+                    >
+                      <Download className="w-4 h-4" />
+                      Export CSV
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-4 min-w-0">
+                    {responsesLoading ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    ) : responsesData.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        No responses found for this survey.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="w-full max-w-full overflow-x-auto rounded-lg border border-border">
+                          <div
+                            style={{
+                              minWidth: `${Math.max(980, 360 + responseQuestions.length * 220)}px`,
+                            }}
+                          >
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                  <TableHead className="whitespace-nowrap font-semibold text-foreground">
+                                    Respondent
+                                  </TableHead>
+                                  <TableHead className="whitespace-nowrap font-semibold text-foreground">
+                                    Email
+                                  </TableHead>
+                                  {responseQuestions.map((q) => (
+                                    <TableHead
+                                      key={q.id}
+                                      className="min-w-[220px] font-semibold text-foreground"
+                                    >
+                                      {q.label}
+                                    </TableHead>
+                                  ))}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {responsesData.map((row) => (
+                                  <TableRow
+                                    key={row.responseId}
+                                    className="align-top"
+                                  >
+                                    <TableCell className="whitespace-nowrap text-sm font-medium">
+                                      {`${row.fname} ${row.sname}`.trim() ||
+                                        "-"}
+                                    </TableCell>
+                                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                                      {row.email || "-"}
+                                    </TableCell>
+                                    {responseQuestions.map((q) => {
+                                      const raw = getAnswerValue(row, q.id);
+                                      const display = getStyledAnswer(q, raw);
+                                      const type = q.type.toLowerCase();
+                                      const capsuleType =
+                                        type === "likert" || type === "rating";
+
+                                      return (
+                                        <TableCell
+                                          key={`${row.responseId}-${q.id}`}
+                                        >
+                                          {capsuleType ? (
+                                            <span className="inline-flex items-center rounded-full border border-[#206AB5]/25 bg-[#206AB5]/10 px-2.5 py-1 text-xs font-medium text-[#185287]">
+                                              {display}
+                                            </span>
+                                          ) : (
+                                            <span className="text-sm text-muted-foreground">
+                                              {display}
+                                            </span>
+                                          )}
+                                        </TableCell>
+                                      );
+                                    })}
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setResponsesPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={responsesPage <= 1 || responsesLoading}
+                          >
+                            Previous
+                          </Button>
+                          <p className="text-xs text-muted-foreground">
+                            Page {responsesPage} of{" "}
+                            {Math.max(1, responsesLastPage)} •{" "}
+                            {responsesTotal.toLocaleString()} total responses
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setResponsesPage((p) =>
+                                Math.min(Math.max(1, responsesLastPage), p + 1),
+                              )
+                            }
+                            disabled={
+                              responsesPage >= responsesLastPage ||
+                              responsesLoading
+                            }
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
               </>
             )}
           </main>
         </SidebarInset>
       </div>
-      <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Export Contacts</DialogTitle>
-            <DialogDescription>
-              Export your audience insights as a CSV file.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setExportModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleExport}>Export</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </SidebarProvider>
   );
 };

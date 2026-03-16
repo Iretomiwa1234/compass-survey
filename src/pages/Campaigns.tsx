@@ -30,6 +30,9 @@ import {
 } from "@/components/ui/table";
 import { getSurveys, SurveyListItemApi } from "@/lib/auth";
 
+const isPublishedSurvey = (survey: SurveyListItemApi) =>
+  Number(survey.is_published ?? 0) === 1;
+
 const performanceData = [
   {
     channel: "Email",
@@ -119,16 +122,22 @@ const Campaigns = () => {
     setShowSuggestions(false);
   };
 
+  const publishedSurveys = useMemo(
+    () => surveys.filter(isPublishedSurvey),
+    [surveys],
+  );
+
   const filteredSurveys = useMemo(() => {
-    if (!searchTerm.trim()) return surveys;
-    return surveys.filter((s) =>
+    if (!searchTerm.trim()) return publishedSurveys;
+    return publishedSurveys.filter((s) =>
       s.title.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [surveys, searchTerm]);
+  }, [publishedSurveys, searchTerm]);
 
   const selectedSurvey = useMemo(
-    () => surveys.find((s) => s.survey_id === selectedSurveyId) ?? null,
-    [surveys, selectedSurveyId],
+    () =>
+      publishedSurveys.find((s) => s.survey_id === selectedSurveyId) ?? null,
+    [publishedSurveys, selectedSurveyId],
   );
 
   const surveyStatus = selectedSurvey
@@ -225,12 +234,12 @@ const Campaigns = () => {
                           Loading…
                         </SelectItem>
                       )}
-                      {!isLoadingSurveys && surveys.length === 0 && (
+                      {!isLoadingSurveys && publishedSurveys.length === 0 && (
                         <SelectItem value="empty" disabled>
                           No surveys found
                         </SelectItem>
                       )}
-                      {surveys.map((s) => (
+                      {publishedSurveys.map((s) => (
                         <SelectItem
                           key={s.survey_id}
                           value={String(s.survey_id)}
