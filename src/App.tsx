@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Verification from "./pages/Verification";
+import ForgotPassword from "./pages/ForgotPassword";
 import SurveyResearch from "./pages/SurveyResearch";
 import SurveyAnalysis from "./pages/SurveyAnalysis";
 import CreateSurvey from "./pages/CreateSurvey";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verification" element={<Verification />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/survey-preview" element={<SurveyPreviewPage />} />
 
             {/* Protected routes */}

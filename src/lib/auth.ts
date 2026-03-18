@@ -67,6 +67,35 @@ export type VerifyResponse = {
   };
 };
 
+export type ForgotPasswordPayload = {
+  email: string;
+  user_type?: "business";
+};
+
+export type ForgotPasswordResponse = {
+  status?: string;
+  message?: string;
+  code?: string;
+  data?: {
+    email?: string;
+  };
+};
+
+export type ResetPasswordPayload = {
+  email: string;
+  code: string;
+  password: string;
+};
+
+export type ResetPasswordResponse = {
+  status?: string;
+  message?: string;
+  code?: string;
+  data?: {
+    email?: string;
+  };
+};
+
 export type SurveyQuestionPayload = {
   id: number;
   type:
@@ -262,6 +291,29 @@ export async function verifyUser(code: string) {
     baseUrl: getBaseUrl(),
     path: `/v1/verify/${encodeURIComponent(trimmed)}`,
     method: "GET",
+  });
+}
+
+// Forgot Password
+export async function forgotPassword(payload: ForgotPasswordPayload) {
+  return fetchJson<ForgotPasswordResponse>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/forgot-password",
+    method: "POST",
+    body: {
+      email: payload.email,
+      user_type: "business",
+    },
+  });
+}
+
+// Reset Password
+export async function resetPassword(payload: ResetPasswordPayload) {
+  return fetchJson<ResetPasswordResponse>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/reset-password",
+    method: "POST",
+    body: payload,
   });
 }
 

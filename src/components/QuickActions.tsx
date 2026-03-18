@@ -82,6 +82,7 @@ export function QuickActions() {
 
   // control visibility of the move handle; keep visible for 2s after mouse leaves
   const [showHandle, setShowHandle] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const hideHandleTimeoutRef = useRef<number | null>(null);
 
   // refs to track pointer dragging
@@ -99,11 +100,13 @@ export function QuickActions() {
       window.clearTimeout(hideHandleTimeoutRef.current);
       hideHandleTimeoutRef.current = null;
     }
+    setIsExpanded(true);
     setShowHandle(true);
   };
 
   const handleMouseLeave = () => {
     if (isDragging) return;
+    setIsExpanded(false);
     // hide after 2s
     hideHandleTimeoutRef.current = window.setTimeout(() => {
       setShowHandle(false);
@@ -140,6 +143,7 @@ export function QuickActions() {
         if (hideHandleTimeoutRef.current)
           window.clearTimeout(hideHandleTimeoutRef.current);
         hideHandleTimeoutRef.current = window.setTimeout(() => {
+          setIsExpanded(false);
           setShowHandle(false);
           hideHandleTimeoutRef.current = null;
         }, 2000);
@@ -183,6 +187,7 @@ export function QuickActions() {
   // reset position
   const reset = () => {
     setOffset({ x: 0, y: 0 });
+    setIsExpanded(false);
     setShowHandle(false);
   };
 
@@ -207,8 +212,8 @@ export function QuickActions() {
   const handleCursor = isDragging
     ? "grabbing"
     : showHandle
-    ? "grab"
-    : "default";
+      ? "grab"
+      : "default";
 
   return (
     <TooltipProvider delayDuration={100}>
@@ -216,6 +221,25 @@ export function QuickActions() {
         ref={containerRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onFocusCapture={() => {
+          if (hideHandleTimeoutRef.current) {
+            window.clearTimeout(hideHandleTimeoutRef.current);
+            hideHandleTimeoutRef.current = null;
+          }
+          setIsExpanded(true);
+          setShowHandle(true);
+        }}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+            setIsExpanded(false);
+            if (!isDragging) {
+              hideHandleTimeoutRef.current = window.setTimeout(() => {
+                setShowHandle(false);
+                hideHandleTimeoutRef.current = null;
+              }, 2000);
+            }
+          }
+        }}
         // position anchored bottom center
         style={{
           position: "fixed",
@@ -283,35 +307,58 @@ export function QuickActions() {
         </div>
 
         {/* Main actions bar */}
-        <div className="flex items-center gap-1 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2">
-          {/* Action buttons */}
-          {quickActions.map((action, index) => (
-            <div key={action.label} className="flex items-center">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 text-gray-500 hover:text-[#206AB5] hover:bg-[#206AB5]/5"
-                    onClick={() => navigate(action.path)}
-                  >
-                    <action.icon className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="top"
-                  className="bg-gray-900 text-white text-xs"
-                >
-                  {action.label}
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Divider before last item */}
-              {index === quickActions.length - 2 && (
-                <div className="h-6 w-px bg-gray-200 mx-1" />
-              )}
+        <div
+          className="bg-white rounded-full shadow-lg border border-gray-200 transition-all duration-300 overflow-hidden"
+          style={{ width: isExpanded ? 306 : 44 }}
+        >
+          <div className="relative h-[44px]">
+            <div
+              className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
+              style={{
+                opacity: isExpanded ? 0 : 1,
+                pointerEvents: isExpanded ? "none" : "auto",
+              }}
+            >
+              <LayoutGrid className="h-5 w-5 text-[#206AB5]" />
             </div>
-          ))}
+
+            <div
+              className="absolute inset-0 flex items-center gap-1 px-3 transition-opacity duration-200"
+              style={{
+                opacity: isExpanded ? 1 : 0,
+                pointerEvents: isExpanded ? "auto" : "none",
+              }}
+            >
+              {/* Action buttons */}
+              {quickActions.map((action, index) => (
+                <div key={action.label} className="flex items-center">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-gray-500 hover:text-[#206AB5] hover:bg-[#206AB5]/5"
+                        onClick={() => navigate(action.path)}
+                      >
+                        <action.icon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-gray-900 text-white text-xs"
+                    >
+                      {action.label}
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Divider before last item */}
+                  {index === quickActions.length - 2 && (
+                    <div className="h-6 w-px bg-gray-200 mx-1" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </TooltipProvider>

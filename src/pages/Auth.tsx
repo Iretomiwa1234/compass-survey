@@ -494,6 +494,18 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
                   {loginForm.formState.errors.password.message}
                 </p>
               )}
+
+              {isLogin && (
+                <div className="mt-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/forgot-password")}
+                    className="text-sm text-[#206AB5] font-medium hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
             </div>
 
             {!isLogin && (

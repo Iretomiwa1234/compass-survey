@@ -1,6 +1,9 @@
 import {
   ArrowLeft,
+  CheckCircle2,
+  Cloud,
   Eye,
+  Loader2,
   Save,
   Send,
   Target,
@@ -82,9 +85,13 @@ const CreateSurvey = () => {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isLoadingSurvey, setIsLoadingSurvey] = useState(false);
   const [isSavingSurvey, setIsSavingSurvey] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [showEditBanner, setShowEditBanner] = useState(true);
   const [invalidQuestionIds, setInvalidQuestionIds] = useState<number[]>([]);
   const [isPublishedSurvey, setIsPublishedSurvey] = useState(false);
+  const [baselineSnapshot, setBaselineSnapshot] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
   const [pendingSaveAction, setPendingSaveAction] = useState<{
@@ -92,6 +99,23 @@ const CreateSurvey = () => {
     isPublished: 0 | 1;
     successLabel: "Draft" | "Template" | "Publish" | "Update";
   } | null>(null);
+  const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
+  const [resumeChoices, setResumeChoices] = useState<
+    Array<{ key: string; label: string; surveyId: number | null }>
+  >([]);
+  const [pendingLocalDraft, setPendingLocalDraft] = useState<null | {
+    title: string;
+    description: string;
+    targetAudience: string;
+    maxResponses: string;
+    singleResponse: string;
+    endDate: string;
+    allowEdit: string;
+    questions: Question[];
+    updatedAt: number;
+  }>(null);
+  const [resumeMode, setResumeMode] = useState<"new" | "edit" | null>(null);
+  const [skipLocalResume, setSkipLocalResume] = useState(false);
 
   type QuestionType =
     | "text"
@@ -139,6 +163,122 @@ const CreateSurvey = () => {
 
   const [questions, setQuestions] = useState<Question[]>([]);
 
+  type StoredDraft = {
+    title: string;
+    description: string;
+    targetAudience: string;
+    maxResponses: string;
+    singleResponse: string;
+    endDate: string;
+    allowEdit: string;
+    questions: Question[];
+    updatedAt: number;
+  };
+
+  const getDraftStorageKey = useCallback(
+    (id: number | null) => (id ? `survey_draft_${id}` : "survey_draft_new"),
+    [],
+  );
+
+  const readDraft = useCallback(
+    (id: number | null): StoredDraft | null => {
+      try {
+        const raw = localStorage.getItem(getDraftStorageKey(id));
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as StoredDraft;
+        if (!parsed || typeof parsed !== "object") return null;
+        return parsed;
+      } catch {
+        return null;
+      }
+    },
+    [getDraftStorageKey],
+  );
+
+  const writeDraft = useCallback(
+    (id: number | null, draft: StoredDraft) => {
+      try {
+        localStorage.setItem(getDraftStorageKey(id), JSON.stringify(draft));
+      } catch {
+        // ignore storage write failures
+      }
+    },
+    [getDraftStorageKey],
+  );
+
+  const clearDraft = useCallback(
+    (id: number | null) => {
+      try {
+        localStorage.removeItem(getDraftStorageKey(id));
+      } catch {
+        // ignore storage clear failures
+      }
+    },
+    [getDraftStorageKey],
+  );
+
+  const applyStoredDraft = useCallback((draft: StoredDraft) => {
+    const normalizedQuestions = (draft.questions ?? []).map((q, idx) => ({
+      ...q,
+      id: idx + 1,
+    }));
+    setSurveyTitle(draft.title ?? "");
+    setDescription(draft.description ?? "");
+    setTargetAudience(draft.targetAudience ?? "all");
+    setMaxResponses(draft.maxResponses ?? "500");
+    setSingleResponse(draft.singleResponse ?? "false");
+    setEndDate(draft.endDate ?? "");
+    setAllowEdit(draft.allowEdit ?? "false");
+    setQuestions(normalizedQuestions);
+    setSelectedId(normalizedQuestions[0]?.id ?? null);
+    setBaselineSnapshot(
+      JSON.stringify({
+        title: (draft.title ?? "").trim(),
+        description: (draft.description ?? "").trim(),
+        targetAudience: draft.targetAudience ?? "all",
+        maxResponses: draft.maxResponses ?? "500",
+        singleResponse: draft.singleResponse ?? "false",
+        endDate: draft.endDate ?? "",
+        allowEdit: draft.allowEdit ?? "false",
+        questions: normalizedQuestions.map((q) => ({
+          ...q,
+          label: q.label?.trim?.() ?? q.label,
+          placeholder: q.placeholder?.trim?.() ?? q.placeholder,
+        })),
+      }),
+    );
+    setLastSavedAt(draft.updatedAt ?? Date.now());
+    setIsHydrated(true);
+  }, []);
+
+  const serializeDraft = useCallback(
+    (snapshot: {
+      title: string;
+      description: string;
+      targetAudience: string;
+      maxResponses: string;
+      singleResponse: string;
+      endDate: string;
+      allowEdit: string;
+      questions: Question[];
+    }) =>
+      JSON.stringify({
+        title: snapshot.title.trim(),
+        description: snapshot.description.trim(),
+        targetAudience: snapshot.targetAudience,
+        maxResponses: snapshot.maxResponses,
+        singleResponse: snapshot.singleResponse,
+        endDate: snapshot.endDate,
+        allowEdit: snapshot.allowEdit,
+        questions: snapshot.questions.map((q) => ({
+          ...q,
+          label: q.label?.trim?.() ?? q.label,
+          placeholder: q.placeholder?.trim?.() ?? q.placeholder,
+        })),
+      }),
+    [],
+  );
+
   const normalizeType = useCallback((value: string): QuestionType => {
     const normalized = value.trim().toLowerCase();
     if (normalized === "rating") return "rating";
@@ -169,8 +309,143 @@ const CreateSurvey = () => {
     return "text";
   }, []);
 
+  const currentSnapshot = useMemo(
+    () =>
+      serializeDraft({
+        title: surveyTitle,
+        description,
+        targetAudience,
+        maxResponses,
+        singleResponse,
+        endDate,
+        allowEdit,
+        questions,
+      }),
+    [
+      surveyTitle,
+      description,
+      targetAudience,
+      maxResponses,
+      singleResponse,
+      endDate,
+      allowEdit,
+      questions,
+      serializeDraft,
+    ],
+  );
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!isHydrated) return false;
+    if (baselineSnapshot === null) return false;
+    return baselineSnapshot !== currentSnapshot;
+  }, [baselineSnapshot, currentSnapshot, isHydrated]);
+
+  const navigateWithUnsavedCheck = useCallback(
+    (path: string) => {
+      if (hasUnsavedChanges) {
+        const shouldLeave = window.confirm(
+          "You have unsaved changes. Are you sure you want to leave this page?",
+        );
+        if (!shouldLeave) return;
+      }
+      navigate(path);
+    },
+    [hasUnsavedChanges, navigate],
+  );
+
+  useEffect(() => {
+    setIsHydrated(false);
+    setBaselineSnapshot(null);
+    setResumeDialogOpen(false);
+    setResumeMode(null);
+    setResumeChoices([]);
+    setPendingLocalDraft(null);
+    setSkipLocalResume(false);
+    setInvalidQuestionIds([]);
+  }, [parsedSurveyId]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    if (isEditing) return;
+    if (baselineSnapshot !== null || isHydrated) return;
+
+    const keys = Object.keys(localStorage).filter((key) =>
+      key.startsWith("survey_draft_"),
+    );
+
+    if (keys.length > 0) {
+      const choices = keys
+        .map((key) => {
+          const draft = (() => {
+            try {
+              const raw = localStorage.getItem(key);
+              return raw ? (JSON.parse(raw) as StoredDraft) : null;
+            } catch {
+              return null;
+            }
+          })();
+          if (!draft) return null;
+          if (key === "survey_draft_new") {
+            return {
+              key,
+              label: `Continue new survey${draft.title ? `: ${draft.title}` : ""}`,
+              surveyId: null,
+            };
+          }
+
+          const id = Number(key.replace("survey_draft_", ""));
+          if (!Number.isFinite(id)) return null;
+          return {
+            key,
+            label: `Continue editing survey ${id}${draft.title ? `: ${draft.title}` : ""}`,
+            surveyId: id,
+          };
+        })
+        .filter(
+          (
+            choice,
+          ): choice is {
+            key: string;
+            label: string;
+            surveyId: number | null;
+          } => choice !== null,
+        );
+
+      if (choices.length > 0) {
+        setResumeMode("new");
+        setResumeChoices(choices);
+        setResumeDialogOpen(true);
+        return;
+      }
+    }
+
+    setBaselineSnapshot(currentSnapshot);
+    setIsHydrated(true);
+  }, [isEditing, baselineSnapshot, currentSnapshot, isHydrated]);
+
   useEffect(() => {
     if (!isEditing || !parsedSurveyId) return;
+    if (isHydrated || resumeDialogOpen) return;
+
+    if (!skipLocalResume) {
+      const localDraft = readDraft(parsedSurveyId);
+      if (localDraft) {
+        setResumeMode("edit");
+        setPendingLocalDraft(localDraft);
+        setResumeDialogOpen(true);
+        return;
+      }
+    }
 
     let isActive = true;
     setIsLoadingSurvey(true);
@@ -285,6 +560,19 @@ const CreateSurvey = () => {
         setIsPublishedSurvey(Number(survey.is_published ?? 0) === 1);
         setQuestions(ordered);
         setSelectedId(ordered[0]?.id ?? null);
+        setBaselineSnapshot(
+          serializeDraft({
+            title: surveyTitleValue,
+            description: descriptionValue,
+            targetAudience: surveyGroupValue,
+            maxResponses: String(maxResponsesValue),
+            singleResponse: singleResponseValue,
+            endDate: normalizedEndDate,
+            allowEdit: allowEditValue,
+            questions: ordered,
+          }),
+        );
+        setIsHydrated(true);
       })
       .catch((error: unknown) => {
         if (!isActive) return;
@@ -297,6 +585,7 @@ const CreateSurvey = () => {
           description: message,
           variant: "destructive",
         });
+        setIsHydrated(true);
       })
       .finally(() => {
         if (!isActive) return;
@@ -306,7 +595,72 @@ const CreateSurvey = () => {
     return () => {
       isActive = false;
     };
-  }, [isEditing, parsedSurveyId, normalizeType]);
+  }, [
+    isEditing,
+    parsedSurveyId,
+    normalizeType,
+    serializeDraft,
+    isHydrated,
+    resumeDialogOpen,
+    readDraft,
+    skipLocalResume,
+  ]);
+
+  const handleResumeNewChoice = (surveyId: number | null) => {
+    if (surveyId === null) {
+      const draft = readDraft(null);
+      if (draft) {
+        applyStoredDraft(draft);
+      } else {
+        setBaselineSnapshot(currentSnapshot);
+        setIsHydrated(true);
+      }
+      setResumeDialogOpen(false);
+      setResumeMode(null);
+      setResumeChoices([]);
+      return;
+    }
+
+    setResumeDialogOpen(false);
+    setResumeMode(null);
+    setResumeChoices([]);
+    navigate(`/create-survey/edit/${surveyId}`);
+  };
+
+  const handleStartFresh = () => {
+    if (resumeMode === "new") {
+      clearDraft(null);
+      setResumeDialogOpen(false);
+      setResumeMode(null);
+      setResumeChoices([]);
+      setBaselineSnapshot(currentSnapshot);
+      setIsHydrated(true);
+      return;
+    }
+
+    if (resumeMode === "edit" && parsedSurveyId) {
+      clearDraft(parsedSurveyId);
+      setPendingLocalDraft(null);
+      setResumeDialogOpen(false);
+      setResumeMode(null);
+      setSkipLocalResume(true);
+    }
+  };
+
+  const handleContinueEditDraft = () => {
+    if (!pendingLocalDraft) return;
+    applyStoredDraft(pendingLocalDraft);
+    setPendingLocalDraft(null);
+    setResumeDialogOpen(false);
+    setResumeMode(null);
+  };
+
+  const handleLoadServerVersion = () => {
+    setPendingLocalDraft(null);
+    setResumeDialogOpen(false);
+    setResumeMode(null);
+    setSkipLocalResume(true);
+  };
 
   const addQuestion = (value: string, insertIndex?: number) => {
     setQuestions((prev) => {
@@ -525,26 +879,43 @@ const CreateSurvey = () => {
     status: CreateSurveyPayload["status"],
     isPublished: 0 | 1,
     successLabel: string,
+    options?: {
+      silent?: boolean;
+      source?: "manual" | "auto";
+    },
   ) => {
+    const isAutoSave = options?.source === "auto";
+
     if (!surveyTitle.trim()) {
+      if (options?.silent) {
+        return false;
+      }
       toast({
         title: "Missing title",
         description: "Please enter a survey title.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     if (questions.length === 0) {
+      if (options?.silent) {
+        return false;
+      }
       toast({
         title: "No questions",
         description: "Please add at least one question.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
-    setIsSavingSurvey(true);
+    if (isAutoSave) {
+      setIsAutoSaving(true);
+    } else {
+      setIsSavingSurvey(true);
+    }
+
     try {
       const payload = buildPayload(status, isPublished);
       if (isEditing && parsedSurveyId) {
@@ -553,17 +924,28 @@ const CreateSurvey = () => {
         await createSurvey(payload);
       }
       setInvalidQuestionIds([]);
-      toast({
-        title: isEditing ? `${successLabel} updated` : `${successLabel} saved`,
-        description: isEditing
-          ? `Your survey ${successLabel.toLowerCase()} has been updated.`
-          : `Your survey has been saved as ${successLabel.toLowerCase()}.`,
-      });
+      setBaselineSnapshot(currentSnapshot);
+      setLastSavedAt(Date.now());
+      if (!isAutoSave) {
+        clearDraft(parsedSurveyId);
+      }
+
+      if (!options?.silent) {
+        toast({
+          title: isEditing
+            ? `${successLabel} updated`
+            : `${successLabel} saved`,
+          description: isEditing
+            ? `Your survey ${successLabel.toLowerCase()} has been updated.`
+            : `Your survey has been saved as ${successLabel.toLowerCase()}.`,
+        });
+      }
 
       // Redirect back to survey research after successful publish
       if (successLabel === "Publish") {
         setTimeout(() => navigate("/survey-research"), 1500);
       }
+      return true;
     } catch (error: unknown) {
       if (error instanceof ApiError) {
         const data = error.data;
@@ -599,20 +981,70 @@ const CreateSurvey = () => {
             } ${questionNumbers}.`,
             variant: "destructive",
           });
-          return;
+          return false;
         }
       }
       const message =
         error instanceof Error ? error.message : "Failed to save survey.";
-      toast({
-        title: "Save failed",
-        description: message,
-        variant: "destructive",
-      });
+      if (!options?.silent) {
+        toast({
+          title: "Save failed",
+          description: message,
+          variant: "destructive",
+        });
+      }
+      return false;
     } finally {
-      setIsSavingSurvey(false);
+      if (isAutoSave) {
+        setIsAutoSaving(false);
+      } else {
+        setIsSavingSurvey(false);
+      }
     }
   };
+
+  useEffect(() => {
+    if (!isHydrated || !hasUnsavedChanges || isSavingSurvey || isAutoSaving) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setIsAutoSaving(true);
+      const now = Date.now();
+      writeDraft(parsedSurveyId, {
+        title: surveyTitle,
+        description,
+        targetAudience,
+        maxResponses,
+        singleResponse,
+        endDate,
+        allowEdit,
+        questions,
+        updatedAt: now,
+      });
+      setBaselineSnapshot(currentSnapshot);
+      setLastSavedAt(now);
+      setIsAutoSaving(false);
+    }, 20_000);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    isHydrated,
+    hasUnsavedChanges,
+    isSavingSurvey,
+    isAutoSaving,
+    parsedSurveyId,
+    surveyTitle,
+    description,
+    targetAudience,
+    maxResponses,
+    singleResponse,
+    endDate,
+    allowEdit,
+    questions,
+    currentSnapshot,
+    writeDraft,
+  ]);
 
   const handleRequestSaveConfirmation = (
     status: CreateSurveyPayload["status"],
@@ -627,7 +1059,7 @@ const CreateSurvey = () => {
     if (!pendingSaveAction) return;
     const { status, isPublished, successLabel } = pendingSaveAction;
     setSaveConfirmOpen(false);
-    void handleSave(status, isPublished, successLabel);
+    void handleSave(status, isPublished, successLabel, { source: "manual" });
   };
 
   const handleSaveDraft = () =>
@@ -638,8 +1070,16 @@ const CreateSurvey = () => {
     handleRequestSaveConfirmation("active", 1, "Publish");
   const handleConfirmClose = () => {
     setCloseConfirmOpen(false);
-    void handleSave("close", 0, "Closed");
+    void handleSave("close", 0, "Closed", { source: "manual" });
   };
+
+  const saveStatusLabel = isAutoSaving
+    ? "Saving locally..."
+    : hasUnsavedChanges
+      ? "Unsaved local changes"
+      : lastSavedAt
+        ? "Saved locally"
+        : "Ready";
 
   return (
     <SidebarProvider>
@@ -663,7 +1103,7 @@ const CreateSurvey = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate("/survey-research")}
+                  onClick={() => navigateWithUnsavedCheck("/survey-research")}
                   className="gap-2 text-[#48556B]"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -672,6 +1112,17 @@ const CreateSurvey = () => {
               </div>
 
               <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-2 rounded-full border border-[#D4E2F3] bg-[#F8FBFF] px-3 py-1.5 text-xs text-[#4A5C73]">
+                  {isAutoSaving ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#206AB5]" />
+                  ) : hasUnsavedChanges ? (
+                    <Cloud className="h-3.5 w-3.5 text-[#206AB5]" />
+                  ) : (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                  )}
+                  <span>{saveStatusLabel}</span>
+                </div>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -947,6 +1398,59 @@ const CreateSurvey = () => {
           </div>
         </SidebarInset>
       </div>
+      <Dialog
+        open={resumeDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) return;
+          setResumeDialogOpen(true);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Resume your local draft?</DialogTitle>
+            <DialogDescription>
+              {resumeMode === "new"
+                ? "We found local drafts in this browser. Pick one to continue."
+                : "A local draft exists for this survey in this browser."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {resumeMode === "new" ? (
+            <div className="space-y-2">
+              {resumeChoices.map((choice) => (
+                <Button
+                  key={choice.key}
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => handleResumeNewChoice(choice.surveyId)}
+                >
+                  {choice.label}
+                </Button>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Button className="w-full" onClick={handleContinueEditDraft}>
+                Continue local draft
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleLoadServerVersion}
+              >
+                Load server version instead
+              </Button>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleStartFresh}>
+              {resumeMode === "new" ? "Start fresh" : "Discard local draft"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog
         open={saveConfirmOpen}
         onOpenChange={(open) => {

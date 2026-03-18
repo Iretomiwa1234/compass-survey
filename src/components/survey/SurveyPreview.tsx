@@ -1,6 +1,5 @@
 import { CirclePlus, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 
 interface SurveyPreviewProps {
@@ -70,15 +69,48 @@ const SurveyPreview = ({
   const [draggingQuestionIndex, setDraggingQuestionIndex] = useState<
     number | null
   >(null);
+  const previewScrollRef = useRef<HTMLDivElement | null>(null);
+
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+
+    const container = previewScrollRef.current;
+    if (!container) return;
+
+    const dragTypes = e.dataTransfer.types;
+    const isQuestionDrag = dragTypes.includes(
+      "application/x-survey-question-index",
+    );
+    const isInputTypeDrag = dragTypes.includes("application/x-inputtype");
+    if (!isQuestionDrag && !isInputTypeDrag) return;
+
+    const edgeThreshold = 80;
+    const maxStep = 22;
+    const rect = container.getBoundingClientRect();
+    let delta = 0;
+
+    if (e.clientY < rect.top + edgeThreshold) {
+      const intensity = (rect.top + edgeThreshold - e.clientY) / edgeThreshold;
+      delta = -Math.ceil(maxStep * Math.min(1, intensity));
+    } else if (e.clientY > rect.bottom - edgeThreshold) {
+      const intensity =
+        (e.clientY - (rect.bottom - edgeThreshold)) / edgeThreshold;
+      delta = Math.ceil(maxStep * Math.min(1, intensity));
+    }
+
+    if (delta !== 0) {
+      container.scrollTop += delta;
+    }
   };
 
   const handleQuestionDragStart = (
     e: React.DragEvent<HTMLDivElement>,
     index: number,
   ) => {
-    e.dataTransfer.setData("application/x-survey-question-index", String(index));
+    e.dataTransfer.setData(
+      "application/x-survey-question-index",
+      String(index),
+    );
     e.dataTransfer.effectAllowed = "move";
     setDraggingQuestionIndex(index);
   };
@@ -120,6 +152,7 @@ const SurveyPreview = ({
 
   return (
     <div
+      ref={previewScrollRef}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       className="min-w-[500px] flex-1 p-6 overflow-y-auto bg-white rounded-lg md:w-[35%] w-full h-full"
@@ -173,9 +206,7 @@ const SurveyPreview = ({
                           : selectedQuestionId === q.id
                             ? "bg-[#EDF3FF] border-[#B5CDE6]"
                             : "border-transparent"
-                      } ${
-                        draggingQuestionIndex === idx ? "opacity-70" : ""
-                      }`}
+                      } ${draggingQuestionIndex === idx ? "opacity-70" : ""}`}
                     >
                       <div className="px-4 py-2">
                         <div className="flex items-center justify-between">
@@ -516,15 +547,6 @@ const SurveyPreview = ({
                 />
               </div>
             )}
-          </div>
-
-          <div className="py-4 flex justify-center">
-            <Button
-              size="lg"
-              className="px-8 bg-[#206AB5] transition duration-150 hover:text-[#206AB5] hover:bg-[white] hover:border hover:border-[#206AB5]"
-            >
-              Submit
-            </Button>
           </div>
         </div>
       </Card>

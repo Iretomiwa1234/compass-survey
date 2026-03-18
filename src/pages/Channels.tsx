@@ -422,7 +422,10 @@ const Channels = () => {
 
   const summaryItems = useMemo(() => {
     const genderLabels = resolveSelectedLabels(demoGenders, genderOptions);
-    const languageLabels = resolveSelectedLabels(demoLanguages, languageOptions);
+    const languageLabels = resolveSelectedLabels(
+      demoLanguages,
+      languageOptions,
+    );
     const maritalLabels = resolveSelectedLabels(
       demoMaritalStatus,
       maritalStatusOptions,
@@ -1809,7 +1812,6 @@ Thank you!`}
                             </Button>
                           </CardContent>
                         </Card>
-
                       </div>
                     </TabsContent>
                   </Tabs>
