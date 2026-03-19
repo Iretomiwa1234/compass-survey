@@ -711,9 +711,8 @@ const Channels = () => {
     setIsSavingDemography(true);
 
     try {
-      const { survey_id: _surveyId, ...patchPayload } = payload;
       try {
-        await patchSurveyDemographyBySurvey(selectedSurveyId, patchPayload);
+        await patchSurveyDemographyBySurvey(selectedSurveyId, payload);
       } catch {
         await postSurveyDemography(payload);
       }

@@ -982,7 +982,7 @@ export async function getSurveyDemographyBySurvey(
 // PATCH /v1/channel/survey-demography/by-survey/{survey_id}
 export async function patchSurveyDemographyBySurvey(
   surveyId: number,
-  payload: Omit<SurveyDemographyPayload, "survey_id">,
+  payload: SurveyDemographyPayload,
 ): Promise<SurveyDemographyRecord> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");

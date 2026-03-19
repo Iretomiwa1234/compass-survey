@@ -1401,8 +1401,7 @@ const CreateSurvey = () => {
       <Dialog
         open={resumeDialogOpen}
         onOpenChange={(open) => {
-          if (!open) return;
-          setResumeDialogOpen(true);
+          setResumeDialogOpen(open);
         }}
       >
         <DialogContent className="sm:max-w-lg">
@@ -1445,7 +1444,7 @@ const CreateSurvey = () => {
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={handleStartFresh}>
-              {resumeMode === "new" ? "Start fresh" : "Discard local draft"}
+              {resumeMode === "new" ? "I'll edit later" : "Skip local draft"}
             </Button>
           </DialogFooter>
         </DialogContent>

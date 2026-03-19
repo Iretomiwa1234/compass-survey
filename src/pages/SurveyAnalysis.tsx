@@ -76,6 +76,9 @@ import { StatCard } from "@/components/StatCard";
 import { DonutMetricCard } from "@/components/DonutMetricCard";
 import { CompletionRateCard } from "@/components/CompletionRateCard";
 
+const isPublishedSurvey = (survey: SurveyListItemApi) =>
+  Number(survey.is_published ?? 0) === 1;
+
 const defaultTrendData = [
   { day: "Monday", value: 0 },
   { day: "Tuesday", value: 0 },
@@ -189,7 +192,10 @@ const SurveyAnalysis = () => {
     getSurveys(1)
       .then((res) => {
         if (!isActive) return;
-        setSurveys(res?.data?.survey?.data ?? []);
+        const publishedItems = (res?.data?.survey?.data ?? []).filter(
+          isPublishedSurvey,
+        );
+        setSurveys(publishedItems);
         setIsLoadingSurveys(false);
       })
       .catch(() => {
