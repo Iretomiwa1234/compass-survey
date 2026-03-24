@@ -1003,6 +1003,21 @@ export async function patchSurveyDemographyBySurvey(
   return mapSurveyDemography({ ...raw, survey_id: raw?.survey_id ?? surveyId });
 }
 
+// GET /v1/channels/respondent/{survey_id}/{hash}
+export async function getRespondentUrl(hash: string): Promise<any> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/channels/respondent/${hash}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return response;
+}
+
 // =========================
 // Social Listening
 // =========================

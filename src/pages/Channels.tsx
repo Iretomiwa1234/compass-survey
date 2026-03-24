@@ -48,6 +48,7 @@ import {
   getSurveyDemographyBySurvey,
   patchSurveyDemographyBySurvey,
   postSurveyDemography,
+  getRespondentUrl,
   type SurveyDemographyPayload,
 } from "@/lib/auth";
 
@@ -661,8 +662,14 @@ const Channels = () => {
     setSelectedSurveyId(surveyId);
     setSearchTerm(survey?.title ?? "");
     setShowSuggestions(false);
-  };
 
+    // Test respondent URL endpoint (hash-only)
+    getRespondentUrl("ceb85b5f25d274aaabaa34dbbaa5278cd950404a").catch(
+      () => {},
+    );
+  };
+  // 3cfee3b6b751e45df312fd38ca959d3fb9a4486c
+  // ceb85b5f25d274aaabaa34dbbaa5278cd950404a;
   const handleApplyDemography = async () => {
     if (!selectedSurveyId) {
       toast({

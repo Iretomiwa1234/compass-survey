@@ -86,8 +86,8 @@ export function ActiveSurveys({ surveys = [] }: ActiveSurveysProps) {
     setDetailsOpen(true);
   };
 
-  const handleAnalytics = () => {
-    navigate("/survey-analysis");
+  const handleAnalytics = (survey: Survey) => {
+    navigate(`/survey-analysis?survey_id=${survey.id}`);
   };
 
   const handleEdit = (survey: Survey) => {
@@ -176,7 +176,7 @@ export function ActiveSurveys({ surveys = [] }: ActiveSurveysProps) {
                           variant="outline"
                           size="sm"
                           className="h-8 text-primary border-primary"
-                          onClick={handleAnalytics}
+                          onClick={() => handleAnalytics(survey)}
                         >
                           <BarChart3 className="w-4 h-4 mr-2" />
                           Analytics

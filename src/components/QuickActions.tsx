@@ -47,6 +47,7 @@ const quickActions = [
     icon: GlassesIcon,
     label: "Social Insights",
     path: "/social-insights",
+    disabled: true,
   },
   {
     icon: BarChartIcon,
@@ -57,11 +58,13 @@ const quickActions = [
     icon: FileIcon,
     label: "Report",
     path: "/report",
+    disabled: true,
   },
   {
     icon: StarIcon,
     label: "Generate Survey with AI",
     path: "/create-survey",
+    disabled: true,
   },
   {
     icon: LayoutGrid,
@@ -337,8 +340,13 @@ export function QuickActions() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 text-gray-500 hover:text-[#206AB5] hover:bg-[#206AB5]/5"
-                        onClick={() => navigate(action.path)}
+                        disabled={action.disabled}
+                        className={`h-9 w-9 ${
+                          action.disabled
+                            ? "text-gray-300 opacity-50 cursor-not-allowed"
+                            : "text-gray-500 hover:text-[#206AB5] hover:bg-[#206AB5]/5"
+                        }`}
+                        onClick={() => !action.disabled && navigate(action.path)}
                       >
                         <action.icon className="h-5 w-5" />
                       </Button>
@@ -348,13 +356,9 @@ export function QuickActions() {
                       className="bg-gray-900 text-white text-xs"
                     >
                       {action.label}
+                      {action.disabled && " (Coming Soon)"}
                     </TooltipContent>
                   </Tooltip>
-
-                  {/* Divider before last item */}
-                  {index === quickActions.length - 2 && (
-                    <div className="h-6 w-px bg-gray-200 mx-1" />
-                  )}
                 </div>
               ))}
             </div>
