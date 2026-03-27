@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -32,6 +32,22 @@ import SurveyPreviewPage from "./pages/SurveyPreviewPage";
 
 const queryClient = new QueryClient();
 
+function RootEntry() {
+  const location = useLocation();
+  const hashFromEmptyParam = new URLSearchParams(location.search).get("");
+  const hasHash = Boolean(hashFromEmptyParam?.trim());
+
+  if (hasHash) {
+    return <SurveyPreviewPage />;
+  }
+
+  return (
+    <ProtectedRoute>
+      <Index />
+    </ProtectedRoute>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -48,16 +64,11 @@ const App = () => (
             <Route path="/verification" element={<Verification />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/survey-preview" element={<SurveyPreviewPage />} />
+            <Route path="/respond" element={<SurveyPreviewPage />} />
+            <Route path="/respond/:hash" element={<SurveyPreviewPage />} />
 
             {/* Protected routes */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/" element={<RootEntry />} />
             <Route
               path="/ai-assistant"
               element={

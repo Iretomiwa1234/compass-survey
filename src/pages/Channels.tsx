@@ -290,6 +290,10 @@ function SearchableMultiSelect({
 const Channels = () => {
   const [activeTab, setActiveTab] = useState("qrcode");
   const [qrGenerated, setQrGenerated] = useState(false);
+  const [qrSubject, setQrSubject] = useState("Scan to share your feedback");
+  const [qrMessage, setQrMessage] = useState(
+    "Share your honest thoughts in this quick survey.",
+  );
   const [linkCopied, setLinkCopied] = useState(false);
   const { toast } = useToast();
 
@@ -1069,7 +1073,13 @@ const Channels = () => {
                   <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <div className="flex flex-col min-[1090px]:flex-row min-[1090px]:items-center min-[1090px]:justify-between gap-3">
                       <TabsList className="bg-transparent p-0 h-auto gap-1 flex-wrap">
-                        <TabsTrigger value="email" className="hidden" />
+                        <TabsTrigger
+                          value="email"
+                          className="gap-2 px-5 py-2.5 rounded-md bg-white text-gray-600 data-[state=active]:bg-[#206AB5] data-[state=active]:text-white data-[state=active]:border-[#206AB5]"
+                        >
+                          <Mail className="w-4 h-4" />
+                          Email
+                        </TabsTrigger>
                         <TabsTrigger value="sms" className="hidden" />
                         <TabsTrigger value="whatsapp" className="hidden" />
                         <TabsTrigger
@@ -1123,7 +1133,7 @@ const Channels = () => {
                       </div>
                     </div>
 
-                    <TabsContent value="email" className="hidden">
+                    <TabsContent value="email">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <Card className="border border-border bg-card shadow-sm">
                           <CardHeader>
@@ -1447,37 +1457,27 @@ Thank you!`}
                           <CardContent className="space-y-5">
                             <div className="space-y-2">
                               <label className="text-sm font-medium block text-foreground">
-                                QR Code Style
+                                QR Code Subject
                               </label>
 
-                              <Select defaultValue="branded">
-                                <SelectTrigger className="w-full h-10 bg-card border border-border">
-                                  <SelectValue placeholder="Select Style" />
-                                </SelectTrigger>
-
-                                <SelectContent>
-                                  <SelectItem value="branded">
-                                    Branded
-                                  </SelectItem>
-                                  <SelectItem value="classic">
-                                    Classic
-                                  </SelectItem>
-                                  <SelectItem value="rounded">
-                                    Rounded
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <Input
+                                placeholder="Enter QR code subject"
+                                value={qrSubject}
+                                onChange={(e) => setQrSubject(e.target.value)}
+                                className="h-10 bg-card border border-border"
+                              />
                             </div>
 
                             <div className="space-y-2">
                               <label className="text-sm font-medium block text-foreground">
-                                Call to Action Text
+                                Call to Action Message
                               </label>
 
-                              <Input
-                                placeholder="Scan to share your feedback"
-                                defaultValue="Scan to share your feedback"
-                                className="h-10 bg-card border border-border"
+                              <Textarea
+                                placeholder="Enter your call to action message"
+                                value={qrMessage}
+                                onChange={(e) => setQrMessage(e.target.value)}
+                                className="min-h-[110px] bg-card border border-border"
                               />
                             </div>
 
@@ -1531,11 +1531,11 @@ Thank you!`}
                               </div>
 
                               <p className="text-sm text-muted-foreground">
-                                Scan to share your feedback
+                                {qrSubject || "QR survey"}
                               </p>
 
                               <p className="text-sm text-muted-foreground">
-                                {surveyLink.replace("https://", "")}
+                                {qrMessage || "Share your feedback"}
                               </p>
 
                               {!qrGenerated && (

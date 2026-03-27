@@ -279,33 +279,108 @@ const CreateSurvey = () => {
     [],
   );
 
+  const toArrayString = useCallback((value: unknown): string[] => {
+    const toStringValue = (entry: unknown): string => {
+      if (typeof entry === "string") return entry.trim();
+      if (entry && typeof entry === "object") {
+        const record = entry as Record<string, unknown>;
+        const picked =
+          record.value ?? record.label ?? record.text ?? record.name ?? "";
+        return String(picked).trim();
+      }
+      return String(entry ?? "").trim();
+    };
+
+    if (Array.isArray(value)) {
+      return value.map(toStringValue).filter(Boolean);
+    }
+
+    if (typeof value === "string") {
+      const raw = value.trim();
+      if (!raw) return [];
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.map(toStringValue).filter(Boolean);
+        }
+      } catch {
+        // keep raw fallback below
+      }
+
+      if (raw.includes("\n") || raw.includes(",")) {
+        return raw
+          .split(/[\n,]+/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      return [raw];
+    }
+
+    return [];
+  }, []);
+
+  const toQuestionList = useCallback(
+    (value: unknown): Array<Record<string, unknown>> => {
+      if (Array.isArray(value)) {
+        return value.filter(
+          (item): item is Record<string, unknown> =>
+            typeof item === "object" && item !== null,
+        );
+      }
+
+      if (typeof value === "string") {
+        const raw = value.trim();
+        if (!raw) return [];
+
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            return parsed.filter(
+              (item): item is Record<string, unknown> =>
+                typeof item === "object" && item !== null,
+            );
+          }
+        } catch {
+          return [];
+        }
+      }
+
+      return [];
+    },
+    [],
+  );
+
   const normalizeType = useCallback((value: string): QuestionType => {
     const normalized = value.trim().toLowerCase();
-    if (normalized === "rating") return "rating";
-    if (normalized === "multiline_text" || normalized === "multiline text") {
+    const normalizedKey = normalized.replace(/[\s-]+/g, "_");
+
+    if (normalizedKey === "rating") return "rating";
+    if (normalizedKey === "multiline_text") {
       return "multiline_text";
     }
-    if (normalized === "number") return "number";
-    if (normalized === "slider") return "slider";
-    if (normalized === "date") return "date";
-    if (normalized === "time") return "time";
-    if (normalized === "date_time" || normalized === "date and time") {
+    if (normalizedKey === "number") return "number";
+    if (normalizedKey === "slider") return "slider";
+    if (normalizedKey === "date") return "date";
+    if (normalizedKey === "time") return "time";
+    if (normalizedKey === "date_time" || normalizedKey === "date_and_time") {
       return "date_time";
     }
-    if (normalized === "email") return "email";
-    if (normalized === "website") return "website";
-    if (normalized === "address") return "address";
-    if (normalized === "location list" || normalized === "location_list") {
+    if (normalizedKey === "email") return "email";
+    if (normalizedKey === "website") return "website";
+    if (normalizedKey === "address") return "address";
+    if (normalizedKey === "location_list") {
       return "location_list";
     }
-    if (normalized === "single select") return "single_select";
-    if (normalized === "multiple select") return "multiple_select";
-    if (normalized === "ranking") return "ranking";
-    if (normalized === "drop down" || normalized === "dropdown") {
+    if (normalizedKey === "single_select") return "single_select";
+    if (normalizedKey === "multiple_select") return "multiple_select";
+    if (normalizedKey === "ranking") return "ranking";
+    if (normalizedKey === "drop_down" || normalizedKey === "dropdown") {
       return "drop_down";
     }
-    if (normalized === "single select grid") return "single_select_grid";
-    if (normalized === "likert scale") return "likert_scale";
+    if (normalizedKey === "single_select_grid") return "single_select_grid";
+    if (normalizedKey === "likert_scale") return "likert_scale";
     return "text";
   }, []);
 
@@ -485,10 +560,9 @@ const CreateSurvey = () => {
         setEndDate(normalizedEndDate);
         setAllowEdit(allowEditValue);
 
-        const questionList =
-          (survey.question as Array<Record<string, unknown>> | undefined) ??
-          (survey.questions as Array<Record<string, unknown>> | undefined) ??
-          [];
+        const questionList = toQuestionList(
+          survey.question ?? survey.questions,
+        );
 
         const mappedQuestions = questionList.map((q, idx) => {
           const type = normalizeType(String(q.type ?? ""));
@@ -530,26 +604,23 @@ const CreateSurvey = () => {
             ...(type === "single_select" ||
             type === "multiple_select" ||
             type === "drop_down"
-              ? { options: (q.options as string[] | undefined) ?? [] }
+              ? { options: toArrayString(q.options) }
               : {}),
-            ...(type === "ranking"
-              ? { items: (q.items as string[] | undefined) ?? [] }
-              : {}),
+            ...(type === "ranking" ? { items: toArrayString(q.items) } : {}),
             ...(type === "single_select_grid"
               ? {
-                  rows: (q.rows as string[] | undefined) ?? [],
-                  columns: (q.columns as string[] | undefined) ?? [],
+                  rows: toArrayString(q.rows),
+                  columns: toArrayString(q.columns),
                 }
               : {}),
             ...(type === "likert_scale"
               ? {
-                  scale_options:
-                    (q.scale_options as string[] | undefined) ?? [],
-                  statements: (q.statements as string[] | undefined) ?? [],
+                  scale_options: toArrayString(q.scale_options),
+                  statements: toArrayString(q.statements),
                 }
               : {}),
             ...(type === "location_list"
-              ? { locations: (q.locations as string[] | undefined) ?? [] }
+              ? { locations: toArrayString(q.locations) }
               : {}),
           };
         });
@@ -599,6 +670,8 @@ const CreateSurvey = () => {
     isEditing,
     parsedSurveyId,
     normalizeType,
+    toArrayString,
+    toQuestionList,
     serializeDraft,
     isHydrated,
     resumeDialogOpen,

@@ -70,7 +70,6 @@ const enabledPaths = [
   "/channels",
   "/campaigns",
   "/survey-analysis",
-  "/social-listening",
 ];
 
 const menuSections = [
@@ -210,7 +209,11 @@ export function DashboardSidebar() {
                                   }
                                 >
                                   {isDisabled ? (
-                                    <div className="flex w-full items-center gap-2">
+                                    <div
+                                      className={`flex w-full items-center gap-2 ${
+                                        isCollapsed ? "justify-center" : ""
+                                      }`}
+                                    >
                                       {item.icon === "image" ? (
                                         <IconImage
                                           src={item.src}
@@ -220,10 +223,14 @@ export function DashboardSidebar() {
                                       ) : (
                                         <item.icon className="h-4 w-4 text-[#9AA4B5]" />
                                       )}
-                                      <span className="leading-[18px] text-[#9AA4B5]">
-                                        {item.name}
-                                      </span>
-                                      <Lock className="ml-auto h-3 w-3 text-[#9AA4B5] opacity-50" />
+                                      {!isCollapsed && (
+                                        <>
+                                          <span className="leading-[18px] text-[#9AA4B5]">
+                                            {item.name}
+                                          </span>
+                                          <Lock className="ml-auto h-3 w-3 text-[#9AA4B5] opacity-50" />
+                                        </>
+                                      )}
                                     </div>
                                   ) : (
                                     <NavLink
@@ -282,12 +289,20 @@ export function DashboardSidebar() {
                         className="relative !h-auto gap-2 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all cursor-not-allowed opacity-50 grayscale hover:bg-transparent"
                         onClick={(e) => e.preventDefault()}
                       >
-                        <div className="flex w-full items-center gap-2">
+                        <div
+                          className={`flex w-full items-center gap-2 ${
+                            isCollapsed ? "justify-center" : ""
+                          }`}
+                        >
                           <settingsItem.icon className="h-4 w-4 text-[#9AA4B5]" />
-                          <span className="leading-[18px] text-[#9AA4B5]">
-                            {settingsItem.name}
-                          </span>
-                          <Lock className="ml-auto h-3 w-3 text-[#9AA4B5] opacity-50" />
+                          {!isCollapsed && (
+                            <>
+                              <span className="leading-[18px] text-[#9AA4B5]">
+                                {settingsItem.name}
+                              </span>
+                              <Lock className="ml-auto h-3 w-3 text-[#9AA4B5] opacity-50" />
+                            </>
+                          )}
                         </div>
                       </SidebarMenuButton>
                     </div>

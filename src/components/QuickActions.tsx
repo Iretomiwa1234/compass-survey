@@ -77,7 +77,24 @@ export function QuickActions() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const shouldHide = hiddenRoutes.includes(location.pathname);
+  const search = new URLSearchParams(location.search);
+  const hasPublicHashParam = Boolean(
+    (search.get("") ?? "").trim() ||
+      (search.get("hash") ?? "").trim() ||
+      (search.get("h") ?? "").trim() ||
+      (search.get("token") ?? "").trim() ||
+      (search.get("respondent_hash") ?? "").trim(),
+  );
+
+  const isPublicResponseRoute =
+    location.pathname === "/respond" ||
+    location.pathname.startsWith("/respond/") ||
+    (location.pathname === "/" && hasPublicHashParam);
+
+  const shouldHide =
+    hiddenRoutes.includes(location.pathname) ||
+    location.pathname === "/survey-preview" ||
+    isPublicResponseRoute;
 
   // offset state (in px)
   const [offset, setOffset] = useState({ x: 0, y: 0 });

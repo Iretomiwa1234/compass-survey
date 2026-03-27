@@ -216,6 +216,20 @@ export type GetSurveyDetailResponse = {
   };
 };
 
+export type RespondentLookupResponse = {
+  status?: string;
+  data?: {
+    name?: string;
+    phone_number?: string;
+    email?: string;
+    details?: {
+      survey_id?: number;
+      views?: number;
+      status?: string;
+    };
+  };
+};
+
 export type DashboardMentionsResponse = {
   status?: string;
   data?: {
@@ -415,6 +429,15 @@ export async function getSurveyDetail(surveyId: number) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+}
+
+// Get Survey Detail (public)
+export async function getPublicSurveyDetail(surveyId: number) {
+  return fetchJson<GetSurveyDetailResponse>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/survey/questions/${surveyId}`,
+    method: "GET",
   });
 }
 
@@ -1003,16 +1026,17 @@ export async function patchSurveyDemographyBySurvey(
   return mapSurveyDemography({ ...raw, survey_id: raw?.survey_id ?? surveyId });
 }
 
-// GET /v1/channels/respondent/{survey_id}/{hash}
-export async function getRespondentUrl(hash: string): Promise<any> {
+// GET /v1/channels/respondent/{hash}
+export async function getRespondentUrl(
+  hash: string,
+): Promise<RespondentLookupResponse> {
   const token = getAuthToken();
-  if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<any>({
+  const response = await fetchJson<RespondentLookupResponse>({
     baseUrl: getBaseUrl(),
     path: `/v1/channels/respondent/${hash}`,
     method: "GET",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
   return response;

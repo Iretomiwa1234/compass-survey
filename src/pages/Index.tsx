@@ -3,14 +3,9 @@ import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { StatCard } from "@/components/StatCard";
 import { ResponseTrendChart } from "@/components/ResponseTrendChart";
-import { MentionsCard } from "@/components/MentionsCard";
-import { SentimentChart } from "@/components/SentimentChart";
 import { ActiveSurveys } from "@/components/ActiveSurveys";
-import { RecentProjects } from "@/components/RecentProjects";
 import { FileText, Users } from "lucide-react";
 import {
-  getDashboardMentions,
-  getDashboardSentiment,
   getSurveyCards,
   getDashboardResponseTrend,
   getSurveys,
@@ -25,12 +20,6 @@ import {
 
 const Index = () => {
   const [surveys, setSurveys] = useState<SurveyListItemApi[]>([]);
-  const [mentionsTotal, setMentionsTotal] = useState(0);
-  const [sentiment, setSentiment] = useState({
-    positive: 0,
-    neutral: 0,
-    negative: 0,
-  });
   const [surveyCards, setSurveyCards] = useState<SurveyCardsData | null>(null);
   const [trendData, setTrendData] = useState<{ day: string; value: number }[]>(
     [],
@@ -89,36 +78,6 @@ const Index = () => {
     };
   }, []);
 
-  useEffect(() => {
-    let isActive = true;
-
-    Promise.allSettled([getDashboardMentions(), getDashboardSentiment()])
-      .then(([mentionsResult, sentimentResult]) => {
-        if (!isActive) return;
-
-        if (mentionsResult.status === "fulfilled") {
-          setMentionsTotal(mentionsResult.value.totalMentions);
-        } else {
-          setMentionsTotal(0);
-        }
-
-        if (sentimentResult.status === "fulfilled") {
-          setSentiment(sentimentResult.value);
-        } else {
-          setSentiment({ positive: 0, neutral: 0, negative: 0 });
-        }
-      })
-      .catch(() => {
-        if (!isActive) return;
-        setMentionsTotal(0);
-        setSentiment({ positive: 0, neutral: 0, negative: 0 });
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
   const surveyStats = useMemo(() => {
     return surveys.reduce(
       (acc, survey) => {
@@ -153,7 +112,7 @@ const Index = () => {
           <DashboardHeader />
 
           <main className="flex-1 p-6 overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <StatCard
                 title="Total Surveys"
                 value={surveyStats.total.toString()}
@@ -204,21 +163,10 @@ const Index = () => {
                   },
                 ]}
               />
-
-              <MentionsCard totalMentions={mentionsTotal} />
-
-              <SentimentChart
-                positive={sentiment.positive}
-                neutral={sentiment.neutral}
-                negative={sentiment.negative}
-              />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              <div className="lg:col-span-2">
-                <ResponseTrendChart data={trendData} />
-              </div>
-              <RecentProjects />
+            <div className="grid grid-cols-1 gap-6 mb-6">
+              <ResponseTrendChart data={trendData} />
             </div>
 
             <ActiveSurveys surveys={surveys} />
