@@ -12,6 +12,14 @@ import {
 import { clearAuthSession, onSessionExpired } from "@/lib/session";
 
 const AUTH_PAGES = new Set(["/login", "/register", "/verification", "/auth"]);
+const RESPONDENT_ROUTES = new Set(["/qrcode", "/respond", "/survey-response"]);
+
+function isRespondentRoute(pathname: string): boolean {
+  // Check if pathname starts with any respondent route
+  return Array.from(RESPONDENT_ROUTES).some(
+    (route) => pathname === route || pathname.startsWith(route + "/"),
+  );
+}
 
 export function SessionExpiredModal() {
   const navigate = useNavigate();
@@ -19,7 +27,9 @@ export function SessionExpiredModal() {
 
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => {
-      if (AUTH_PAGES.has(window.location.pathname)) return;
+      const pathname = window.location.pathname;
+      // Don't show modal for auth pages or respondent survey routes
+      if (AUTH_PAGES.has(pathname) || isRespondentRoute(pathname)) return;
       setOpen(true);
     });
 

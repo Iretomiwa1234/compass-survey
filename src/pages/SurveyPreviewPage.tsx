@@ -5,10 +5,18 @@ import {
   Check,
   ChevronDown,
   GripVertical,
+  Loader2,
   Search,
   Star,
 } from "lucide-react";
-import { getPublicSurveyDetail, getRespondentUrl } from "@/lib/auth";
+import {
+  getRespondentUrl,
+  verifyRespondentToken,
+  type RespondentChannelResponse,
+  type RespondentSession,
+} from "@/lib/auth";
+import { ApiError } from "@/lib/api";
+import RespondentVerification from "@/components/RespondentVerification";
 
 // Types
 
@@ -65,6 +73,7 @@ interface PreviewData {
 // Helpers
 
 const STORAGE_PREFIX = "compass.survey.preview.";
+const RESPONDENT_STORAGE_PREFIX = "compass.survey.respondent.";
 
 const formControl =
   "w-full rounded-xl sm:rounded-2xl bg-white px-4 py-3 sm:px-5 sm:py-4 text-sm sm:text-base text-[#1A2330] placeholder:text-[#8C98AC] focus:outline-none focus:ring-2 focus:ring-[#206AB5]/25 transition shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:shadow-md";
@@ -207,6 +216,100 @@ export function openSurveyPreview(data: PreviewData) {
   const key = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
   window.open(`/survey-preview?key=${key}`, "_blank", "noopener");
+}
+
+function respondentStorageKey(hash: string): string {
+  return `${RESPONDENT_STORAGE_PREFIX}${hash}`;
+}
+
+function readStoredRespondent(hash: string): RespondentSession | null {
+  try {
+    const raw = localStorage.getItem(respondentStorageKey(hash));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<RespondentSession>;
+
+    if (!parsed || typeof parsed !== "object") return null;
+
+    const normalizedHash = String(parsed.hash ?? hash).trim();
+    const normalizedEmail = String(parsed.email ?? "").trim();
+    if (!normalizedHash || !normalizedEmail) return null;
+
+    return {
+      hash: normalizedHash,
+      email: normalizedEmail,
+      fname: String(parsed.fname ?? "").trim(),
+      sname: String(parsed.sname ?? "").trim(),
+      phone: String(parsed.phone ?? "").trim(),
+      token: String(parsed.token ?? "").trim() || undefined,
+      user_exists:
+        parsed.user_exists == null ? undefined : Number(parsed.user_exists),
+      verification_pending: Boolean(parsed.verification_pending),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function storeRespondent(session: RespondentSession): void {
+  localStorage.setItem(
+    respondentStorageKey(session.hash),
+    JSON.stringify(session),
+  );
+}
+
+function clearStoredRespondent(hash: string): void {
+  localStorage.removeItem(respondentStorageKey(hash));
+}
+
+function readUserExists(response: RespondentChannelResponse): number {
+  const fromDetails = Number(response?.data?.details?.user_exists ?? 0);
+  if (Number.isFinite(fromDetails) && fromDetails > 0) return fromDetails;
+
+  const fromData = Number(response?.data?.user_exists ?? 0);
+  if (Number.isFinite(fromData) && fromData > 0) return fromData;
+
+  return 0;
+}
+
+function responseMessage(response: RespondentChannelResponse): string {
+  return (
+    String(response?.message ?? "").trim() ||
+    String(response?.data?.message ?? "").trim() ||
+    ""
+  );
+}
+
+function sessionFromResponse(
+  response: RespondentChannelResponse,
+  fallbackHash: string,
+): RespondentSession {
+  const details = response?.data?.details;
+  const hash = String(
+    details?.hash ?? response?.data?.hash ?? fallbackHash,
+  ).trim();
+  const email = String(details?.email ?? response?.data?.email ?? "").trim();
+  const fname = String(details?.fname ?? "").trim();
+  const sname = String(details?.sname ?? "").trim();
+  const phone = String(details?.phone ?? "").trim();
+  const token = String(details?.token ?? "").trim();
+
+  return {
+    hash,
+    email,
+    fname,
+    sname,
+    phone,
+    token: token || undefined,
+    user_exists: readUserExists(response) || undefined,
+    verification_pending: false,
+  };
+}
+
+function buildDisplayName(session: RespondentSession | null): string {
+  if (!session) return "";
+  const fullName = `${session.fname ?? ""} ${session.sname ?? ""}`.trim();
+  if (fullName) return fullName;
+  return session.email;
 }
 
 // Question renderers
@@ -986,7 +1089,6 @@ function resolveIncomingHash(
   const fromNamedParams =
     searchParams.get("hash") ??
     searchParams.get("h") ??
-    searchParams.get("token") ??
     searchParams.get("respondent_hash");
 
   if (fromNamedParams && fromNamedParams.trim()) {
@@ -1006,25 +1108,89 @@ export default function SurveyPreviewPage() {
     "Loading survey for response...",
   );
   const [sourceMode, setSourceMode] = useState<"preview" | "hash">("hash");
-  const [responderName, setResponderName] = useState("");
-  const [responderEmail, setResponderEmail] = useState("");
-  const [responderPhone, setResponderPhone] = useState("");
-  const [isNameLocked, setIsNameLocked] = useState(false);
-  const [isEmailLocked, setIsEmailLocked] = useState(false);
-  const [isPhoneLocked, setIsPhoneLocked] = useState(false);
+  const [respondentSession, setRespondentSession] =
+    useState<RespondentSession | null>(null);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(
+    null,
+  );
+  const [isTokenVerifying, setIsTokenVerifying] = useState(false);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [questionLoadError, setQuestionLoadError] = useState<string | null>(
     null,
   );
 
+  const key = searchParams.get("key")?.trim() ?? "";
+  const incomingHash = resolveIncomingHash(searchParams, pathHash);
+  const incomingToken = (searchParams.get("token") ?? "").trim();
+
+  const isHashMode = sourceMode === "hash";
+  const respondentBearerToken = respondentSession?.token;
+  const isRespondentVerified =
+    isHashMode &&
+    Boolean(respondentSession?.token) &&
+    !respondentSession?.verification_pending;
+  const isWaitingForEmailVerification =
+    isHashMode && Boolean(respondentSession?.verification_pending);
+  const shouldShowVerificationModal =
+    isHashMode &&
+    Boolean(incomingHash) &&
+    !key &&
+    !notFound &&
+    !isTokenVerifying &&
+    !isRespondentVerified &&
+    !isWaitingForEmailVerification;
+
+  const respondentDisplayName = buildDisplayName(respondentSession);
+
+  const handleUseAnotherEmail = () => {
+    if (incomingHash) {
+      clearStoredRespondent(incomingHash);
+    }
+    setRespondentSession(null);
+    setVerificationMessage(null);
+    setData(null);
+    setQuestionLoadError(null);
+    setNotFound(false);
+  };
+
+  const handleRespondentVerified = (session: RespondentSession) => {
+    const normalized: RespondentSession = {
+      ...session,
+      hash: incomingHash || session.hash,
+      verification_pending: false,
+    };
+    storeRespondent(normalized);
+    setRespondentSession(normalized);
+    setVerificationMessage(null);
+    setData(null);
+  };
+
+  const handlePendingVerification = (
+    session: RespondentSession,
+    message: string,
+  ) => {
+    const normalized: RespondentSession = {
+      ...session,
+      hash: incomingHash || session.hash,
+      verification_pending: true,
+    };
+    storeRespondent(normalized);
+    setRespondentSession(normalized);
+    setVerificationMessage(message);
+    setData(null);
+    setIsLoadingQuestions(false);
+  };
+
   useEffect(() => {
-    const key = searchParams.get("key");
-    const incomingHash = resolveIncomingHash(searchParams, pathHash);
+    let isActive = true;
 
     if (key) {
       setSourceMode("preview");
+      setRespondentSession(null);
+      setVerificationMessage(null);
       setQuestionLoadError(null);
       setIsLoadingQuestions(false);
+      setNotFound(false);
 
       const raw = localStorage.getItem(STORAGE_PREFIX + key);
       if (!raw) {
@@ -1056,6 +1222,7 @@ export default function SurveyPreviewPage() {
     }
 
     if (!incomingHash) {
+      setRespondentSession(null);
       setLoadMessage("Missing survey hash in URL.");
       setNotFound(true);
       return;
@@ -1064,30 +1231,111 @@ export default function SurveyPreviewPage() {
     setSourceMode("hash");
     setNotFound(false);
     setQuestionLoadError(null);
+    setData(null);
+
+    const stored = readStoredRespondent(incomingHash);
+
+    if (incomingToken) {
+      setIsTokenVerifying(true);
+      setLoadMessage("Verifying your email link...");
+      setVerificationMessage(null);
+      setRespondentSession(null);
+
+      verifyRespondentToken({ hash: incomingHash, token: incomingToken })
+        .then((response) => {
+          if (!isActive) return;
+
+          const userExists = readUserExists(response);
+          const isSuccessful =
+            response?.status === "success" && userExists === 1;
+
+          if (isSuccessful) {
+            const session = sessionFromResponse(response, incomingHash);
+            if (!session.token || !session.email) {
+              setVerificationMessage(
+                "Verification succeeded but your session could not be prepared.",
+              );
+              setRespondentSession(null);
+              return;
+            }
+            storeRespondent(session);
+            setRespondentSession(session);
+            setVerificationMessage(null);
+            return;
+          }
+
+          clearStoredRespondent(incomingHash);
+          setRespondentSession(null);
+          setVerificationMessage(
+            responseMessage(response) ||
+              "This verification link is invalid or expired. Enter your email to continue.",
+          );
+        })
+        .catch(() => {
+          if (!isActive) return;
+          clearStoredRespondent(incomingHash);
+          setRespondentSession(null);
+          setVerificationMessage(
+            "We could not verify this link right now. Enter your email to continue.",
+          );
+        })
+        .finally(() => {
+          if (!isActive) return;
+          setIsTokenVerifying(false);
+        });
+
+      return () => {
+        isActive = false;
+      };
+    }
+
+    if (stored) {
+      setRespondentSession(stored);
+      setVerificationMessage(
+        stored.verification_pending
+          ? "A verification email has been sent. Open the link in your email to continue."
+          : null,
+      );
+    } else {
+      setRespondentSession(null);
+      setVerificationMessage(null);
+    }
+
+    return () => {
+      isActive = false;
+    };
+  }, [incomingHash, incomingToken, key]);
+
+  useEffect(() => {
+    if (sourceMode !== "hash") return;
+    if (!incomingHash) return;
+    if (!isRespondentVerified) return;
 
     let isActive = true;
     setLoadMessage("Resolving survey link...");
+    setQuestionLoadError(null);
+    setIsLoadingQuestions(true);
 
-    getRespondentUrl(incomingHash)
+    getRespondentUrl(incomingHash, respondentBearerToken)
       .then((res) => {
         if (!isActive) return;
 
         const payload = res?.data;
         const details = payload?.details;
-        const surveyId = Number(details?.survey_id ?? 0);
 
-        const incomingName = String(payload?.name ?? "").trim();
-        const incomingEmail = String(payload?.email ?? "").trim();
-        const incomingPhone = String(payload?.phone_number ?? "").trim();
+        // Extract survey directly from respondent lookup response
+        const surveyRecord =
+          details && typeof details === "object"
+            ? (details as Record<string, unknown>)
+            : ({} as Record<string, unknown>);
 
-        setResponderName(incomingName);
-        setResponderEmail(incomingEmail);
-        setResponderPhone(incomingPhone);
-        setIsNameLocked(incomingName.length > 0);
-        setIsEmailLocked(incomingEmail.length > 0);
-        setIsPhoneLocked(incomingPhone.length > 0);
+        const survey =
+          surveyRecord.survey && typeof surveyRecord.survey === "object"
+            ? (surveyRecord.survey as Record<string, unknown>)
+            : ({} as Record<string, unknown>);
 
-        if (!Number.isFinite(surveyId) || surveyId <= 0) {
+        // Validate that we have a valid survey
+        if (!survey.id || !survey.title) {
           setData({
             title: "Public Survey Response",
             description: "",
@@ -1097,59 +1345,49 @@ export default function SurveyPreviewPage() {
           return;
         }
 
-        setLoadMessage("Loading survey questions...");
-        setIsLoadingQuestions(true);
+        // Parse questions from survey - check both 'question' and 'questions' fields
+        const rawQuestions = Array.isArray(survey.question)
+          ? survey.question
+          : Array.isArray(survey.questions)
+            ? survey.questions
+            : [];
+        const questions = rawQuestions.map((q, idx) =>
+          normalizePreviewQuestion(q, idx),
+        );
 
-        return getPublicSurveyDetail(surveyId)
-          .then((surveyRes) => {
-            if (!isActive) return;
-            const survey = surveyRes?.data?.survey;
-            const surveyRecord =
-              survey && typeof survey === "object"
-                ? (survey as Record<string, unknown>)
-                : ({} as Record<string, unknown>);
-            const rawQuestions = Array.isArray(surveyRecord.questions)
-              ? surveyRecord.questions
-              : Array.isArray(surveyRecord.question)
-                ? surveyRecord.question
-                : [];
-            const questions = rawQuestions.map((q, idx) =>
-              normalizePreviewQuestion(q, idx),
-            );
-
-            setData({
-              title: String(surveyRecord.title ?? "Untitled Survey"),
-              description: String(surveyRecord.description ?? ""),
-              questions,
-            });
-            setQuestionLoadError(null);
-          })
-          .catch(() => {
-            if (!isActive) return;
-            setData({
-              title: "Public Survey Response",
-              description: "",
-              questions: [],
-            });
-            setQuestionLoadError(
-              "Failed to fetch survey details and questions. Please try again later.",
-            );
-          })
-          .finally(() => {
-            if (!isActive) return;
-            setIsLoadingQuestions(false);
-          });
+        setData({
+          title: String(survey.title ?? "Untitled Survey"),
+          description: String(survey.description ?? ""),
+          questions,
+        });
+        setQuestionLoadError(null);
       })
-      .catch(() => {
+      .catch((error) => {
         if (!isActive) return;
+
+        // Handle respondent token expiration (401)
+        if (error instanceof ApiError && error.status === 401) {
+          clearStoredRespondent(incomingHash);
+          setRespondentSession(null);
+          setVerificationMessage(
+            "Your verification link has expired. Please request a new verification email to continue responding to this survey.",
+          );
+          return;
+        }
+
+        // Generic error for other issues (hash not found, etc)
         setLoadMessage("Could not resolve this survey hash.");
         setNotFound(true);
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsLoadingQuestions(false);
       });
 
     return () => {
       isActive = false;
     };
-  }, [pathHash, searchParams]);
+  }, [incomingHash, isRespondentVerified, respondentBearerToken, sourceMode]);
 
   if (notFound) {
     return (
@@ -1167,6 +1405,79 @@ export default function SurveyPreviewPage() {
     );
   }
 
+  if (isTokenVerifying) {
+    return (
+      <div className="min-h-screen bg-[#ECEFF3] flex items-center justify-center px-6">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#206AB5]" />
+          <p className="mt-3 text-base text-[#6B788D]">{loadMessage}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    isHashMode &&
+    incomingToken &&
+    !respondentSession &&
+    !verificationMessage
+  ) {
+    return (
+      <div className="min-h-screen bg-[#ECEFF3] flex items-center justify-center px-6">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#206AB5]" />
+          <p className="mt-3 text-base text-[#6B788D]">
+            Verifying your email link...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isWaitingForEmailVerification) {
+    return (
+      <div className="min-h-screen bg-[#F7F9FB] flex items-center justify-center px-4 sm:px-6">
+        <div className="w-full max-w-xl rounded-2xl sm:rounded-3xl bg-white px-6 py-8 sm:px-10 sm:py-12 text-center shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#171E29]">
+            Verify your email to continue
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-[#5E6C81] leading-relaxed">
+            {verificationMessage ||
+              "We sent you a verification email. Open the link from your inbox to continue to this survey."}
+          </p>
+
+          <button
+            type="button"
+            onClick={handleUseAnotherEmail}
+            className="mt-6 inline-flex items-center justify-center rounded-full border border-[#206AB5]/25 bg-[#206AB5]/5 px-5 py-2.5 text-sm font-semibold text-[#206AB5] transition hover:bg-[#206AB5]/10"
+          >
+            Wrong email? Use another one
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (shouldShowVerificationModal) {
+    return (
+      <div className="min-h-screen bg-[#F7F9FB]">
+        <RespondentVerification
+          hash={incomingHash}
+          open
+          onVerified={handleRespondentVerified}
+          onPendingVerification={handlePendingVerification}
+        />
+        {verificationMessage && (
+          <div className="mx-auto max-w-[760px] px-4 pt-8 sm:px-6 sm:pt-10">
+            <p className="rounded-xl bg-[#FEEBED] px-4 py-3 text-sm font-medium text-[#B1223C]">
+              {verificationMessage}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (!data) {
     return (
       <div className="min-h-screen bg-[#ECEFF3] flex items-center justify-center px-6">
@@ -1180,12 +1491,28 @@ export default function SurveyPreviewPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F9FB]">
-      <div className="mx-auto max-w-[1024px] px-4 pb-16 pt-8 sm:px-6 sm:pt-10 md:px-8 md:pb-20 md:pt-12">
+      {/* Logo Header */}
+      <div className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-6">
+        <img
+          src="/assets/Compass-logo.png"
+          alt="Compass Survey"
+          className="h-10 sm:h-12 w-auto"
+        />
+      </div>
+
+      <div className="mx-auto max-w-[1024px] px-4 pb-16 pt-4 sm:px-6 sm:pt-6 md:px-8 md:pb-20 md:pt-8">
+        {/* Survey Title & Description */}
         <header className="mb-10 sm:mb-12 md:mb-14 text-center">
-          <span className="inline-block rounded-full bg-[#C6DAF7] px-4 py-1.5 sm:px-5 sm:py-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.14em] text-[#4D5F7D]">
-            {sourceMode === "preview" ? "Survey Preview" : "Public Response"}
-          </span>
-          <h1 className="mt-4 sm:mt-5 text-[1.9rem] sm:text-[2.6rem] lg:text-[3.3rem] font-bold tracking-tight text-[#171E29] leading-[1.05] sm:leading-[1]">
+          {sourceMode === "preview" && (
+            <span className="inline-block rounded-full bg-[#C6DAF7] px-4 py-1.5 sm:px-5 sm:py-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.14em] text-[#4D5F7D]">
+              Survey Preview
+            </span>
+          )}
+          <h1
+            className={`text-[1.9rem] sm:text-[2.6rem] lg:text-[3.3rem] font-bold tracking-tight text-[#171E29] leading-[1.05] sm:leading-[1] ${
+              sourceMode === "preview" ? "mt-4 sm:mt-5" : ""
+            }`}
+          >
             {data.title || "Untitled Survey"}
           </h1>
           {data.description && (
@@ -1195,43 +1522,36 @@ export default function SurveyPreviewPage() {
           )}
         </header>
 
-        {sourceMode === "hash" && (
-          <section className="mb-10 sm:mb-12 md:mb-14">
-            <div className="mb-4 sm:mb-5 flex items-start gap-3 sm:gap-4">
-              <span className="inline-flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-[#DDE2EA] text-sm sm:text-base font-bold text-[#4E6487]">
-                00
-              </span>
-              <h2 className="text-[1.35rem] sm:text-[1.7rem] md:text-[2rem] font-semibold tracking-tight text-[#1A2330] leading-[1.2]">
-                Respondent details
-              </h2>
-            </div>
-
-            <div className="sm:pl-12">
-              <div className="grid grid-cols-1 gap-4">
-                <input
-                  type="text"
-                  value={responderName}
-                  readOnly={isNameLocked}
-                  onChange={(e) => setResponderName(e.target.value)}
-                  placeholder="Full name"
-                  className={`${formControl} ${isNameLocked ? "bg-[#F2F5FA]" : ""}`}
-                />
-                <input
-                  type="email"
-                  value={responderEmail}
-                  readOnly={isEmailLocked}
-                  onChange={(e) => setResponderEmail(e.target.value)}
-                  placeholder="Email address"
-                  className={`${formControl} ${isEmailLocked ? "bg-[#F2F5FA]" : ""}`}
-                />
-                <input
-                  type="tel"
-                  value={responderPhone}
-                  readOnly={isPhoneLocked}
-                  onChange={(e) => setResponderPhone(e.target.value)}
-                  placeholder="Phone number"
-                  className={`${formControl} ${isPhoneLocked ? "bg-[#F2F5FA]" : ""}`}
-                />
+        {/* Respondent Info - After Title & Description */}
+        {sourceMode === "hash" && respondentSession && (
+          <section className="mb-8 sm:mb-10 md:mb-12 rounded-2xl sm:rounded-3xl bg-white px-5 py-5 sm:px-8 sm:py-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+            <h2 className="text-sm sm:text-base font-semibold uppercase tracking-[0.12em] text-[#5B6A80]">
+              Respondent
+            </h2>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8C98AC]">
+                  Name
+                </p>
+                <p className="mt-1 text-base sm:text-lg font-semibold text-[#1A2330] break-words">
+                  {respondentDisplayName}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8C98AC]">
+                  Email
+                </p>
+                <p className="mt-1 text-base sm:text-lg font-semibold text-[#1A2330] break-words">
+                  {respondentSession.email}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8C98AC]">
+                  Phone
+                </p>
+                <p className="mt-1 text-base sm:text-lg font-semibold text-[#1A2330] break-words">
+                  {respondentSession.phone || "-"}
+                </p>
               </div>
             </div>
           </section>
@@ -1265,7 +1585,7 @@ export default function SurveyPreviewPage() {
                       {q.label || `Question ${idx + 1}`}
                     </h2>
                     {isRequired(q.required) && (
-                      <p className="mt-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#CE3B3B]">
+                      <p className="mt-2 text-[0.6em] font-semibold uppercase tracking-[0.12em] text-[#CE3B3B]">
                         Required
                       </p>
                     )}

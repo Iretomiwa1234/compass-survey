@@ -37,8 +37,17 @@ import {
   ChevronDown,
   ChevronUp,
   Users,
+  Loader2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   getSurveys,
@@ -48,7 +57,8 @@ import {
   getSurveyDemographyBySurvey,
   patchSurveyDemographyBySurvey,
   postSurveyDemography,
-  getRespondentUrl,
+  getQRCodeBySurvey,
+  postQRCode,
   type SurveyDemographyPayload,
 } from "@/lib/auth";
 
@@ -289,11 +299,15 @@ function SearchableMultiSelect({
 
 const Channels = () => {
   const [activeTab, setActiveTab] = useState("qrcode");
-  const [qrGenerated, setQrGenerated] = useState(false);
   const [qrSubject, setQrSubject] = useState("Scan to share your feedback");
   const [qrMessage, setQrMessage] = useState(
     "Share your honest thoughts in this quick survey.",
   );
+  const [qrCodeHash, setQrCodeHash] = useState("");
+  const [qrCodeExists, setQrCodeExists] = useState(false);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [isSavingQrCode, setIsSavingQrCode] = useState(false);
+  const [isLoadingQrCode, setIsLoadingQrCode] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const { toast } = useToast();
 
@@ -385,8 +399,19 @@ const Channels = () => {
   const smsFileRef = useRef<HTMLInputElement>(null);
   const whatsappFileRef = useRef<HTMLInputElement>(null);
 
-  const surveyLink = "https://msurvey123.com/customerfeedback";
-  const websiteUrl = "https://msurvey123.com";
+  const surveyLink = useMemo(() => {
+    if (!qrCodeHash) return "";
+    if (typeof window === "undefined") return "";
+    const origin = window.location.origin;
+    return `${origin}/respond?hash=${encodeURIComponent(qrCodeHash)}`;
+  }, [qrCodeHash]);
+
+  const qrCodeImageUrl = useMemo(() => {
+    if (!surveyLink) return "";
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+      surveyLink,
+    )}`;
+  }, [surveyLink]);
 
   const platformOptions = useMemo(
     () => mapOptionMap(demographyOptions.platform),
@@ -666,14 +691,106 @@ const Channels = () => {
     setSelectedSurveyId(surveyId);
     setSearchTerm(survey?.title ?? "");
     setShowSuggestions(false);
-
-    // Test respondent URL endpoint (hash-only)
-    getRespondentUrl("ceb85b5f25d274aaabaa34dbbaa5278cd950404a").catch(
-      () => {},
-    );
   };
   // 3cfee3b6b751e45df312fd38ca959d3fb9a4486c
   // ceb85b5f25d274aaabaa34dbbaa5278cd950404a;
+
+  const resetQrCodeState = useCallback(() => {
+    setQrCodeHash("");
+    setQrCodeExists(false);
+    setQrSubject("Scan to share your feedback");
+    setQrMessage("Share your honest thoughts in this quick survey.");
+  }, []);
+
+  const loadQrCodeBySurvey = useCallback(
+    async (surveyId: number) => {
+      setIsLoadingQrCode(true);
+
+      try {
+        const response = await getQRCodeBySurvey(surveyId);
+        const hash = String(response?.data?.hash ?? "").trim();
+        const channel = response?.data?.channel;
+
+        if (!hash || !channel) {
+          resetQrCodeState();
+          return;
+        }
+
+        setQrCodeHash(hash);
+        setQrCodeExists(true);
+        setQrSubject(channel.subject ?? "");
+        setQrMessage(channel.message ?? "");
+      } catch {
+        resetQrCodeState();
+      } finally {
+        setIsLoadingQrCode(false);
+      }
+    },
+    [resetQrCodeState],
+  );
+
+  const handleSaveQrCode = async () => {
+    if (!selectedSurveyId) {
+      toast({
+        title: "Select a survey first",
+        description: "Choose a survey before generating a QR code.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const subject = qrSubject.trim();
+
+    const message = qrMessage.trim();
+
+    if (!subject || !message) {
+      toast({
+        title: "Missing fields",
+        description: "Both QR code subject and message are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const wasExisting = qrCodeExists;
+    setIsSavingQrCode(true);
+
+    try {
+      await postQRCode({
+        survey_id: selectedSurveyId,
+        subject,
+        message,
+      });
+
+      await loadQrCodeBySurvey(selectedSurveyId);
+      setQrModalOpen(false);
+
+      toast({
+        title: wasExisting ? "QR code updated" : "QR code generated",
+        description: wasExisting
+          ? "Your QR code details were updated successfully."
+          : "Your QR code was created successfully.",
+      });
+    } catch {
+      toast({
+        title: "Unable to save QR code",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingQrCode(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedSurveyId) {
+      resetQrCodeState();
+      return;
+    }
+
+    loadQrCodeBySurvey(selectedSurveyId);
+  }, [selectedSurveyId, loadQrCodeBySurvey, resetQrCodeState]);
+
   const handleApplyDemography = async () => {
     if (!selectedSurveyId) {
       toast({
@@ -815,6 +932,15 @@ const Channels = () => {
   };
 
   const handleCopyLink = async () => {
+    if (!surveyLink) {
+      toast({
+        title: "No QR link yet",
+        description: "Generate a QR code first to get a shareable link.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(surveyLink);
       setLinkCopied(true);
@@ -833,11 +959,20 @@ const Channels = () => {
   };
 
   const handleShare = async () => {
+    if (!surveyLink) {
+      toast({
+        title: "No QR link yet",
+        description: "Generate a QR code first to share the link.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Customer Satisfaction Survey",
-          text: "Please take a moment to complete our survey",
+          title: qrSubject || "Survey",
+          text: qrMessage || "Please take a moment to complete our survey",
           url: surveyLink,
         });
         toast({
@@ -860,19 +995,20 @@ const Channels = () => {
   };
 
   const handleOpenWebsite = () => {
-    window.open(websiteUrl, "_blank", "noopener,noreferrer");
+    if (!surveyLink) {
+      toast({
+        title: "No QR link yet",
+        description: "Generate a QR code first to open the survey link.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    window.open(surveyLink, "_blank", "noopener,noreferrer");
   };
 
-  const handleGenerateQR = () => {
-    setQrGenerated(true);
-    toast({
-      title: "QR Code Generated!",
-      description: "Your QR code is ready for download.",
-    });
-  };
-
-  const handleDownloadQR = (format: "png" | "svg") => {
-    if (!qrGenerated) {
+  const handleDownloadQR = async () => {
+    if (!qrCodeImageUrl || !selectedSurveyId) {
       toast({
         title: "Generate QR Code First",
         description: "Please generate the QR code before downloading.",
@@ -881,71 +1017,30 @@ const Channels = () => {
       return;
     }
 
-    // Create a simple QR-like SVG for download
-    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-      <rect width="200" height="200" fill="white"/>
-      <rect x="20" y="20" width="60" height="60" fill="#206AB5"/>
-      <rect x="120" y="20" width="60" height="60" fill="#206AB5"/>
-      <rect x="20" y="120" width="60" height="60" fill="#206AB5"/>
-      <rect x="40" y="40" width="20" height="20" fill="white"/>
-      <rect x="140" y="40" width="20" height="20" fill="white"/>
-      <rect x="40" y="140" width="20" height="20" fill="white"/>
-      <rect x="90" y="20" width="20" height="20" fill="#206AB5"/>
-      <rect x="90" y="50" width="20" height="20" fill="#206AB5"/>
-      <rect x="90" y="90" width="20" height="20" fill="#206AB5"/>
-      <rect x="120" y="90" width="20" height="20" fill="#206AB5"/>
-      <rect x="150" y="90" width="20" height="20" fill="#206AB5"/>
-      <rect x="90" y="120" width="20" height="20" fill="#206AB5"/>
-      <rect x="120" y="150" width="60" height="30" fill="#206AB5"/>
-      <rect x="90" y="160" width="20" height="20" fill="#206AB5"/>
-    </svg>`;
-
-    if (format === "svg") {
-      const blob = new Blob([svgContent], { type: "image/svg+xml" });
-      const url = URL.createObjectURL(blob);
+    try {
+      const response = await fetch(qrCodeImageUrl);
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = "survey-qr-code.svg";
+      a.href = imageUrl;
+      a.download = `survey-${selectedSurveyId}-qrcode.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } else {
-      // Convert SVG to PNG
-      const canvas = document.createElement("canvas");
-      canvas.width = 200;
-      canvas.height = 200;
-      const ctx = canvas.getContext("2d");
-      const img = new Image();
-      const svgBlob = new Blob([svgContent], {
-        type: "image/svg+xml;charset=utf-8",
+      URL.revokeObjectURL(imageUrl);
+
+      toast({
+        title: "QR code downloaded",
+        description: "Your QR code image was downloaded successfully.",
       });
-      const url = URL.createObjectURL(svgBlob);
-
-      img.onload = () => {
-        ctx?.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const pngUrl = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = pngUrl;
-            a.download = "survey-qr-code.png";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(pngUrl);
-          }
-        }, "image/png");
-      };
-      img.src = url;
+    } catch {
+      window.open(qrCodeImageUrl, "_blank", "noopener,noreferrer");
+      toast({
+        title: "Opened QR image",
+        description:
+          "Automatic download failed in this browser, so the image was opened in a new tab.",
+      });
     }
-
-    toast({
-      title: `QR Code Downloaded!`,
-      description: `Your QR code has been saved as ${format.toUpperCase()}.`,
-    });
   };
 
   return (
@@ -1446,6 +1541,64 @@ Thank you!`}
                     </TabsContent>
 
                     <TabsContent value="qrcode" className="mt-6">
+                      <Dialog open={qrModalOpen} onOpenChange={setQrModalOpen}>
+                        <DialogContent className="sm:max-w-[440px]">
+                          <DialogHeader>
+                            <DialogTitle>
+                              {qrCodeExists
+                                ? "Update QR code"
+                                : "Generate QR code"}
+                            </DialogTitle>
+                            <DialogDescription>
+                              {qrCodeExists
+                                ? "This will update the existing QR code details for this survey."
+                                : "This will generate a new QR code for this survey."}
+                            </DialogDescription>
+                          </DialogHeader>
+
+                          <div className="rounded-md border border-border bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
+                            <p>
+                              <span className="font-medium text-foreground">
+                                Subject:
+                              </span>{" "}
+                              {qrSubject || "-"}
+                            </p>
+                            <p className="mt-1">
+                              <span className="font-medium text-foreground">
+                                Message:
+                              </span>{" "}
+                              {qrMessage || "-"}
+                            </p>
+                          </div>
+
+                          <DialogFooter>
+                            <Button
+                              variant="outline"
+                              onClick={() => setQrModalOpen(false)}
+                              disabled={isSavingQrCode}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={handleSaveQrCode}
+                              disabled={isSavingQrCode}
+                              className="bg-[#206AB5] hover:bg-[#206AB5]/90"
+                            >
+                              {isSavingQrCode ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : qrCodeExists ? (
+                                "Update QR code"
+                              ) : (
+                                "Generate QR code"
+                              )}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <Card className="border border-border bg-card shadow-sm">
                           <CardHeader className="pb-4">
@@ -1482,31 +1635,25 @@ Thank you!`}
                             </div>
 
                             <Button
-                              onClick={handleGenerateQR}
+                              onClick={() => setQrModalOpen(true)}
                               className="w-full h-10 bg-[#206AB5] hover:bg-[#206AB5]/90 text-primary-foreground gap-2 font-medium"
+                              disabled={isLoadingQrCode}
                             >
                               <QrCode className="w-4 h-4" />
-                              Generate QR Code
+                              {qrCodeExists
+                                ? "Update QR Code"
+                                : "Generate QR Code"}
                             </Button>
 
-                            <div className="flex gap-3">
-                              <Button
-                                variant="outline"
-                                onClick={() => handleDownloadQR("png")}
-                                className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-[#206AB5]/5"
-                              >
-                                <Download className="w-4 h-4" />
-                                Download PNG
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => handleDownloadQR("svg")}
-                                className="flex-1 h-10 gap-2 border-primary text-primary hover:bg-[#206AB5]/5"
-                              >
-                                <Download className="w-4 h-4" />
-                                Download SVG
-                              </Button>
-                            </div>
+                            <Button
+                              variant="outline"
+                              onClick={handleDownloadQR}
+                              className="w-full h-10 gap-2 border-primary text-primary hover:bg-[#206AB5]/5"
+                              disabled={!qrCodeHash}
+                            >
+                              <Download className="w-4 h-4" />
+                              Download QR Code
+                            </Button>
                           </CardContent>
                         </Card>
 
@@ -1517,33 +1664,47 @@ Thank you!`}
                             </CardTitle>
                           </CardHeader>
 
-                          <CardContent className="flex items-center justify-center py-12">
-                            <div className="flex flex-col items-center space-y-4">
-                              <div
-                                className={`p-2 transition-opacity ${
-                                  qrGenerated ? "opacity-100" : "opacity-50"
-                                }`}
-                              >
+                          <CardContent className="flex items-center justify-center py-8">
+                            {isLoadingQrCode ? (
+                              <div className="flex flex-col items-center space-y-3 text-muted-foreground">
+                                <Loader2 className="w-6 h-6 animate-spin" />
+                                <p className="text-sm">
+                                  Loading QR code data...
+                                </p>
+                              </div>
+                            ) : qrCodeImageUrl ? (
+                              <div className="flex flex-col items-center space-y-4 w-full">
+                                <div className="p-3 rounded-lg border border-border bg-white">
+                                  <img
+                                    src={qrCodeImageUrl}
+                                    alt="Survey QR code"
+                                    className="h-48 w-48"
+                                  />
+                                </div>
+
+                                <p className="text-sm font-medium text-foreground text-center">
+                                  {qrSubject || "QR survey"}
+                                </p>
+
+                                <p className="text-xs text-muted-foreground text-center max-w-xs">
+                                  {qrMessage || "Share your feedback"}
+                                </p>
+
+                                <div className="w-full rounded-md border border-border bg-slate-50 px-3 py-2 text-xs text-muted-foreground break-all">
+                                  {surveyLink}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center space-y-4">
                                 <QrCode
-                                  className="w-40 h-40 text-primary"
+                                  className="w-32 h-32 text-primary/40"
                                   strokeWidth={1}
                                 />
-                              </div>
-
-                              <p className="text-sm text-muted-foreground">
-                                {qrSubject || "QR survey"}
-                              </p>
-
-                              <p className="text-sm text-muted-foreground">
-                                {qrMessage || "Share your feedback"}
-                              </p>
-
-                              {!qrGenerated && (
-                                <p className="text-xs text-muted-foreground italic">
-                                  Click "Generate QR Code" to create your code
+                                <p className="text-sm text-muted-foreground text-center">
+                                  Generate a QR code to preview and share it.
                                 </p>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </CardContent>
                         </Card>
                       </div>

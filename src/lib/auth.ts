@@ -230,6 +230,56 @@ export type RespondentLookupResponse = {
   };
 };
 
+export type RespondentCheckPayload = {
+  hash: string;
+  email: string;
+};
+
+export type RespondentCreatePayload = RespondentCheckPayload & {
+  fname: string;
+  sname: string;
+  phone: string;
+};
+
+export type RespondentTokenVerifyPayload = {
+  hash: string;
+  token: string;
+};
+
+export type RespondentChannelDetails = {
+  hash?: string;
+  email?: string;
+  fname?: string;
+  sname?: string;
+  phone?: string;
+  token?: string;
+  user_exists?: number;
+};
+
+export type RespondentChannelResponse = {
+  status?: string;
+  message?: string;
+  code?: string;
+  data?: {
+    message?: string;
+    user_exists?: number;
+    hash?: string;
+    email?: string;
+    details?: RespondentChannelDetails;
+  };
+};
+
+export type RespondentSession = {
+  hash: string;
+  email: string;
+  fname?: string;
+  sname?: string;
+  phone?: string;
+  token?: string;
+  user_exists?: number;
+  verification_pending?: boolean;
+};
+
 export type DashboardMentionsResponse = {
   status?: string;
   data?: {
@@ -1026,20 +1076,170 @@ export async function patchSurveyDemographyBySurvey(
   return mapSurveyDemography({ ...raw, survey_id: raw?.survey_id ?? surveyId });
 }
 
-// GET /v1/channels/respondent/{hash}
+// GET /v1/channel/respondent/{hash}
 export async function getRespondentUrl(
   hash: string,
+  bearerToken?: string,
 ): Promise<RespondentLookupResponse> {
-  const token = getAuthToken();
+  const token = bearerToken || getAuthToken();
 
   const response = await fetchJson<RespondentLookupResponse>({
     baseUrl: getBaseUrl(),
-    path: `/v1/channels/respondent/${hash}`,
+    path: `/v1/channel/respondent/${hash}`,
     method: "GET",
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
   return response;
+}
+
+// POST /v1/channels/respondent (check existing user by hash + email)
+export async function checkRespondentByHash(
+  payload: RespondentCheckPayload,
+): Promise<RespondentChannelResponse> {
+  const token = getAuthToken();
+
+  try {
+    return await fetchJson<RespondentChannelResponse>({
+      baseUrl: getBaseUrl(),
+      path: "/v1/channels/respondent",
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: payload,
+    });
+  } catch (error: unknown) {
+    if (
+      error instanceof ApiError &&
+      error.data &&
+      typeof error.data === "object"
+    ) {
+      return error.data as RespondentChannelResponse;
+    }
+    throw error;
+  }
+}
+
+// POST /v1/channels/respondent (create user when not found)
+export async function createRespondentByHash(
+  payload: RespondentCreatePayload,
+): Promise<RespondentChannelResponse> {
+  const token = getAuthToken();
+
+  try {
+    return await fetchJson<RespondentChannelResponse>({
+      baseUrl: getBaseUrl(),
+      path: "/v1/channels/respondent",
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: payload,
+    });
+  } catch (error: unknown) {
+    if (
+      error instanceof ApiError &&
+      error.data &&
+      typeof error.data === "object"
+    ) {
+      return error.data as RespondentChannelResponse;
+    }
+    throw error;
+  }
+}
+
+// POST /v1/channels/token/verify
+export async function verifyRespondentToken(
+  payload: RespondentTokenVerifyPayload,
+): Promise<RespondentChannelResponse> {
+  const token = getAuthToken();
+
+  try {
+    return await fetchJson<RespondentChannelResponse>({
+      baseUrl: getBaseUrl(),
+      path: "/v1/channels/token/verify",
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: payload,
+    });
+  } catch (error: unknown) {
+    if (
+      error instanceof ApiError &&
+      error.data &&
+      typeof error.data === "object"
+    ) {
+      return error.data as RespondentChannelResponse;
+    }
+    throw error;
+  }
+}
+
+export type QRCodePayload = {
+  survey_id: string | number;
+  subject: string;
+  message: string;
+};
+
+export type QRCodeChannel = {
+  id: number;
+  user_id: string;
+  business_id: string;
+  survey_id: string;
+  subject: string;
+  message: string;
+  recepient_list: string | null;
+  recepient_file: string | null;
+  is_sent: number;
+  channel: string;
+  country_id: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QRCodeBySurveyResponse = {
+  status?: string;
+  message?: string;
+  data?: {
+    hash?: string;
+    channel?: QRCodeChannel;
+  };
+};
+
+// POST /v1/channel/qrcode (create and edit)
+export async function postQRCode(
+  payload: QRCodePayload,
+): Promise<QRCodeBySurveyResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  return fetchJson<QRCodeBySurveyResponse>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/channel/qrcode",
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: payload,
+  });
+}
+
+// GET /v1/channel/qrcode/{survey_id}
+export async function getQRCodeBySurvey(
+  surveyId: number | string,
+): Promise<QRCodeBySurveyResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  try {
+    return await fetchJson<QRCodeBySurveyResponse>({
+      baseUrl: getBaseUrl(),
+      path: `/v1/channel/qrcode/${surveyId}`,
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    return fetchJson<QRCodeBySurveyResponse>({
+      baseUrl: getBaseUrl(),
+      path: `/v1/channel/qrcode/survey_id?survey_id=${surveyId}`,
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
 }
 
 // =========================

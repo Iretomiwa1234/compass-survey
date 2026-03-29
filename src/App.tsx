@@ -34,8 +34,13 @@ const queryClient = new QueryClient();
 
 function RootEntry() {
   const location = useLocation();
-  const hashFromEmptyParam = new URLSearchParams(location.search).get("");
-  const hasHash = Boolean(hashFromEmptyParam?.trim());
+  const params = new URLSearchParams(location.search);
+  const hashFromEmptyParam = params.get("");
+  const hashFromNamedParam =
+    params.get("hash") ?? params.get("h") ?? params.get("respondent_hash");
+  const hasHash = Boolean(
+    hashFromNamedParam?.trim() || hashFromEmptyParam?.trim(),
+  );
 
   if (hasHash) {
     return <SurveyPreviewPage />;
@@ -66,6 +71,8 @@ const App = () => (
             <Route path="/survey-preview" element={<SurveyPreviewPage />} />
             <Route path="/respond" element={<SurveyPreviewPage />} />
             <Route path="/respond/:hash" element={<SurveyPreviewPage />} />
+            <Route path="/qrcode" element={<SurveyPreviewPage />} />
+            <Route path="/qrcode/:hash" element={<SurveyPreviewPage />} />
 
             {/* Protected routes */}
             <Route path="/" element={<RootEntry />} />
