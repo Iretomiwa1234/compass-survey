@@ -219,6 +219,7 @@ export type GetSurveyDetailResponse = {
 export type RespondentLookupResponse = {
   status?: string;
   data?: {
+    user_id?: string;
     name?: string;
     phone_number?: string;
     email?: string;
@@ -226,8 +227,25 @@ export type RespondentLookupResponse = {
       survey_id?: number;
       views?: number;
       status?: string;
+      survey?: Record<string, unknown>;
     };
   };
+};
+
+export type CustomerSurveySubmitPayload = {
+  customer_id: string;
+  survey_id: string | number;
+  answers: Array<{
+    question_id: string;
+    answer: string | number | string[] | Record<string, string>;
+  }>;
+};
+
+export type CustomerSurveySubmitResponse = {
+  status?: string;
+  message?: string;
+  code?: string;
+  data?: unknown;
 };
 
 export type RespondentCheckPayload = {
@@ -733,7 +751,7 @@ export type SurveyRespondentItem = {
 
 export type SurveyResponseAnswerItem = {
   questionId: string;
-  answer: string;
+  answer: unknown;
 };
 
 export type SurveyResponseQuestionItem = {
@@ -823,7 +841,7 @@ export async function getSurveyResponses(
       answer: Array.isArray(r?.answer)
         ? r.answer.map((a: any) => ({
             questionId: String(a?.question_id ?? ""),
-            answer: String(a?.answer ?? ""),
+            answer: a?.answer ?? "",
           }))
         : [],
       question: Array.isArray(r?.question)
@@ -1169,6 +1187,22 @@ export async function verifyRespondentToken(
     }
     throw error;
   }
+}
+
+// POST /v1/survey/customer/submit
+export async function submitCustomerSurveyResponse(
+  payload: CustomerSurveySubmitPayload,
+  bearerToken?: string,
+): Promise<CustomerSurveySubmitResponse> {
+  const token = bearerToken || getAuthToken();
+
+  return fetchJson<CustomerSurveySubmitResponse>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/survey/customer/submit",
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: payload,
+  });
 }
 
 export type QRCodePayload = {

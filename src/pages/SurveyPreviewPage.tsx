@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import {
   getRespondentUrl,
+  submitCustomerSurveyResponse,
   verifyRespondentToken,
   type RespondentChannelResponse,
   type RespondentSession,
@@ -68,6 +69,16 @@ interface PreviewData {
   title: string;
   description: string;
   questions: PreviewQuestion[];
+}
+
+type SurveyAnswerValue = string | number | string[] | Record<string, string>;
+
+function hasAnswerValue(value: SurveyAnswerValue | undefined): boolean {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.length > 0;
+  return Object.keys(value).length > 0;
 }
 
 // Helpers
@@ -314,7 +325,18 @@ function buildDisplayName(session: RespondentSession | null): string {
 
 // Question renderers
 
-function TextField({ q }: { q: PreviewQuestion }) {
+function TextField({
+  q,
+  value,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  value?: SurveyAnswerValue;
+  onChange: (next: string) => void;
+}) {
+  const normalizedValue =
+    typeof value === "string" || typeof value === "number" ? String(value) : "";
+
   return (
     <input
       type={
@@ -328,17 +350,32 @@ function TextField({ q }: { q: PreviewQuestion }) {
       }
       placeholder={q.placeholder || "Type your answer"}
       maxLength={q.max_length}
+      value={normalizedValue}
+      onChange={(e) => onChange(e.target.value)}
       className={formControl}
     />
   );
 }
 
-function MultilineField({ q }: { q: PreviewQuestion }) {
+function MultilineField({
+  q,
+  value,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  value?: SurveyAnswerValue;
+  onChange: (next: string) => void;
+}) {
+  const normalizedValue =
+    typeof value === "string" || typeof value === "number" ? String(value) : "";
+
   return (
     <textarea
       rows={4}
       placeholder={q.placeholder || "Type your answer"}
       maxLength={q.max_length}
+      value={normalizedValue}
+      onChange={(e) => onChange(e.target.value)}
       className={`${formControl} min-h-[170px] resize-none`}
     />
   );
@@ -498,15 +535,39 @@ function TimePickerCard({
   );
 }
 
-function DateField({ q }: { q: PreviewQuestion }) {
+function DateField({
+  q,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  onChange: (next: string) => void;
+}) {
   const [dateValue, setDateValue] = useState("");
   const [timeValue, setTimeValue] = useState("14:30");
+
+  const updateDate = (next: string) => {
+    setDateValue(next);
+    if (q.type === "date") {
+      onChange(next);
+      return;
+    }
+    onChange(next && timeValue ? `${next} ${timeValue}` : "");
+  };
+
+  const updateTime = (next: string) => {
+    setTimeValue(next);
+    if (q.type === "time") {
+      onChange(next);
+      return;
+    }
+    onChange(dateValue && next ? `${dateValue} ${next}` : "");
+  };
 
   if (q.type === "date") {
     return (
       <DatePickerCard
         value={dateValue}
-        onChange={setDateValue}
+        onChange={updateDate}
         min={q.min_date ?? undefined}
         max={q.max_date ?? undefined}
       />
@@ -514,28 +575,50 @@ function DateField({ q }: { q: PreviewQuestion }) {
   }
 
   if (q.type === "time") {
-    return <TimePickerCard value={timeValue} onChange={setTimeValue} />;
+    return <TimePickerCard value={timeValue} onChange={updateTime} />;
   }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <DatePickerCard
         value={dateValue}
-        onChange={setDateValue}
+        onChange={updateDate}
         min={(q.min_datetime ?? "").slice(0, 10) || undefined}
         max={(q.max_datetime ?? "").slice(0, 10) || undefined}
       />
-      <TimePickerCard value={timeValue} onChange={setTimeValue} />
+      <TimePickerCard value={timeValue} onChange={updateTime} />
     </div>
   );
 }
 
-function AddressField({ q }: { q: PreviewQuestion }) {
+function AddressField({
+  q,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  onChange: (next: Record<string, string>) => void;
+}) {
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
   const [stateRegion, setStateRegion] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
+
+  const emitAddress = (
+    nextStreet: string,
+    nextCity: string,
+    nextStateRegion: string,
+    nextPostalCode: string,
+    nextCountry: string,
+  ) => {
+    const next: Record<string, string> = {};
+    if (nextStreet.trim()) next.street = nextStreet.trim();
+    if (nextCity.trim()) next.city = nextCity.trim();
+    if (nextStateRegion.trim()) next.state = nextStateRegion.trim();
+    if (nextPostalCode.trim()) next.postal_code = nextPostalCode.trim();
+    if (nextCountry.trim()) next.country = nextCountry.trim();
+    onChange(next);
+  };
 
   return (
     <div className={`${whitePanel} overflow-hidden`}>
@@ -546,7 +629,11 @@ function AddressField({ q }: { q: PreviewQuestion }) {
         <input
           type="text"
           value={street}
-          onChange={(e) => setStreet(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value;
+            setStreet(next);
+            emitAddress(next, city, stateRegion, postalCode, country);
+          }}
           placeholder={q.placeholder || "Street and building"}
           className="w-full border-0 bg-transparent p-0 text-xl sm:text-[1.65rem] font-semibold text-[#1A2330] placeholder:text-[#AFB7C4] focus:outline-none"
         />
@@ -560,7 +647,11 @@ function AddressField({ q }: { q: PreviewQuestion }) {
           <input
             type="text"
             value={city}
-            onChange={(e) => setCity(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              setCity(next);
+              emitAddress(street, next, stateRegion, postalCode, country);
+            }}
             placeholder="City"
             className="w-full border-0 bg-transparent p-0 text-lg sm:text-[1.5rem] font-semibold text-[#1A2330] placeholder:text-[#AFB7C4] focus:outline-none"
           />
@@ -572,7 +663,11 @@ function AddressField({ q }: { q: PreviewQuestion }) {
           <input
             type="text"
             value={stateRegion}
-            onChange={(e) => setStateRegion(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              setStateRegion(next);
+              emitAddress(street, city, next, postalCode, country);
+            }}
             placeholder="State / Region"
             className="w-full border-0 bg-transparent p-0 text-lg sm:text-[1.5rem] font-semibold text-[#1A2330] placeholder:text-[#AFB7C4] focus:outline-none"
           />
@@ -587,7 +682,11 @@ function AddressField({ q }: { q: PreviewQuestion }) {
           <input
             type="text"
             value={postalCode}
-            onChange={(e) => setPostalCode(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              setPostalCode(next);
+              emitAddress(street, city, stateRegion, next, country);
+            }}
             placeholder="Postal code"
             className="w-full border-0 bg-transparent p-0 text-lg sm:text-[1.5rem] font-semibold text-[#1A2330] placeholder:text-[#AFB7C4] focus:outline-none"
           />
@@ -599,7 +698,11 @@ function AddressField({ q }: { q: PreviewQuestion }) {
           <input
             type="text"
             value={country}
-            onChange={(e) => setCountry(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              setCountry(next);
+              emitAddress(street, city, stateRegion, postalCode, next);
+            }}
             placeholder="Country"
             className="w-full border-0 bg-transparent p-0 text-lg sm:text-[1.5rem] font-semibold text-[#1A2330] placeholder:text-[#AFB7C4] focus:outline-none"
           />
@@ -609,11 +712,24 @@ function AddressField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function SliderField({ q }: { q: PreviewQuestion }) {
+function SliderField({
+  q,
+  value,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  value?: SurveyAnswerValue;
+  onChange: (next: number) => void;
+}) {
   const min = toNum(q.min, 0);
   const max = toNum(q.max, 100);
   const step = toNum(q.step, 1);
-  const [val, setVal] = useState(min);
+  const val =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim() !== ""
+        ? toNum(value, min)
+        : min;
   const pct = ((val - min) / Math.max(max - min, 1)) * 100;
 
   return (
@@ -628,7 +744,7 @@ function SliderField({ q }: { q: PreviewQuestion }) {
         max={max}
         step={step}
         value={val}
-        onChange={(e) => setVal(Number(e.target.value))}
+        onChange={(e) => onChange(Number(e.target.value))}
         className="h-2 w-full cursor-pointer appearance-none rounded-full bg-[#DFE5EF]"
         style={{
           background: `linear-gradient(to right, #206AB5 ${pct}%, #DFE5EF ${pct}%)`,
@@ -643,7 +759,13 @@ function SliderField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function RatingField({ q }: { q: PreviewQuestion }) {
+function RatingField({
+  q,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  onChange: (next: number) => void;
+}) {
   const [hovered, setHovered] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const scale = toNum(q.scale, 5);
@@ -662,7 +784,10 @@ function RatingField({ q }: { q: PreviewQuestion }) {
               type="button"
               onMouseEnter={() => setHovered(n)}
               onMouseLeave={() => setHovered(null)}
-              onClick={() => setSelected(n)}
+              onClick={() => {
+                setSelected(n);
+                onChange(n);
+              }}
               className="rounded-xl p-1 transition hover:scale-110"
               aria-label={`Rate ${n}`}
             >
@@ -680,13 +805,24 @@ function RatingField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function DropdownField({ q }: { q: PreviewQuestion }) {
+function DropdownField({
+  q,
+  value,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  value?: SurveyAnswerValue;
+  onChange: (next: string) => void;
+}) {
   const options = toStringArray(q.options ?? q.locations);
+  const normalizedValue =
+    typeof value === "string" || typeof value === "number" ? String(value) : "";
 
   return (
     <div className="relative">
       <select
-        defaultValue=""
+        value={normalizedValue}
+        onChange={(e) => onChange(e.target.value)}
         className={`${formControl} appearance-none pr-12`}
       >
         <option value="" disabled>
@@ -703,7 +839,13 @@ function DropdownField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function LocationListField({ q }: { q: PreviewQuestion }) {
+function LocationListField({
+  q,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  onChange: (next: string) => void;
+}) {
   const options = toStringArray(q.locations ?? q.options);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState("");
@@ -734,7 +876,10 @@ function LocationListField({ q }: { q: PreviewQuestion }) {
             <button
               key={item}
               type="button"
-              onClick={() => setSelected(item)}
+              onClick={() => {
+                setSelected(item);
+                onChange(item);
+              }}
               className={`rounded-xl sm:rounded-2xl px-4 py-3 sm:px-5 sm:py-4 text-left text-sm sm:text-base md:text-lg font-semibold transition shadow-[0_4px_12px_rgba(32,106,181,0.02)] ${
                 active
                   ? "bg-[#206AB5]/5 ring-2 ring-[#206AB5] text-[#206AB5]"
@@ -754,7 +899,13 @@ function LocationListField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function SingleSelectField({ q }: { q: PreviewQuestion }) {
+function SingleSelectField({
+  q,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  onChange: (next: string) => void;
+}) {
   const [val, setVal] = useState("");
   const options = toStringArray(q.options);
 
@@ -780,7 +931,10 @@ function SingleSelectField({ q }: { q: PreviewQuestion }) {
               name={`q-${q.id}`}
               value={opt}
               checked={chosen}
-              onChange={() => setVal(opt)}
+              onChange={() => {
+                setVal(opt);
+                onChange(opt);
+              }}
               className="sr-only"
             />
             <span
@@ -801,7 +955,13 @@ function SingleSelectField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function MultipleSelectField({ q }: { q: PreviewQuestion }) {
+function MultipleSelectField({
+  q,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  onChange: (next: string[]) => void;
+}) {
   const [vals, setVals] = useState<Set<string>>(new Set());
   const options = toStringArray(q.options);
 
@@ -813,6 +973,7 @@ function MultipleSelectField({ q }: { q: PreviewQuestion }) {
       } else {
         next.add(opt);
       }
+      onChange(Array.from(next));
       return next;
     });
   };
@@ -864,7 +1025,13 @@ function MultipleSelectField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function RankingField({ q }: { q: PreviewQuestion }) {
+function RankingField({
+  q,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  onChange: (next: string[]) => void;
+}) {
   const [items, setItems] = useState<string[]>(toStringArray(q.items));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
@@ -874,6 +1041,7 @@ function RankingField({ q }: { q: PreviewQuestion }) {
     const [moved] = next.splice(dragIdx, 1);
     next.splice(targetIdx, 0, moved);
     setItems(next);
+    onChange(next);
     setDragIdx(null);
   };
 
@@ -905,7 +1073,13 @@ function RankingField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function SingleSelectGridField({ q }: { q: PreviewQuestion }) {
+function SingleSelectGridField({
+  q,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  onChange: (next: Record<string, string>) => void;
+}) {
   const rows = toStringArray(q.rows);
   const cols = toStringArray(q.columns);
   const [vals, setVals] = useState<Record<string, string>>({});
@@ -945,9 +1119,11 @@ function SingleSelectGridField({ q }: { q: PreviewQuestion }) {
                       name={`grid-${q.id}-row-${ri}`}
                       value={col}
                       checked={chosen}
-                      onChange={() =>
-                        setVals((prev) => ({ ...prev, [row]: col }))
-                      }
+                      onChange={() => {
+                        const next = { ...vals, [row]: col };
+                        setVals(next);
+                        onChange(next);
+                      }}
                       className="sr-only"
                     />
                     <span
@@ -972,7 +1148,13 @@ function SingleSelectGridField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function LikertField({ q }: { q: PreviewQuestion }) {
+function LikertField({
+  q,
+  onChange,
+}: {
+  q: PreviewQuestion;
+  onChange: (next: Record<string, string>) => void;
+}) {
   const scale = toStringArray(q.scale_options);
   const stmts = toStringArray(q.statements);
   const [vals, setVals] = useState<Record<string, string>>({});
@@ -1017,9 +1199,11 @@ function LikertField({ q }: { q: PreviewQuestion }) {
                       name={`likert-${q.id}-stmt-${si}`}
                       value={item}
                       checked={chosen}
-                      onChange={() =>
-                        setVals((prev) => ({ ...prev, [stmt]: item }))
-                      }
+                      onChange={() => {
+                        const next = { ...vals, [stmt]: item };
+                        setVals(next);
+                        onChange(next);
+                      }}
                       className="sr-only"
                     />
                     <span
@@ -1044,36 +1228,44 @@ function LikertField({ q }: { q: PreviewQuestion }) {
   );
 }
 
-function QuestionInput({ q }: { q: PreviewQuestion }) {
+function QuestionInput({
+  q,
+  value,
+  onAnswerChange,
+}: {
+  q: PreviewQuestion;
+  value?: SurveyAnswerValue;
+  onAnswerChange: (next: SurveyAnswerValue) => void;
+}) {
   switch (q.type) {
     case "multiline_text":
-      return <MultilineField q={q} />;
+      return <MultilineField q={q} value={value} onChange={onAnswerChange} />;
     case "date":
     case "time":
     case "date_time":
-      return <DateField q={q} />;
+      return <DateField q={q} onChange={onAnswerChange} />;
     case "address":
-      return <AddressField q={q} />;
+      return <AddressField q={q} onChange={onAnswerChange} />;
     case "slider":
-      return <SliderField q={q} />;
+      return <SliderField q={q} value={value} onChange={onAnswerChange} />;
     case "rating":
-      return <RatingField q={q} />;
+      return <RatingField q={q} onChange={onAnswerChange} />;
     case "single_select":
-      return <SingleSelectField q={q} />;
+      return <SingleSelectField q={q} onChange={onAnswerChange} />;
     case "multiple_select":
-      return <MultipleSelectField q={q} />;
+      return <MultipleSelectField q={q} onChange={onAnswerChange} />;
     case "drop_down":
-      return <DropdownField q={q} />;
+      return <DropdownField q={q} value={value} onChange={onAnswerChange} />;
     case "location_list":
-      return <LocationListField q={q} />;
+      return <LocationListField q={q} onChange={onAnswerChange} />;
     case "ranking":
-      return <RankingField q={q} />;
+      return <RankingField q={q} onChange={onAnswerChange} />;
     case "single_select_grid":
-      return <SingleSelectGridField q={q} />;
+      return <SingleSelectGridField q={q} onChange={onAnswerChange} />;
     case "likert_scale":
-      return <LikertField q={q} />;
+      return <LikertField q={q} onChange={onAnswerChange} />;
     default:
-      return <TextField q={q} />;
+      return <TextField q={q} value={value} onChange={onAnswerChange} />;
   }
 }
 
@@ -1118,6 +1310,14 @@ export default function SurveyPreviewPage() {
   const [questionLoadError, setQuestionLoadError] = useState<string | null>(
     null,
   );
+  const [surveyAnswers, setSurveyAnswers] = useState<
+    Record<number, SurveyAnswerValue>
+  >({});
+  const [respondentCustomerId, setRespondentCustomerId] = useState("");
+  const [activeSurveyId, setActiveSurveyId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
 
   const key = searchParams.get("key")?.trim() ?? "";
   const incomingHash = resolveIncomingHash(searchParams, pathHash);
@@ -1142,11 +1342,90 @@ export default function SurveyPreviewPage() {
 
   const respondentDisplayName = buildDisplayName(respondentSession);
 
+  const handleAnswerChange = (questionId: number, next: SurveyAnswerValue) => {
+    setSurveyAnswers((prev) => ({ ...prev, [questionId]: next }));
+  };
+
+  const handleSubmitSurvey = async () => {
+    if (!data) return;
+    if (!respondentCustomerId || !activeSurveyId) {
+      setSubmitError(
+        "Survey context is missing. Please refresh and try again.",
+      );
+      return;
+    }
+
+    const missingRequired = data.questions.find(
+      (question) =>
+        isRequired(question.required) &&
+        !hasAnswerValue(surveyAnswers[question.id]),
+    );
+
+    if (missingRequired) {
+      setSubmitSuccess(null);
+      setSubmitError(
+        `Please answer required question: ${missingRequired.label}`,
+      );
+      return;
+    }
+
+    const payloadAnswers = Object.entries(surveyAnswers)
+      .filter(([, answer]) => hasAnswerValue(answer))
+      .map(([questionId, answer]) => ({
+        question_id: String(questionId),
+        answer,
+      }));
+
+    if (payloadAnswers.length === 0) {
+      setSubmitSuccess(null);
+      setSubmitError("Please answer at least one question before submitting.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
+    try {
+      const response = await submitCustomerSurveyResponse(
+        {
+          customer_id: respondentCustomerId,
+          survey_id: activeSurveyId,
+          answers: payloadAnswers,
+        },
+        respondentBearerToken,
+      );
+
+      if (response?.status && response.status.toLowerCase() !== "success") {
+        throw new Error(response?.message || "Unable to submit response.");
+      }
+
+      setSubmitSuccess(
+        response?.message || "Thanks! Your survey response was submitted.",
+      );
+      setSubmitError(null);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not submit your response. Please try again.";
+      setSubmitSuccess(null);
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleUseAnotherEmail = () => {
     if (incomingHash) {
       clearStoredRespondent(incomingHash);
     }
     setRespondentSession(null);
+    setRespondentCustomerId("");
+    setActiveSurveyId(null);
+    setSurveyAnswers({});
+    setSubmitError(null);
+    setSubmitSuccess(null);
     setVerificationMessage(null);
     setData(null);
     setQuestionLoadError(null);
@@ -1161,6 +1440,8 @@ export default function SurveyPreviewPage() {
     };
     storeRespondent(normalized);
     setRespondentSession(normalized);
+    setSubmitError(null);
+    setSubmitSuccess(null);
     setVerificationMessage(null);
     setData(null);
   };
@@ -1176,6 +1457,11 @@ export default function SurveyPreviewPage() {
     };
     storeRespondent(normalized);
     setRespondentSession(normalized);
+    setRespondentCustomerId("");
+    setActiveSurveyId(null);
+    setSurveyAnswers({});
+    setSubmitError(null);
+    setSubmitSuccess(null);
     setVerificationMessage(message);
     setData(null);
     setIsLoadingQuestions(false);
@@ -1187,6 +1473,11 @@ export default function SurveyPreviewPage() {
     if (key) {
       setSourceMode("preview");
       setRespondentSession(null);
+      setRespondentCustomerId("");
+      setActiveSurveyId(null);
+      setSurveyAnswers({});
+      setSubmitError(null);
+      setSubmitSuccess(null);
       setVerificationMessage(null);
       setQuestionLoadError(null);
       setIsLoadingQuestions(false);
@@ -1223,6 +1514,11 @@ export default function SurveyPreviewPage() {
 
     if (!incomingHash) {
       setRespondentSession(null);
+      setRespondentCustomerId("");
+      setActiveSurveyId(null);
+      setSurveyAnswers({});
+      setSubmitError(null);
+      setSubmitSuccess(null);
       setLoadMessage("Missing survey hash in URL.");
       setNotFound(true);
       return;
@@ -1230,6 +1526,8 @@ export default function SurveyPreviewPage() {
 
     setSourceMode("hash");
     setNotFound(false);
+    setSubmitError(null);
+    setSubmitSuccess(null);
     setQuestionLoadError(null);
     setData(null);
 
@@ -1291,6 +1589,8 @@ export default function SurveyPreviewPage() {
 
     if (stored) {
       setRespondentSession(stored);
+      setSubmitError(null);
+      setSubmitSuccess(null);
       setVerificationMessage(
         stored.verification_pending
           ? "A verification email has been sent. Open the link in your email to continue."
@@ -1298,6 +1598,11 @@ export default function SurveyPreviewPage() {
       );
     } else {
       setRespondentSession(null);
+      setRespondentCustomerId("");
+      setActiveSurveyId(null);
+      setSurveyAnswers({});
+      setSubmitError(null);
+      setSubmitSuccess(null);
       setVerificationMessage(null);
     }
 
@@ -1322,6 +1627,7 @@ export default function SurveyPreviewPage() {
 
         const payload = res?.data;
         const details = payload?.details;
+        const customerId = String(payload?.user_id ?? "").trim();
 
         // Extract survey directly from respondent lookup response
         const surveyRecord =
@@ -1334,8 +1640,13 @@ export default function SurveyPreviewPage() {
             ? (surveyRecord.survey as Record<string, unknown>)
             : ({} as Record<string, unknown>);
 
+        const surveyId = Number(surveyRecord.survey_id ?? survey.id ?? 0);
+
         // Validate that we have a valid survey
         if (!survey.id || !survey.title) {
+          setRespondentCustomerId(customerId);
+          setActiveSurveyId(Number.isFinite(surveyId) ? surveyId : null);
+          setSurveyAnswers({});
           setData({
             title: "Public Survey Response",
             description: "",
@@ -1360,6 +1671,13 @@ export default function SurveyPreviewPage() {
           description: String(survey.description ?? ""),
           questions,
         });
+        setRespondentCustomerId(customerId);
+        setActiveSurveyId(
+          Number.isFinite(surveyId) && surveyId > 0 ? surveyId : null,
+        );
+        setSurveyAnswers({});
+        setSubmitError(null);
+        setSubmitSuccess(null);
         setQuestionLoadError(null);
       })
       .catch((error) => {
@@ -1369,6 +1687,11 @@ export default function SurveyPreviewPage() {
         if (error instanceof ApiError && error.status === 401) {
           clearStoredRespondent(incomingHash);
           setRespondentSession(null);
+          setRespondentCustomerId("");
+          setActiveSurveyId(null);
+          setSurveyAnswers({});
+          setSubmitError(null);
+          setSubmitSuccess(null);
           setVerificationMessage(
             "Your verification link has expired. Please request a new verification email to continue responding to this survey.",
           );
@@ -1593,28 +1916,52 @@ export default function SurveyPreviewPage() {
                 </div>
 
                 <div className="sm:pl-12">
-                  <QuestionInput q={q} />
+                  <QuestionInput
+                    q={q}
+                    value={surveyAnswers[q.id]}
+                    onAnswerChange={(next) => handleAnswerChange(q.id, next)}
+                  />
                 </div>
               </section>
             ))}
           </div>
         )}
 
-        {!questionLoadError && data.questions.length > 0 && (
-          <div className="mt-10 sm:mt-12 rounded-2xl sm:rounded-3xl bg-white px-5 py-5 sm:px-8 sm:py-6 sm:flex sm:items-center sm:justify-between shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-            <p className="text-xs sm:text-sm text-[#67758A]">
-              <span className="font-bold text-[#CE3B3B]">*</span> Required
-              questions must be filled.
-            </p>
-            <button
-              type="button"
-              disabled
-              className="mt-3 sm:mt-0 w-full rounded-xl sm:rounded-2xl bg-[#206AB5] px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-semibold text-white opacity-60 sm:w-auto"
-            >
-              Submit (coming soon)
-            </button>
-          </div>
+        {submitError && (
+          <p className="mt-6 rounded-xl bg-[#FEEBED] px-4 py-3 text-sm font-medium text-[#B1223C]">
+            {submitError}
+          </p>
         )}
+
+        {submitSuccess && (
+          <p className="mt-6 rounded-xl bg-[#EAF7EF] px-4 py-3 text-sm font-medium text-[#186A3B]">
+            {submitSuccess}
+          </p>
+        )}
+
+        {sourceMode === "hash" &&
+          !questionLoadError &&
+          data.questions.length > 0 && (
+            <div className="mt-10 sm:mt-12 rounded-2xl sm:rounded-3xl bg-white px-5 py-5 sm:px-8 sm:py-6 sm:flex sm:items-center sm:justify-between shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+              <p className="text-xs sm:text-sm text-[#67758A]">
+                <span className="font-bold text-[#CE3B3B]">*</span> Required
+                questions must be filled.
+              </p>
+              <button
+                type="button"
+                onClick={handleSubmitSurvey}
+                disabled={
+                  isSubmitting ||
+                  !respondentCustomerId ||
+                  !activeSurveyId ||
+                  !isRespondentVerified
+                }
+                className="mt-3 sm:mt-0 w-full rounded-xl sm:rounded-2xl bg-[#206AB5] px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              >
+                {isSubmitting ? "Submitting..." : "Submit response"}
+              </button>
+            </div>
+          )}
 
         {data.questions.length === 0 &&
           !questionLoadError &&

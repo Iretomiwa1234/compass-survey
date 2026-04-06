@@ -1053,7 +1053,7 @@ const Channels = () => {
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1" />
           </header>
-          <DashboardHeader headerTitle="Social Listening" hideGreeting />
+          <DashboardHeader headerTitle="Channels" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">
             {/* Survey Selection Bar */}

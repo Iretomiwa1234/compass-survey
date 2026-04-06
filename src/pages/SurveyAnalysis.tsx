@@ -33,7 +33,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as ChartTooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -41,6 +41,18 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -119,6 +131,206 @@ const countryKeyFromName = (name: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
+type AnswerDetailEntry = {
+  label: string;
+  value: string;
+};
+
+type AnswerDetailState = {
+  title: string;
+  entries: AnswerDetailEntry[];
+};
+
+const STRUCTURED_PREVIEW_LIMIT = 5;
+
+function normalizeAnswerKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function toAnswerText(value: unknown): string {
+  if (value == null) return "-";
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || "-";
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    const items = value
+      .map((entry) => toAnswerText(entry))
+      .filter((entry) => entry !== "-");
+    return items.length ? items.join(", ") : "-";
+  }
+
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (!entries.length) return "-";
+
+    return entries
+      .map(([key, nestedValue]) => {
+        const prettyKey = key
+          .replace(/([A-Z])/g, " $1")
+          .replace(/_/g, " ")
+          .replace(/([a-z])([A-Z])/g, "$1 $2")
+          .trim();
+        return `${prettyKey || key}: ${toAnswerText(nestedValue)}`;
+      })
+      .join("\n");
+  }
+
+  return String(value);
+}
+
+function getStructuredAnswerEntries(
+  question: SurveyResponseQuestionItem,
+  rawValue: unknown,
+): AnswerDetailEntry[] | null {
+  if (!rawValue || typeof rawValue !== "object" || Array.isArray(rawValue)) {
+    return null;
+  }
+
+  const rawEntries = Object.entries(rawValue as Record<string, unknown>);
+  if (!rawEntries.length) return null;
+
+  const type = question.type.toLowerCase();
+  const structuredQuestion = question as SurveyResponseQuestionItem & {
+    statements?: string[];
+    rows?: string[];
+  };
+
+  if (type === "likert_scale") {
+    const entries = (structuredQuestion.statements ?? [])
+      .map((statement) => {
+        const matched = rawEntries.find(
+          ([key]) => normalizeAnswerKey(key) === normalizeAnswerKey(statement),
+        );
+        if (!matched) return null;
+
+        return {
+          label: statement,
+          value: toAnswerText(matched[1]),
+        };
+      })
+      .filter((entry): entry is AnswerDetailEntry => Boolean(entry));
+
+    return entries.length ? entries : null;
+  }
+
+  if (type === "single_select_grid") {
+    const entries = (structuredQuestion.rows ?? [])
+      .map((rowLabel) => {
+        const matched = rawEntries.find(
+          ([key]) => normalizeAnswerKey(key) === normalizeAnswerKey(rowLabel),
+        );
+        if (!matched) return null;
+
+        return {
+          label: rowLabel,
+          value: toAnswerText(matched[1]),
+        };
+      })
+      .filter((entry): entry is AnswerDetailEntry => Boolean(entry));
+
+    return entries.length ? entries : null;
+  }
+
+  if (type === "address") {
+    const preferredOrder = [
+      "street",
+      "city",
+      "state",
+      "postal_code",
+      "country",
+    ];
+    const orderedEntries: AnswerDetailEntry[] = [];
+
+    preferredOrder.forEach((field) => {
+      const matched = rawEntries.find(
+        ([key]) => normalizeAnswerKey(key) === normalizeAnswerKey(field),
+      );
+      if (!matched) return;
+
+      orderedEntries.push({
+        label: field.replace(/_/g, " "),
+        value: toAnswerText(matched[1]),
+      });
+    });
+
+    rawEntries.forEach(([key, value]) => {
+      const normalizedKey = normalizeAnswerKey(key);
+      if (
+        preferredOrder.some(
+          (field) => normalizeAnswerKey(field) === normalizedKey,
+        )
+      ) {
+        return;
+      }
+
+      orderedEntries.push({
+        label: key
+          .replace(/([A-Z])/g, " $1")
+          .replace(/_/g, " ")
+          .trim(),
+        value: toAnswerText(value),
+      });
+    });
+
+    return orderedEntries.length ? orderedEntries : null;
+  }
+
+  return null;
+}
+
+function formatQuestionAnswerValue(
+  question: SurveyResponseQuestionItem,
+  rawValue: unknown,
+): string {
+  const structuredEntries = getStructuredAnswerEntries(question, rawValue);
+  if (structuredEntries) {
+    return structuredEntries
+      .map((entry) => `${entry.label}: ${entry.value}`)
+      .join(" | ");
+  }
+
+  return toAnswerText(rawValue);
+}
+
+function formatStructuredAnswerPreview(entries: AnswerDetailEntry[]): string {
+  return entries.map((entry) => `${entry.label}: ${entry.value}`).join(" • ");
+}
+
+function formatStructuredAnswerTooltip(entries: AnswerDetailEntry[]): string {
+  return entries.map((entry) => `${entry.label}: ${entry.value}`).join("\n");
+}
+
+function getAnswerCellPreview(
+  question: SurveyResponseQuestionItem,
+  rawValue: unknown,
+): string {
+  const structuredEntries = getStructuredAnswerEntries(question, rawValue);
+  if (structuredEntries?.length) {
+    return formatStructuredAnswerPreview(structuredEntries);
+  }
+
+  return formatQuestionAnswerValue(question, rawValue);
+}
+
+function getAnswerCellTooltip(
+  question: SurveyResponseQuestionItem,
+  rawValue: unknown,
+): string {
+  const structuredEntries = getStructuredAnswerEntries(question, rawValue);
+  if (structuredEntries?.length) {
+    return formatStructuredAnswerTooltip(structuredEntries);
+  }
+
+  return formatQuestionAnswerValue(question, rawValue);
+}
+
 const ageData = [
   { range: "18 - 24", value: 3.3 },
   { range: "25 - 34", value: 12.7 },
@@ -134,6 +346,36 @@ const likertScale5: Record<string, string> = {
   "4": "Agree",
   "5": "Strongly Agree",
 };
+
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildCsvFileName(title: string, fallback: string): string {
+  const normalized = title
+    .trim()
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return `${normalized || fallback} survey responses.csv`;
+}
+
+function buildSevenDayDiffRange(endSource: Date) {
+  const endDate = new Date(endSource);
+  endDate.setHours(0, 0, 0, 0);
+
+  const startDate = new Date(endDate);
+  // Backend validates (end - start) to be exactly 7 days.
+  startDate.setDate(startDate.getDate() - 7);
+
+  return {
+    start: formatLocalDate(startDate),
+    end: formatLocalDate(endDate),
+  };
+}
 
 const SurveyAnalysis = () => {
   const [searchParams] = useSearchParams();
@@ -177,6 +419,9 @@ const SurveyAnalysis = () => {
   const [responsesTotal, setResponsesTotal] = useState(0);
   const [responsesPage, setResponsesPage] = useState(1);
   const [responsesLastPage, setResponsesLastPage] = useState(1);
+  const [answerDetail, setAnswerDetail] = useState<AnswerDetailState | null>(
+    null,
+  );
 
   // Country chart
   const [countryChartRaw, setCountryChartRaw] = useState<CountryByDayItem[]>(
@@ -247,17 +492,14 @@ const SurveyAnalysis = () => {
     setBrowserData([]);
     setRespondentData([]);
 
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 7);
-    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+    const { start, end } = buildSevenDayDiffRange(new Date());
 
     Promise.allSettled([
       getSurveyCards(selectedSurveyId),
       getSurveyCompletionRate(selectedSurveyId),
       getSurveyAverageRate(selectedSurveyId),
       getSurveyCountryReach(selectedSurveyId),
-      getSurveyResponseTrend(selectedSurveyId, fmt(startDate), fmt(endDate)),
+      getSurveyResponseTrend(selectedSurveyId, start, end),
       getSurveyDeviceUsage(selectedSurveyId),
       getSurveyBrowserUsage(selectedSurveyId),
       getSurveyRespondents(selectedSurveyId),
@@ -388,13 +630,11 @@ const SurveyAnalysis = () => {
     setIsLoadingCountryChart(true);
     setCountryChartRaw([]);
 
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() - countryDateOffset);
-    const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - 6);
-    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+    const anchorDate = new Date();
+    anchorDate.setDate(anchorDate.getDate() - countryDateOffset);
+    const { start, end } = buildSevenDayDiffRange(anchorDate);
 
-    getSurveyResponseByCountry(selectedSurveyId, fmt(startDate), fmt(endDate))
+    getSurveyResponseByCountry(selectedSurveyId, start, end)
       .then((data) => {
         if (!isActive) return;
         setCountryChartRaw(data);
@@ -468,29 +708,56 @@ const SurveyAnalysis = () => {
   const getAnswerValue = useCallback(
     (row: SurveyResponseItem, questionId: string) => {
       const found = row.answer.find((a) => a.questionId === questionId);
-      return found?.answer ?? "";
+      return found?.answer;
+    },
+    [],
+  );
+
+  const formatAnswerValue = useCallback(
+    (question: SurveyResponseQuestionItem, rawValue: unknown) => {
+      return formatQuestionAnswerValue(question, rawValue);
     },
     [],
   );
 
   const getStyledAnswer = useCallback(
-    (question: SurveyResponseQuestionItem, rawValue: string) => {
-      if (!rawValue) return "-";
+    (question: SurveyResponseQuestionItem, rawValue: unknown) => {
+      if (rawValue == null) return "-";
 
       const type = question.type.toLowerCase();
-      if (type === "likert") {
-        if ((question.scale ?? 5) === 5 && likertScale5[rawValue]) {
-          return likertScale5[rawValue];
+      if (type === "likert" || type === "likert_scale") {
+        if (typeof rawValue === "string" || typeof rawValue === "number") {
+          const normalized = String(rawValue).trim();
+          if (!normalized) return "-";
+          if ((question.scale ?? 5) === 5 && likertScale5[normalized]) {
+            return likertScale5[normalized];
+          }
+          return normalized;
         }
-        return rawValue;
+
+        return formatAnswerValue(question, rawValue);
       }
 
       if (type === "rating") {
+        if (rawValue === "") return "-";
         const scale = question.scale ?? 5;
-        return `${rawValue}/${scale}`;
+        return `${String(rawValue)}/${scale}`;
       }
 
-      return rawValue;
+      return formatAnswerValue(question, rawValue);
+    },
+    [formatAnswerValue],
+  );
+
+  const openAnswerDetail = useCallback(
+    (question: SurveyResponseQuestionItem, rawValue: unknown) => {
+      const entries = getStructuredAnswerEntries(question, rawValue);
+      if (!entries || !entries.length) return;
+
+      setAnswerDetail({
+        title: question.label,
+        entries,
+      });
     },
     [],
   );
@@ -516,10 +783,12 @@ const SurveyAnalysis = () => {
       `${row.fname} ${row.sname}`.trim(),
       row.email,
       row.customerId,
-      ...responseQuestions.map((q) => getAnswerValue(row, q.id)),
+      ...responseQuestions.map((q) =>
+        getStyledAnswer(q, getAnswerValue(row, q.id)),
+      ),
     ]);
 
-    const escapeCsv = (v: string | number) => {
+    const escapeCsv = (v: unknown) => {
       const s = String(v ?? "");
       if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
       return s;
@@ -533,16 +802,21 @@ const SurveyAnalysis = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `survey-responses-${selectedSurveyId ?? "all"}.csv`;
+    link.download = buildCsvFileName(
+      selectedSurveyTitle,
+      `survey-responses-${selectedSurveyId ?? "all"}`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }, [
     getAnswerValue,
+    getStyledAnswer,
     responseQuestions,
     responsesData,
     selectedSurveyId,
+    selectedSurveyTitle,
     toast,
   ]);
 
@@ -905,7 +1179,7 @@ const SurveyAnalysis = () => {
                                 fill: "hsl(var(--muted-foreground))",
                               }}
                             />
-                            <Tooltip />
+                            <ChartTooltip />
                             <Area
                               type="monotone"
                               dataKey="value"
@@ -1033,7 +1307,7 @@ const SurveyAnalysis = () => {
                                     fill: "hsl(var(--muted-foreground))",
                                   }}
                                 />
-                                <Tooltip />
+                                <ChartTooltip />
                                 {countrySeries.map((country, idx) => (
                                   <Bar
                                     key={country.key}
@@ -1283,22 +1557,56 @@ const SurveyAnalysis = () => {
                                     {responseQuestions.map((q) => {
                                       const raw = getAnswerValue(row, q.id);
                                       const display = getStyledAnswer(q, raw);
+                                      const preview = getAnswerCellPreview(
+                                        q,
+                                        raw,
+                                      );
+                                      const tooltipText = getAnswerCellTooltip(
+                                        q,
+                                        raw,
+                                      );
                                       const type = q.type.toLowerCase();
-                                      const capsuleType =
-                                        type === "likert" || type === "rating";
+                                      const structuredEntries =
+                                        getStructuredAnswerEntries(q, raw);
 
                                       return (
                                         <TableCell
                                           key={`${row.responseId}-${q.id}`}
+                                          className="align-top"
                                         >
-                                          {capsuleType ? (
+                                          {type === "rating" ? (
                                             <span className="inline-flex items-center rounded-full border border-[#206AB5]/25 bg-[#206AB5]/10 px-2.5 py-1 text-xs font-medium text-[#185287]">
                                               {display}
                                             </span>
                                           ) : (
-                                            <span className="text-sm text-muted-foreground">
-                                              {display}
-                                            </span>
+                                            <Tooltip delayDuration={120}>
+                                              <TooltipTrigger asChild>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    if (
+                                                      structuredEntries?.length
+                                                    ) {
+                                                      openAnswerDetail(q, raw);
+                                                    }
+                                                  }}
+                                                  className={`block w-full max-w-[18rem] truncate text-left text-sm transition ${
+                                                    structuredEntries?.length
+                                                      ? "cursor-pointer text-muted-foreground hover:text-foreground"
+                                                      : "cursor-default text-muted-foreground"
+                                                  }`}
+                                                >
+                                                  {preview}
+                                                </button>
+                                              </TooltipTrigger>
+                                              <TooltipContent
+                                                side="top"
+                                                align="start"
+                                                className="max-w-sm whitespace-pre-wrap break-words text-left leading-relaxed"
+                                              >
+                                                {tooltipText}
+                                              </TooltipContent>
+                                            </Tooltip>
                                           )}
                                         </TableCell>
                                       );
@@ -1349,6 +1657,40 @@ const SurveyAnalysis = () => {
               </>
             )}
           </main>
+
+          <Dialog
+            open={Boolean(answerDetail)}
+            onOpenChange={(open) => {
+              if (!open) setAnswerDetail(null);
+            }}
+          >
+            <DialogContent className="sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>
+                  {answerDetail?.title || "Response details"}
+                </DialogTitle>
+                <DialogDescription>
+                  Full breakdown of the selected response value.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3">
+                {answerDetail?.entries.map((entry) => (
+                  <div
+                    key={`${entry.label}-${entry.value}`}
+                    className="rounded-xl border border-border bg-muted/30 px-4 py-3"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      {entry.label}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-foreground">
+                      {entry.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
         </SidebarInset>
       </div>
     </SidebarProvider>
