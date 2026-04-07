@@ -5,10 +5,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { SurveyStatsOverview } from "@/components/SurveyStatsOverview";
 import { SurveyListItem, Survey } from "@/components/SurveyListItem";
 import { Card, CardContent } from "@/components/ui/card"; // Keep for later use
-import {
-  SidebarProvider,
-  SidebarInset,
-} from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StarIcon from "/assets/stars-01.svg?url";
@@ -195,7 +192,9 @@ const SurveyResearch = () => {
         end_date: (detail.end_date as string | undefined) ?? "",
         allow_edit_after_submit:
           Number(detail.allow_edit_after_submit ?? 0) === 1,
-        questions: (detail.question ?? detail.questions ?? []) as CreateSurveyPayload["questions"],
+        questions: (detail.question ??
+          detail.questions ??
+          []) as CreateSurveyPayload["questions"],
       };
 
       await editSurvey(Number(surveyToClose.id), payload);
