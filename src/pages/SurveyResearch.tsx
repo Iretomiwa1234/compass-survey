@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card"; // Keep for later use
 import {
   SidebarProvider,
   SidebarInset,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -196,10 +195,7 @@ const SurveyResearch = () => {
         end_date: (detail.end_date as string | undefined) ?? "",
         allow_edit_after_submit:
           Number(detail.allow_edit_after_submit ?? 0) === 1,
-        questions:
-          ((detail.question ??
-            detail.questions ??
-            []) as CreateSurveyPayload["questions"]) ?? [],
+        questions: (detail.question ?? detail.questions ?? []) as CreateSurveyPayload["questions"],
       };
 
       await editSurvey(Number(surveyToClose.id), payload);
@@ -357,10 +353,6 @@ const SurveyResearch = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex flex-1 flex-col bg-[#F7FBFF]">
-          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-[#F7FBFF] px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex-1" />
-          </header>
           <DashboardHeader headerTitle="Surveys" hideGreeting />
 
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">

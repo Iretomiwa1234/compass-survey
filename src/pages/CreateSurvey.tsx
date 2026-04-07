@@ -1165,10 +1165,6 @@ const CreateSurvey = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex-1" />
-          </header>
           <DashboardHeader headerTitle="Create Survey" hideGreeting />
           <div className="flex flex-col h-[calc(100vh-var(--nav-height))] min-h-0 bg-[#F7FAFE] px-3 py-3">
             <div className="flex items-center justify-between bg-white px-6 py-3 mb-2 rounded-[12px] border border-[#E2E8F0]">

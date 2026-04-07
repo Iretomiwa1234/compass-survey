@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   SidebarProvider,
   SidebarInset,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -163,10 +162,6 @@ const Campaigns = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-12">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex-1" />
-          </header>
           <DashboardHeader headerTitle="Distribution Campaigns" hideGreeting />
 
           <main className="flex-1 p-6 overflow-y-auto">

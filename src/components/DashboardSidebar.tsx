@@ -30,6 +30,8 @@ import {
   SidebarMenuButton,
   useSidebar,
   SidebarHeader,
+  SidebarFooter,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   Tooltip,
@@ -67,6 +69,7 @@ function IconImage({
 const enabledPaths = [
   "/",
   "/survey-research",
+  "/social-listening",
   "/channels",
   "/campaigns",
   "/survey-analysis",
@@ -316,6 +319,14 @@ export function DashboardSidebar() {
           </SidebarGroup>
         </TooltipProvider>
       </SidebarContent>
+
+      <SidebarFooter>
+        <div
+          className={`flex w-full pb-2 ${isCollapsed ? "justify-center" : "justify-end"}`}
+        >
+          <SidebarTrigger className="h-8 w-8" />
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }

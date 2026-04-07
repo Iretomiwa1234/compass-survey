@@ -16,6 +16,13 @@ function getInitials(fname: string, sname: string): string {
   return `${fname.charAt(0)}${sname.charAt(0)}`.toUpperCase();
 }
 
+function getTimeBasedGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 18) return "Good Afternoon";
+  return "Good Evening";
+}
+
 type DashboardHeaderProps = {
   headerTitle?: string;
   hideGreeting?: boolean;
@@ -51,7 +58,7 @@ export function DashboardHeader({
               className={`${hideGreeting ? "hidden md:flex" : "flex"} flex-col`}
             >
               <h2 className="text-base font-semibold text-foreground">
-                Good Morning, {user?.fname || "Guest"}
+                {getTimeBasedGreeting()}, {user?.fname || "Guest"}
               </h2>
               <p className="text-xs text-muted-foreground">
                 What do you want to do today?

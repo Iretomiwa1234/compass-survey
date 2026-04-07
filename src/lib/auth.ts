@@ -721,6 +721,17 @@ export async function getSurveyDeviceUsage(
 
 export type SurveyBrowserUsageData = Record<string, number>;
 
+export type SurveyAgeRangeItem = {
+  ageRange: string;
+  totalUsers: number;
+  percentage: number;
+};
+
+export type SurveyAgeRangeData = {
+  totalUsers: number;
+  ranges: SurveyAgeRangeItem[];
+};
+
 // GET /v1/survey/browser-usage
 export async function getSurveyBrowserUsage(
   surveyId?: number,
@@ -740,6 +751,34 @@ export async function getSurveyBrowserUsage(
   return Object.fromEntries(
     Object.entries(cards).map(([k, v]) => [k, toSafeNumber(v)]),
   ) as SurveyBrowserUsageData;
+}
+
+// GET /v1/dashboard/age-range/{survey_id}
+export async function getSurveyAgeRange(
+  surveyId: number,
+): Promise<SurveyAgeRangeData> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const response = await fetchJson<any>({
+    baseUrl: getBaseUrl(),
+    path: `/v1/dashboard/age-range/${surveyId}`,
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const rawRanges: any[] = Array.isArray(response?.data?.data)
+    ? response.data.data
+    : [];
+
+  return {
+    totalUsers: toSafeNumber(response?.data?.total_users),
+    ranges: rawRanges.map((item) => ({
+      ageRange: String(item?.age_range ?? ""),
+      totalUsers: toSafeNumber(item?.total_users),
+      percentage: toSafeNumber(item?.percentage),
+    })),
+  };
 }
 
 export type SurveyRespondentItem = {

@@ -8,8 +8,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const fallbackData = [
   { day: "Monday", value: 0 },
@@ -23,9 +28,15 @@ const fallbackData = [
 
 interface ResponseTrendChartProps {
   data?: { day: string; value: number }[];
+  selectedRange?: "this-week" | "last-week" | "last-2-weeks";
+  onRangeChange?: (value: "this-week" | "last-week" | "last-2-weeks") => void;
 }
 
-export function ResponseTrendChart({ data }: ResponseTrendChartProps) {
+export function ResponseTrendChart({
+  data,
+  selectedRange = "this-week",
+  onRangeChange,
+}: ResponseTrendChartProps) {
   const chartData = data && data.length > 0 ? data : fallbackData;
   return (
     <Card>
@@ -34,16 +45,23 @@ export function ResponseTrendChart({ data }: ResponseTrendChartProps) {
           <CardTitle className="text-base font-semibold">
             Response Trend
           </CardTitle>
-          <div className="flex gap-2">
-            {/* <Button variant="outline" size="sm" className="h-8">
-              Optimal Brand
-              <ChevronDown className="w-4 h-4 ml-2" />
-            </Button> */}
-            <Button variant="outline" size="sm" className="h-8">
-              This Week
-              <ChevronDown className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
+          <Select
+            value={selectedRange}
+            onValueChange={(value) =>
+              onRangeChange?.(
+                value as "this-week" | "last-week" | "last-2-weeks",
+              )
+            }
+          >
+            <SelectTrigger className="h-8 w-[150px]">
+              <SelectValue placeholder="This Week" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="this-week">This Week</SelectItem>
+              <SelectItem value="last-week">Last Week</SelectItem>
+              <SelectItem value="last-2-weeks">Last 2 Weeks</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>

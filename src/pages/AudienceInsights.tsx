@@ -1,10 +1,6 @@
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -213,10 +209,6 @@ const AudienceInsights = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 h-16">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex-1" />
-          </header>
           <DashboardHeader hideGreeting headerTitle="Audience Insights" />
 
           <main className="flex-1 p-6 overflow-y-auto mt-[var(--nav-height)]">

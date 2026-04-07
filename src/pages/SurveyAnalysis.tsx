@@ -13,11 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import {
   Search,
   Download,
@@ -71,6 +67,7 @@ import {
   getSurveyResponseTrend,
   getSurveyDeviceUsage,
   getSurveyBrowserUsage,
+  getSurveyAgeRange,
   getSurveyRespondents,
   getSurveyResponses,
   getSurveyResponseByCountry,
@@ -79,6 +76,8 @@ import {
   type SurveyCompletionRateData,
   type SurveyAverageRateData,
   type SurveyCountryReachData,
+  type SurveyAgeRangeData,
+  type SurveyAgeRangeItem,
   type SurveyRespondentItem,
   type CountryByDayItem,
   type SurveyResponseItem,
@@ -331,12 +330,13 @@ function getAnswerCellTooltip(
   return formatQuestionAnswerValue(question, rawValue);
 }
 
-const ageData = [
-  { range: "18 - 24", value: 3.3 },
-  { range: "25 - 34", value: 12.7 },
-  { range: "35 - 44", value: 15.2 },
-  { range: "45 - 64", value: 25.3 },
-  { range: "65+", value: 33.5 },
+const defaultAgeRanges: SurveyAgeRangeItem[] = [
+  { ageRange: "18-24", totalUsers: 0, percentage: 0 },
+  { ageRange: "25-34", totalUsers: 0, percentage: 0 },
+  { ageRange: "35-44", totalUsers: 0, percentage: 0 },
+  { ageRange: "45-54", totalUsers: 0, percentage: 0 },
+  { ageRange: "55-64", totalUsers: 0, percentage: 0 },
+  { ageRange: "65+", totalUsers: 0, percentage: 0 },
 ];
 
 const likertScale5: Record<string, string> = {
@@ -411,6 +411,10 @@ const SurveyAnalysis = () => {
   const [browserData, setBrowserData] = useState<
     { name: string; value: number }[]
   >([]);
+  const [ageRangeData, setAgeRangeData] = useState<SurveyAgeRangeData>({
+    totalUsers: 0,
+    ranges: [],
+  });
   const [respondentData, setRespondentData] = useState<SurveyRespondentItem[]>(
     [],
   );
@@ -490,6 +494,7 @@ const SurveyAnalysis = () => {
     setTrendData(defaultTrendData);
     setDeviceUsageData(defaultDeviceData);
     setBrowserData([]);
+    setAgeRangeData({ totalUsers: 0, ranges: [] });
     setRespondentData([]);
 
     const { start, end } = buildSevenDayDiffRange(new Date());
@@ -502,6 +507,7 @@ const SurveyAnalysis = () => {
       getSurveyResponseTrend(selectedSurveyId, start, end),
       getSurveyDeviceUsage(selectedSurveyId),
       getSurveyBrowserUsage(selectedSurveyId),
+      getSurveyAgeRange(selectedSurveyId),
       getSurveyRespondents(selectedSurveyId),
     ]).then(
       ([
@@ -512,6 +518,7 @@ const SurveyAnalysis = () => {
         trendRes,
         deviceRes,
         browserRes,
+        ageRes,
         respondentRes,
       ]) => {
         if (!isActive) return;
@@ -579,6 +586,16 @@ const SurveyAnalysis = () => {
               value: value as number,
             })),
           );
+        }
+
+        if (ageRes.status === "fulfilled") {
+          setAgeRangeData(ageRes.value);
+        } else {
+          toast({
+            title: "Failed to load age ranges",
+            description: "Could not fetch age range data for this survey.",
+            variant: "destructive",
+          });
         }
 
         if (respondentRes.status === "fulfilled") {
@@ -686,6 +703,10 @@ const SurveyAnalysis = () => {
       return { day: entry.day, ...values };
     });
   }, [countryChartRaw]);
+
+  const ageRows = useMemo(() => {
+    return ageRangeData.ranges.length ? ageRangeData.ranges : defaultAgeRanges;
+  }, [ageRangeData.ranges]);
 
   const handleSelectSurvey = useCallback((survey: SurveyListItemApi) => {
     setSelectedSurveyId(survey.survey_id);
@@ -826,11 +847,6 @@ const SurveyAnalysis = () => {
         <DashboardSidebar />
 
         <SidebarInset className="flex-1 min-w-0 overflow-x-hidden">
-          <header className="sticky top-0 z-10 flex items-center gap-2 border-b bg-card px-4 h-14">
-            <SidebarTrigger />
-            <div className="flex-1" />
-          </header>
-
           <DashboardHeader hideGreeting headerTitle="Survey Analysis" />
 
           <main className="flex-1 w-full min-w-0 p-6 space-y-6 overflow-x-hidden">
@@ -1440,49 +1456,35 @@ const SurveyAnalysis = () => {
 
                 <Card>
                   <CardContent className="p-0">
-                    <div className="flex">
-                      <div className="w-48 p-6 border-r">
-                        <h3 className="text-base font-semibold mb-6">Age</h3>
-                        <div className="space-y-3">
-                          {ageData.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center gap-2 text-sm text-muted-foreground"
-                            >
-                              <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
-                              <span>{item.range}</span>
-                            </div>
-                          ))}
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-base font-semibold">Age</h3>
+                        <div className="text-sm font-medium">
+                          Total: {ageRangeData.totalUsers.toLocaleString()}
                         </div>
                       </div>
-                      <div className="flex-1 p-6">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-base font-semibold">Age</h3>
-                          <div className="text-sm font-medium">
-                            Total: 1,300
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          {ageData.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center gap-4 text-sm"
-                            >
-                              <div className="w-12 text-muted-foreground">
-                                {item.range.replace(" - ", "-")}
-                              </div>
-                              <div className="flex-1 h-3 bg-[#206AB5]/10 rounded overflow-hidden relative">
-                                <div
-                                  className="h-full bg-[#206AB5]/60 rounded"
-                                  style={{ width: `${item.value * 2.5}%` }}
-                                />
-                              </div>
-                              <div className="w-12 text-right text-muted-foreground">
-                                {item.value}%
-                              </div>
+                      <div className="space-y-4">
+                        {ageRows.map((item, idx) => (
+                          <div
+                            key={`${item.ageRange}-${idx}`}
+                            className="flex items-center gap-4 text-sm"
+                          >
+                            <div className="w-16 text-muted-foreground font-medium">
+                              {item.ageRange}
                             </div>
-                          ))}
-                        </div>
+                            <div className="flex-1 h-3 bg-[#206AB5]/10 rounded overflow-hidden relative">
+                              <div
+                                className="h-full bg-[#206AB5]/60 rounded"
+                                style={{
+                                  width: `${Math.max(0, Math.min(100, item.percentage))}%`,
+                                }}
+                              />
+                            </div>
+                            <div className="w-14 text-right text-muted-foreground font-medium">
+                              {item.percentage.toFixed(1)}%
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </CardContent>
