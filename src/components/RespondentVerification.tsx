@@ -267,6 +267,16 @@ export default function RespondentVerification({
     }
   };
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (stage === "email") {
+      void handleCheckEmail();
+      return;
+    }
+
+    void handleCreateAccount();
+  };
+
   if (!open) return null;
 
   return (
@@ -287,7 +297,10 @@ export default function RespondentVerification({
           </p>
         )}
 
-        <div className="mx-auto mt-8 max-w-[620px] space-y-4">
+        <form
+          className="mx-auto mt-8 max-w-[620px] space-y-4"
+          onSubmit={handleSubmit}
+        >
           <input
             type="email"
             value={email}
@@ -344,15 +357,14 @@ export default function RespondentVerification({
           )}
 
           <button
-            type="button"
+            type="submit"
             disabled={isLoading}
-            onClick={stage === "email" ? handleCheckEmail : handleCreateAccount}
             className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#206AB5] px-6 py-3.5 text-base font-semibold text-white transition hover:bg-[#185997] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             {buttonLabel}
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

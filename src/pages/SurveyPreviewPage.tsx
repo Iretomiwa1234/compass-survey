@@ -92,6 +92,8 @@ const formControl =
 const whitePanel =
   "rounded-2xl sm:rounded-3xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.02)]";
 
+const appDownloadUrl = "https://marketinganalytics.africa/";
+
 /** Safely coerce any array element to a plain string (handles API that returns objects). */
 function toStr(val: unknown): string {
   if (typeof val === "string") return val;
@@ -1318,6 +1320,8 @@ export default function SurveyPreviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [isSubmitSuccessModalOpen, setIsSubmitSuccessModalOpen] =
+    useState(false);
 
   const key = searchParams.get("key")?.trim() ?? "";
   const incomingHash = resolveIncomingHash(searchParams, pathHash);
@@ -1363,6 +1367,7 @@ export default function SurveyPreviewPage() {
 
     if (missingRequired) {
       setSubmitSuccess(null);
+      setIsSubmitSuccessModalOpen(false);
       setSubmitError(
         `Please answer required question: ${missingRequired.label}`,
       );
@@ -1378,6 +1383,7 @@ export default function SurveyPreviewPage() {
 
     if (payloadAnswers.length === 0) {
       setSubmitSuccess(null);
+      setIsSubmitSuccessModalOpen(false);
       setSubmitError("Please answer at least one question before submitting.");
       return;
     }
@@ -1385,6 +1391,7 @@ export default function SurveyPreviewPage() {
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitSuccess(null);
+    setIsSubmitSuccessModalOpen(false);
 
     try {
       const response = await submitCustomerSurveyResponse(
@@ -1403,6 +1410,7 @@ export default function SurveyPreviewPage() {
       setSubmitSuccess(
         response?.message || "Thanks! Your survey response was submitted.",
       );
+      setIsSubmitSuccessModalOpen(true);
       setSubmitError(null);
     } catch (error) {
       const message =
@@ -1410,6 +1418,7 @@ export default function SurveyPreviewPage() {
           ? error.message
           : "Could not submit your response. Please try again.";
       setSubmitSuccess(null);
+      setIsSubmitSuccessModalOpen(false);
       setSubmitError(message);
     } finally {
       setIsSubmitting(false);
@@ -1426,6 +1435,7 @@ export default function SurveyPreviewPage() {
     setSurveyAnswers({});
     setSubmitError(null);
     setSubmitSuccess(null);
+    setIsSubmitSuccessModalOpen(false);
     setVerificationMessage(null);
     setData(null);
     setQuestionLoadError(null);
@@ -1442,6 +1452,7 @@ export default function SurveyPreviewPage() {
     setRespondentSession(normalized);
     setSubmitError(null);
     setSubmitSuccess(null);
+    setIsSubmitSuccessModalOpen(false);
     setVerificationMessage(null);
     setData(null);
   };
@@ -1934,9 +1945,47 @@ export default function SurveyPreviewPage() {
         )}
 
         {submitSuccess && (
-          <p className="mt-6 rounded-xl bg-[#EAF7EF] px-4 py-3 text-sm font-medium text-[#186A3B]">
-            {submitSuccess}
-          </p>
+          <>
+            {isSubmitSuccessModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6 backdrop-blur-sm">
+                <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF7EF] text-[#186A3B]">
+                    <Check className="h-6 w-6" />
+                  </div>
+                  <div className="mt-4 text-center">
+                    <h3 className="text-xl font-semibold text-[#171E29]">
+                      Survey response submitted
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-[#5F6C80]">
+                      {submitSuccess}
+                    </p>
+                  </div>
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setIsSubmitSuccessModalOpen(false)}
+                      className="rounded-full bg-[#206AB5] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#185287]"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 rounded-2xl border border-[#D8E7F7] bg-[#F4F9FF] px-4 py-4 text-sm text-[#4C5B70]">
+              If you'd like to answer surveys like this, download our app{" "}
+              <a
+                href={appDownloadUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-[#206AB5] underline underline-offset-4 transition hover:text-[#185287]"
+              >
+                marketinganalytics.africa
+              </a>
+              .
+            </div>
+          </>
         )}
 
         {sourceMode === "hash" &&
