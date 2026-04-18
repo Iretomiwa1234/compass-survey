@@ -161,6 +161,29 @@ const CreateSurvey = () => {
     locations?: string[];
   };
 
+  const ensureStableQuestionIds = useCallback((items: Question[]) => {
+    const used = new Set<number>();
+    let nextId = 1;
+
+    return items.map((question) => {
+      const parsedId = Number(question.id);
+      let id =
+        Number.isInteger(parsedId) && parsedId > 0 && !used.has(parsedId)
+          ? parsedId
+          : 0;
+
+      if (id === 0) {
+        while (used.has(nextId)) nextId += 1;
+        id = nextId;
+      }
+
+      used.add(id);
+      if (id >= nextId) nextId = id + 1;
+
+      return { ...question, id };
+    });
+  }, []);
+
   const [questions, setQuestions] = useState<Question[]>([]);
 
   type StoredDraft = {
@@ -217,39 +240,41 @@ const CreateSurvey = () => {
     [getDraftStorageKey],
   );
 
-  const applyStoredDraft = useCallback((draft: StoredDraft) => {
-    const normalizedQuestions = (draft.questions ?? []).map((q, idx) => ({
-      ...q,
-      id: idx + 1,
-    }));
-    setSurveyTitle(draft.title ?? "");
-    setDescription(draft.description ?? "");
-    setTargetAudience(draft.targetAudience ?? "all");
-    setMaxResponses(draft.maxResponses ?? "500");
-    setSingleResponse(draft.singleResponse ?? "false");
-    setEndDate(draft.endDate ?? "");
-    setAllowEdit(draft.allowEdit ?? "false");
-    setQuestions(normalizedQuestions);
-    setSelectedId(normalizedQuestions[0]?.id ?? null);
-    setBaselineSnapshot(
-      JSON.stringify({
-        title: (draft.title ?? "").trim(),
-        description: (draft.description ?? "").trim(),
-        targetAudience: draft.targetAudience ?? "all",
-        maxResponses: draft.maxResponses ?? "500",
-        singleResponse: draft.singleResponse ?? "false",
-        endDate: draft.endDate ?? "",
-        allowEdit: draft.allowEdit ?? "false",
-        questions: normalizedQuestions.map((q) => ({
-          ...q,
-          label: q.label?.trim?.() ?? q.label,
-          placeholder: q.placeholder?.trim?.() ?? q.placeholder,
-        })),
-      }),
-    );
-    setLastSavedAt(draft.updatedAt ?? Date.now());
-    setIsHydrated(true);
-  }, []);
+  const applyStoredDraft = useCallback(
+    (draft: StoredDraft) => {
+      const normalizedQuestions = ensureStableQuestionIds(
+        draft.questions ?? [],
+      );
+      setSurveyTitle(draft.title ?? "");
+      setDescription(draft.description ?? "");
+      setTargetAudience(draft.targetAudience ?? "all");
+      setMaxResponses(draft.maxResponses ?? "500");
+      setSingleResponse(draft.singleResponse ?? "false");
+      setEndDate(draft.endDate ?? "");
+      setAllowEdit(draft.allowEdit ?? "false");
+      setQuestions(normalizedQuestions);
+      setSelectedId(normalizedQuestions[0]?.id ?? null);
+      setBaselineSnapshot(
+        JSON.stringify({
+          title: (draft.title ?? "").trim(),
+          description: (draft.description ?? "").trim(),
+          targetAudience: draft.targetAudience ?? "all",
+          maxResponses: draft.maxResponses ?? "500",
+          singleResponse: draft.singleResponse ?? "false",
+          endDate: draft.endDate ?? "",
+          allowEdit: draft.allowEdit ?? "false",
+          questions: normalizedQuestions.map((q) => ({
+            ...q,
+            label: q.label?.trim?.() ?? q.label,
+            placeholder: q.placeholder?.trim?.() ?? q.placeholder,
+          })),
+        }),
+      );
+      setLastSavedAt(draft.updatedAt ?? Date.now());
+      setIsHydrated(true);
+    },
+    [ensureStableQuestionIds],
+  );
 
   const serializeDraft = useCallback(
     (snapshot: {
@@ -564,14 +589,14 @@ const CreateSurvey = () => {
           survey.question ?? survey.questions,
         );
 
-        const mappedQuestions = questionList.map((q, idx) => {
+        const mappedQuestions = questionList.map((q) => {
           const type = normalizeType(String(q.type ?? ""));
           const requiredValue =
             q.required === true || q.required === "1" || q.required === 1;
-          const parsedId = Number(q.id ?? idx + 1);
+          const parsedId = Number(q.id);
           const parsedScale = Number(q.scale ?? 5);
           return {
-            id: Number.isNaN(parsedId) ? idx + 1 : parsedId,
+            id: Number.isNaN(parsedId) ? 0 : parsedId,
             label: String(q.label ?? ""),
             placeholder: String(q.placeholder ?? ""),
             required: requiredValue,
@@ -624,10 +649,7 @@ const CreateSurvey = () => {
               : {}),
           };
         });
-        const ordered = mappedQuestions.map((q, idx) => ({
-          ...q,
-          id: idx + 1,
-        }));
+        const ordered = ensureStableQuestionIds(mappedQuestions);
         setIsPublishedSurvey(Number(survey.is_published ?? 0) === 1);
         setQuestions(ordered);
         setSelectedId(ordered[0]?.id ?? null);
@@ -672,6 +694,7 @@ const CreateSurvey = () => {
     normalizeType,
     toArrayString,
     toQuestionList,
+    ensureStableQuestionIds,
     serializeDraft,
     isHydrated,
     resumeDialogOpen,
@@ -738,6 +761,8 @@ const CreateSurvey = () => {
   const addQuestion = (value: string, insertIndex?: number) => {
     setQuestions((prev) => {
       const type = normalizeType(value);
+      const nextQuestionId =
+        prev.reduce((maxId, q) => Math.max(maxId, q.id), 0) + 1;
       const defaultPlaceholder =
         type === "date"
           ? "YYYY-MM-DD"
@@ -759,7 +784,7 @@ const CreateSurvey = () => {
                           ? "Choose..."
                           : "";
       const newQuestion: Question = {
-        id: prev.length + 1,
+        id: nextQuestionId,
         label: "",
         placeholder: defaultPlaceholder,
         required: false,
@@ -802,16 +827,12 @@ const CreateSurvey = () => {
       } else {
         next.push(newQuestion);
       }
-      const reindexed = next.map((q, idx) => ({
-        ...q,
-        id: idx + 1,
-      }));
       const selectedIndex =
         typeof insertIndex === "number"
-          ? Math.max(0, Math.min(insertIndex, reindexed.length - 1))
-          : reindexed.length - 1;
-      setSelectedId(reindexed[selectedIndex]?.id ?? null);
-      return reindexed;
+          ? Math.max(0, Math.min(insertIndex, next.length - 1))
+          : next.length - 1;
+      setSelectedId(next[selectedIndex]?.id ?? null);
+      return next;
     });
   };
 
@@ -823,16 +844,22 @@ const CreateSurvey = () => {
   };
 
   const removeQuestion = (id: number) => {
-    setQuestions((prev) =>
-      prev.filter((q) => q.id !== id).map((q, idx) => ({ ...q, id: idx + 1 })),
-    );
-    setInvalidQuestionIds((prev) => prev.filter((qid) => qid !== id));
-    setSelectedId((prev) => {
-      if (prev == null) return null;
-      if (prev === id) return null;
-      if (prev > id) return prev - 1;
-      return prev;
+    setQuestions((prev) => {
+      const removedIndex = prev.findIndex((q) => q.id === id);
+      const next = prev.filter((q) => q.id !== id);
+
+      setSelectedId((currentSelectedId) => {
+        if (currentSelectedId == null) return null;
+        if (currentSelectedId !== id) return currentSelectedId;
+        if (!next.length) return null;
+
+        const fallbackIndex = removedIndex <= 0 ? 0 : removedIndex - 1;
+        return next[Math.min(fallbackIndex, next.length - 1)]?.id ?? null;
+      });
+
+      return next;
     });
+    setInvalidQuestionIds((prev) => prev.filter((qid) => qid !== id));
   };
 
   const reorderQuestions = (fromIndex: number, toIndex: number) => {
@@ -858,27 +885,15 @@ const CreateSurvey = () => {
       next.splice(targetIndex, 0, moved);
 
       const currentlySelectedOldId = selectedId;
-      const selectedIndexInNext =
-        currentlySelectedOldId == null
-          ? -1
-          : next.findIndex((q) => q.id === currentlySelectedOldId);
 
-      const idMap = new Map<number, number>();
-      const reindexed = next.map((q, idx) => {
-        const newId = idx + 1;
-        idMap.set(q.id, newId);
-        return { ...q, id: newId };
-      });
-
-      setInvalidQuestionIds((prevInvalidIds) =>
-        prevInvalidIds
-          .map((id) => idMap.get(id))
-          .filter((id): id is number => typeof id === "number"),
+      setSelectedId(
+        currentlySelectedOldId != null &&
+          next.some((q) => q.id === currentlySelectedOldId)
+          ? currentlySelectedOldId
+          : null,
       );
 
-      setSelectedId(selectedIndexInNext >= 0 ? selectedIndexInNext + 1 : null);
-
-      return reindexed;
+      return next;
     });
   };
 
@@ -895,8 +910,8 @@ const CreateSurvey = () => {
     single_response: singleResponse === "true",
     end_date: endDate,
     allow_edit_after_submit: allowEdit === "true",
-    questions: questions.map((q, idx) => ({
-      id: idx + 1,
+    questions: questions.map((q) => ({
+      id: q.id,
       type: q.type,
       label: q.label,
       placeholder:
