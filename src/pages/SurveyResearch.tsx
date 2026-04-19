@@ -566,8 +566,8 @@ const SurveyResearch = () => {
           </DialogHeader>
 
           {open && (
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <button
+            <div className="grid grid-cols-1 gap-4 pt-4">
+              {/* <button
                 onClick={handleGenerateWithAI}
                 className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-[#206AB5]/30 hover:border-[#206AB5] hover:bg-[#206AB5]/5 transition-all group gap-3"
               >
@@ -577,7 +577,7 @@ const SurveyResearch = () => {
                 <span className="font-semibold text-[#206AB5]">
                   Generate with AI
                 </span>
-              </button>
+              </button> */}
               <button
                 onClick={() => navigate("/create-survey")}
                 className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all group gap-3"
