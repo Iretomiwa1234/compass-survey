@@ -509,10 +509,10 @@ const Channels = () => {
         const urlSurveyId = searchParams.get("survey_id");
         if (urlSurveyId) {
           const id = Number(urlSurveyId);
-          const match = publishedItems.find((s) => s.survey_id === id);
-          if (match) {
+          if (Number.isFinite(id) && id > 0) {
+            const match = publishedItems.find((s) => s.survey_id === id);
             setSelectedSurveyId(id);
-            setSearchTerm(match.title);
+            setSearchTerm(match?.title ?? "");
             setActiveTab("mobileapp");
           }
         }
@@ -538,7 +538,7 @@ const Channels = () => {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!showSuggestions) return;
@@ -1137,7 +1137,7 @@ const Channels = () => {
               </div>
             </div>
 
-            {!selectedSurvey ? (
+            {!selectedSurveyId ? (
               <div className="flex min-h-[50vh] items-center justify-center">
                 <Card className="max-w-md border border-border bg-white shadow-sm">
                   <CardContent className="p-6 text-center">
