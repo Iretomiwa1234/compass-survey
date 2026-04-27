@@ -90,6 +90,12 @@ import { CompletionRateCard } from "@/components/CompletionRateCard";
 const isPublishedSurvey = (survey: SurveyListItemApi) =>
   Number(survey.is_published ?? 0) === 1;
 
+const toSurveyId = (value: unknown): number | null => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
+};
+
 const defaultTrendData = [
   { day: "Monday", value: 0 },
   { day: "Tuesday", value: 0 },
@@ -441,9 +447,16 @@ const SurveyAnalysis = () => {
     getSurveys(1)
       .then((res) => {
         if (!isActive) return;
-        const publishedItems = (res?.data?.survey?.data ?? []).filter(
-          isPublishedSurvey,
-        );
+        const publishedItems = (res?.data?.survey?.data ?? [])
+          .filter(isPublishedSurvey)
+          .map((survey) => {
+            const surveyId = toSurveyId(survey.survey_id);
+            return {
+              ...survey,
+              survey_id: surveyId ?? 0,
+            };
+          })
+          .filter((survey) => survey.survey_id > 0);
         setSurveys(publishedItems);
         setIsLoadingSurveys(false);
       })
@@ -459,15 +472,16 @@ const SurveyAnalysis = () => {
 
   // Pre-select from ?survey_id= query param once surveys are loaded
   useEffect(() => {
-    if (!surveys.length) return;
     const idParam = searchParams.get("survey_id");
     if (!idParam) return;
-    const id = Number(idParam);
-    const found = surveys.find((s) => s.survey_id === id);
-    if (found) {
-      setSelectedSurveyId(id);
-      setSelectedSurveyTitle(found.title);
-    }
+    const id = toSurveyId(idParam);
+    if (!id) return;
+
+    setSelectedSurveyId(id);
+
+    if (!surveys.length) return;
+    const found = surveys.find((s) => toSurveyId(s.survey_id) === id);
+    if (found) setSelectedSurveyTitle(found.title);
   }, [surveys, searchParams]);
 
   // Click-outside to close suggestions
@@ -668,7 +682,9 @@ const SurveyAnalysis = () => {
   }, [selectedSurveyId, countryDateOffset]);
 
   const sortedSurveys = useMemo(() => {
-    return [...surveys].sort((a, b) => b.survey_id - a.survey_id);
+    return [...surveys].sort(
+      (a, b) => Number(b.survey_id) - Number(a.survey_id),
+    );
   }, [surveys]);
 
   const filteredSurveys = useMemo(() => {
@@ -676,7 +692,7 @@ const SurveyAnalysis = () => {
     if (!q) return [];
     return surveys
       .filter((s) => s.title.toLowerCase().includes(q))
-      .sort((a, b) => b.survey_id - a.survey_id)
+      .sort((a, b) => Number(b.survey_id) - Number(a.survey_id))
       .slice(0, 10);
   }, [surveys, searchTerm]);
 
@@ -709,7 +725,9 @@ const SurveyAnalysis = () => {
   }, [ageRangeData.ranges]);
 
   const handleSelectSurvey = useCallback((survey: SurveyListItemApi) => {
-    setSelectedSurveyId(survey.survey_id);
+    const surveyId = toSurveyId(survey.survey_id);
+    if (!surveyId) return;
+    setSelectedSurveyId(surveyId);
     setSelectedSurveyTitle(survey.title);
     setSearchTerm("");
     setShowSuggestions(false);
@@ -920,8 +938,10 @@ const SurveyAnalysis = () => {
                         selectedSurveyId ? String(selectedSurveyId) : undefined
                       }
                       onValueChange={(value) => {
+                        const selectedId = toSurveyId(value);
+                        if (!selectedId) return;
                         const survey = surveys.find(
-                          (s) => s.survey_id === Number(value),
+                          (s) => toSurveyId(s.survey_id) === selectedId,
                         );
                         if (survey) handleSelectSurvey(survey);
                       }}

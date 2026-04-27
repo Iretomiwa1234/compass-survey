@@ -61,6 +61,12 @@ import {
 const isPublishedSurvey = (survey: SurveyListItemApi) =>
   Number(survey.is_published ?? 0) === 1;
 
+const toSurveyId = (value: unknown): number | null => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
+};
+
 type DemographyFormState = {
   ageMin: string;
   ageMax: string;
@@ -501,16 +507,27 @@ const Channels = () => {
           surveysRes.status === "fulfilled"
             ? (surveysRes.value?.data?.survey?.data ?? [])
             : [];
-        const publishedItems = items.filter(isPublishedSurvey);
+        const publishedItems = items
+          .filter(isPublishedSurvey)
+          .map((survey) => {
+            const surveyId = toSurveyId(survey.survey_id);
+            return {
+              ...survey,
+              survey_id: surveyId ?? 0,
+            };
+          })
+          .filter((survey) => survey.survey_id > 0);
         setSurveys(publishedItems);
         setIsLoadingSurveys(false);
 
         // Auto-select survey from URL param (?survey_id=X)
         const urlSurveyId = searchParams.get("survey_id");
         if (urlSurveyId) {
-          const id = Number(urlSurveyId);
-          if (Number.isFinite(id) && id > 0) {
-            const match = publishedItems.find((s) => s.survey_id === id);
+          const id = toSurveyId(urlSurveyId);
+          if (id) {
+            const match = publishedItems.find(
+              (s) => toSurveyId(s.survey_id) === id,
+            );
             setSelectedSurveyId(id);
             setSearchTerm(match?.title ?? "");
             setActiveTab("mobileapp");
@@ -663,13 +680,17 @@ const Channels = () => {
   }, [currentDemographyState, initialDemographyState]);
 
   const sortedSurveys = useMemo(() => {
-    return [...surveys].sort((a, b) => b.survey_id - a.survey_id);
+    return [...surveys].sort(
+      (a, b) => Number(b.survey_id) - Number(a.survey_id),
+    );
   }, [surveys]);
 
   const selectedSurvey = useMemo(() => {
     if (selectedSurveyId === null) return null;
     return (
-      surveys.find((survey) => survey.survey_id === selectedSurveyId) || null
+      surveys.find(
+        (survey) => toSurveyId(survey.survey_id) === selectedSurveyId,
+      ) || null
     );
   }, [selectedSurveyId, surveys]);
 
@@ -678,13 +699,18 @@ const Channels = () => {
     if (!query) return [];
     return surveys
       .filter((survey) => survey.title.toLowerCase().includes(query))
-      .sort((a, b) => b.survey_id - a.survey_id)
+      .sort((a, b) => Number(b.survey_id) - Number(a.survey_id))
       .slice(0, 10);
   }, [searchTerm, surveys]);
 
   const handleSelectSurvey = (surveyId: number) => {
-    const survey = surveys.find((item) => item.survey_id === surveyId);
-    setSelectedSurveyId(surveyId);
+    const normalizedSurveyId = toSurveyId(surveyId);
+    if (!normalizedSurveyId) return;
+
+    const survey = surveys.find(
+      (item) => toSurveyId(item.survey_id) === normalizedSurveyId,
+    );
+    setSelectedSurveyId(normalizedSurveyId);
     setSearchTerm(survey?.title ?? "");
     setShowSuggestions(false);
   };
@@ -1087,9 +1113,11 @@ const Channels = () => {
                               key={survey.survey_id}
                               type="button"
                               onMouseDown={(e) => e.preventDefault()}
-                              onClick={() =>
-                                handleSelectSurvey(survey.survey_id)
-                              }
+                              onClick={() => {
+                                const surveyId = toSurveyId(survey.survey_id);
+                                if (!surveyId) return;
+                                handleSelectSurvey(surveyId);
+                              }}
                               className="flex w-full items-center rounded-sm px-2 py-2 text-left text-sm text-foreground hover:bg-accent"
                             >
                               {survey.title}
@@ -1107,7 +1135,11 @@ const Channels = () => {
                   value={
                     selectedSurveyId ? String(selectedSurveyId) : undefined
                   }
-                  onValueChange={(value) => handleSelectSurvey(Number(value))}
+                  onValueChange={(value) => {
+                    const surveyId = toSurveyId(value);
+                    if (!surveyId) return;
+                    handleSelectSurvey(surveyId);
+                  }}
                 >
                   <SelectTrigger className="w-[150px] h-9 bg-card border border-border">
                     <SelectValue placeholder="Select Survey" />
