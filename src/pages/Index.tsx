@@ -180,74 +180,80 @@ const Index = () => {
 
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
-              <StatCard
-                title="Total Surveys"
-                value={surveyStats.total.toString()}
-                icon={FileText}
-                badges={[
-                  {
-                    label: "Active",
-                    count: surveyStats.active,
-                    variant: "success",
-                  },
-                  {
-                    label: "Closed",
-                    count: surveyStats.closed,
-                    variant: "secondary",
-                  },
-                  {
-                    label: "Draft",
-                    count: surveyStats.draft,
-                    variant: "warning",
-                  },
-                ]}
-              />
+              <div className="xl:col-span-2">
+                <StatCard
+                  title="Total Surveys"
+                  value={surveyStats.total.toString()}
+                  icon={FileText}
+                  badges={[
+                    {
+                      label: "Active",
+                      count: surveyStats.active,
+                      variant: "success",
+                    },
+                    {
+                      label: "Closed",
+                      count: surveyStats.closed,
+                      variant: "secondary",
+                    },
+                    {
+                      label: "Draft",
+                      count: surveyStats.draft,
+                      variant: "warning",
+                    },
+                  ]}
+                />
+              </div>
 
-              <StatCard
-                title="Total Responses"
-                value={
-                  surveyCards
-                    ? surveyCards.totalResponses.toLocaleString()
-                    : "0"
-                }
-                icon={Users}
-                iconBgColor="bg-purple-500/10"
-                badges={[
-                  {
-                    label: "Completed",
-                    count: surveyCards?.completed ?? 0,
-                    variant: "success",
-                  },
-                  {
-                    label: "In Progress",
-                    count: surveyCards?.inProgress ?? 0,
-                    variant: "warning",
-                  },
-                  {
-                    label: "Abandoned",
-                    count: surveyCards?.abandoned ?? 0,
-                    variant: "destructive",
-                  },
-                ]}
-              />
+              <div className="xl:col-span-2">
+                <StatCard
+                  title="Total Responses"
+                  value={
+                    surveyCards
+                      ? surveyCards.totalResponses.toLocaleString()
+                      : "0"
+                  }
+                  icon={Users}
+                  iconBgColor="bg-purple-500/10"
+                  badges={[
+                    {
+                      label: "Completed",
+                      count: surveyCards?.completed ?? 0,
+                      variant: "success",
+                    },
+                    {
+                      label: "In Progress",
+                      count: surveyCards?.inProgress ?? 0,
+                      variant: "warning",
+                    },
+                    {
+                      label: "Abandoned",
+                      count: surveyCards?.abandoned ?? 0,
+                      variant: "destructive",
+                    },
+                  ]}
+                />
+              </div>
 
+              {/*
               <MentionsCard totalMentions={mentionsCard?.totalMentions ?? 0} />
               <SentimentChart
                 positive={sentimentCard?.positive ?? 0}
                 neutral={sentimentCard?.neutral ?? 0}
                 negative={sentimentCard?.negative ?? 0}
               />
+              */}
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-              <div className="xl:col-span-2">
+              <div className="xl:col-span-3">
                 <ResponseTrendChart
                   data={trendData}
                   selectedRange={trendRange}
                   onRangeChange={setTrendRange}
                 />
               </div>
-              <RecentProjects />
+              {/* <RecentProjects /> */}
             </div>
 
             <ActiveSurveys surveys={surveys} />

@@ -69,7 +69,6 @@ function IconImage({
 const enabledPaths = [
   "/",
   "/survey-research",
-  "/social-listening",
   "/channels",
   "/campaigns",
   "/survey-analysis",

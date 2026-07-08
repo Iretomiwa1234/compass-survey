@@ -52,15 +52,15 @@ export function DashboardHeader({
   return (
     <>
       <header className="h-16 bg-[#F7FAFE] px-6 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex-1 max-w-xl">
+        <div className="flex-1 max-w-xl min-w-0">
           {!headerTitle ? (
             <div
-              className={`${hideGreeting ? "hidden md:flex" : "flex"} flex-col`}
+              className={`${hideGreeting ? "hidden md:flex" : "flex"} flex-col min-w-0`}
             >
-              <h2 className="text-base font-semibold text-foreground">
+              <h2 className="text-base font-semibold text-foreground truncate">
                 {getTimeBasedGreeting()}, {user?.fname || "Guest"}
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground truncate">
                 What do you want to do today?
               </p>
             </div>
