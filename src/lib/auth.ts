@@ -376,6 +376,19 @@ export async function verifyUser(code: string) {
   });
 }
 
+// Resend Verification Code
+export async function resendVerification(email: string) {
+  return fetchJson<RegisterResponse>({
+    baseUrl: getBaseUrl(),
+    path: "/v1/register",
+    method: "POST",
+    body: {
+      email,
+      user_type: "business",
+    },
+  });
+}
+
 // Forgot Password
 export async function forgotPassword(payload: ForgotPasswordPayload) {
   return fetchJson<ForgotPasswordResponse>({
@@ -557,14 +570,14 @@ export async function getSurveyCards(
   if (!token) throw new Error("Not authenticated");
 
   const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/cards${qs}`,
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const cards = response?.data?.cards ?? {};
+  const cards = ((response?.data as Record<string, unknown>)?.cards ?? {}) as Record<string, unknown>;
   return {
     totalResponses: toSafeNumber(cards.total_responses),
     completed: toSafeNumber(cards.completed),
@@ -581,14 +594,14 @@ export async function getSurveyCompletionRate(
   if (!token) throw new Error("Not authenticated");
 
   const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/cards/completion-rate${qs}`,
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const stats = response?.data?.completion_stats ?? {};
+  const stats = ((response?.data as Record<string, unknown>)?.completion_stats ?? {}) as Record<string, unknown>;
   return {
     completionRatePercentage: parsePercentageStr(stats.completion_rate),
     completed: toSafeNumber(stats.completed),
@@ -605,14 +618,14 @@ export async function getSurveyAverageRate(
   if (!token) throw new Error("Not authenticated");
 
   const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/cards/average-rate${qs}`,
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const metrics = response?.data?.metrics ?? {};
+  const metrics = ((response?.data as Record<string, unknown>)?.metrics ?? {}) as Record<string, unknown>;
   return {
     avgResponseRatePercentage: parsePercentageStr(metrics.avg_response_rate),
     totalInviteSent: toSafeNumber(metrics.total_invite_sent),
@@ -628,7 +641,7 @@ export async function getSurveyCountryReach(
   if (!token) throw new Error("Not authenticated");
 
   const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/country/reach${qs}`,
     method: "GET",
@@ -639,7 +652,11 @@ export async function getSurveyCountryReach(
     country_id: number;
     country_name: string;
     total_responses: number;
-  }> = response?.data?.cards_by_country ?? [];
+  }> = (response?.data as Record<string, unknown>)?.cards_by_country as Array<{
+    country_id: number;
+    country_name: string;
+    total_responses: number;
+  }> ?? [];
 
   const countries: CountryReachItem[] = raw.map((c) => ({
     countryId: c.country_id,
@@ -662,11 +679,11 @@ export async function getSurveyResponseTrend(
   surveyId: number,
   start: string,
   end: string,
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  return fetchJson<any>({
+  return fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/response-trend?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&survey_id=${surveyId}`,
     method: "GET",
@@ -678,11 +695,11 @@ export async function getSurveyResponseTrend(
 export async function getDashboardResponseTrend(
   start: string,
   end: string,
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  return fetchJson<any>({
+  return fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/response-trend?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
     method: "GET",
@@ -704,14 +721,14 @@ export async function getSurveyDeviceUsage(
   if (!token) throw new Error("Not authenticated");
 
   const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/device-usage${qs}`,
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const cards = response?.data?.cards ?? {};
+  const cards = ((response?.data as Record<string, unknown>)?.cards ?? {}) as Record<string, unknown>;
   return {
     desktop: toSafeNumber(cards.desktop),
     mobile: toSafeNumber(cards.mobile),
@@ -740,14 +757,14 @@ export async function getSurveyBrowserUsage(
   if (!token) throw new Error("Not authenticated");
 
   const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/browser-usage${qs}`,
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const cards = response?.data?.cards ?? {};
+  const cards = (response?.data as Record<string, unknown>)?.cards ?? {};
   return Object.fromEntries(
     Object.entries(cards).map(([k, v]) => [k, toSafeNumber(v)]),
   ) as SurveyBrowserUsageData;
@@ -760,24 +777,28 @@ export async function getSurveyAgeRange(
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/dashboard/age-range/${surveyId}`,
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const rawRanges: any[] = Array.isArray(response?.data?.data)
-    ? response.data.data
+  const data = response?.data as Record<string, unknown> | undefined;
+  const rawRanges: unknown[] = Array.isArray(data?.data)
+    ? (data?.data as unknown[])
     : [];
 
   return {
-    totalUsers: toSafeNumber(response?.data?.total_users),
-    ranges: rawRanges.map((item) => ({
-      ageRange: String(item?.age_range ?? ""),
-      totalUsers: toSafeNumber(item?.total_users),
-      percentage: toSafeNumber(item?.percentage),
-    })),
+    totalUsers: toSafeNumber(data?.total_users),
+    ranges: rawRanges.map((item) => {
+      const i = item as Record<string, unknown>;
+      return {
+        ageRange: String(i?.age_range ?? ""),
+        totalUsers: toSafeNumber(i?.total_users),
+        percentage: toSafeNumber(i?.percentage),
+      };
+    }),
   };
 }
 
@@ -830,20 +851,23 @@ export async function getSurveyRespondents(
   if (!token) throw new Error("Not authenticated");
 
   const qs = surveyId != null ? `?survey_id=${surveyId}` : "";
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/respondent${qs}`,
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const raw: any[] = response?.data?.top_customers ?? [];
-  return raw.map((c) => ({
-    customerId: String(c.customer_id ?? ""),
-    fname: String(c.fname ?? ""),
-    sname: String(c.sname ?? ""),
-    totalResponses: toSafeNumber(c.total_responses),
-  }));
+  const raw: unknown[] = (response?.data as Record<string, unknown>)?.top_customers as unknown[] ?? [];
+  return raw.map((c) => {
+    const item = c as Record<string, unknown>;
+    return {
+      customerId: String(item.customer_id ?? ""),
+      fname: String(item.fname ?? ""),
+      sname: String(item.sname ?? ""),
+      totalResponses: toSafeNumber(item.total_responses),
+    };
+  });
 }
 
 // GET /v1/survey/responses/{survey_id}
@@ -854,7 +878,7 @@ export async function getSurveyResponses(
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path:
       page > 1
@@ -865,42 +889,46 @@ export async function getSurveyResponses(
   });
 
   const payload =
-    response?.data?.survey?.reponses ?? response?.data?.survey?.responses ?? {};
-  const rows: any[] = Array.isArray(payload?.data) ? payload.data : [];
+    (response?.data as Record<string, unknown>)?.survey as Record<string, unknown> ?? {};
+  const surveyData = (payload?.reponses ?? payload?.responses ?? {}) as Record<string, unknown>;
+  const rows: unknown[] = Array.isArray(surveyData?.data) ? surveyData.data as unknown[] : [];
 
   return {
-    rows: rows.map((r) => ({
-      surveyId: toSafeNumber(r?.survey_id),
-      surveyTitle: String(r?.survey_title ?? ""),
-      responseId: toSafeNumber(r?.response_id),
-      customerId: String(r?.customer_id ?? ""),
-      fname: String(r?.fname ?? ""),
-      sname: String(r?.sname ?? ""),
-      email: String(r?.email ?? ""),
-      answer: Array.isArray(r?.answer)
-        ? r.answer.map((a: any) => ({
-            questionId: String(a?.question_id ?? ""),
-            answer: a?.answer ?? "",
-          }))
-        : [],
-      question: Array.isArray(r?.question)
-        ? r.question.map((q: any) => ({
-            id: String(q?.id ?? ""),
-            type: String(q?.type ?? ""),
-            label: String(q?.label ?? ""),
-            scale:
-              q?.scale != null && q?.scale !== ""
-                ? toSafeNumber(q.scale)
-                : undefined,
-            required:
-              q?.required != null && q?.required !== ""
-                ? String(q.required) === "1"
-                : undefined,
-            placeholder:
-              q?.placeholder != null ? String(q.placeholder) : undefined,
-          }))
-        : [],
-    })),
+    rows: rows.map((r) => {
+      const row = r as Record<string, unknown>;
+      return {
+        surveyId: toSafeNumber(row?.survey_id),
+        surveyTitle: String(row?.survey_title ?? ""),
+        responseId: toSafeNumber(row?.response_id),
+        customerId: String(row?.customer_id ?? ""),
+        fname: String(row?.fname ?? ""),
+        sname: String(row?.sname ?? ""),
+        email: String(row?.email ?? ""),
+        answer: Array.isArray(row?.answer)
+          ? row.answer.map((a: Record<string, unknown>) => ({
+              questionId: String(a?.question_id ?? ""),
+              answer: a?.answer ?? "",
+            }))
+          : [],
+        question: Array.isArray(row?.question)
+          ? row.question.map((q: Record<string, unknown>) => ({
+              id: String(q?.id ?? ""),
+              type: String(q?.type ?? ""),
+              label: String(q?.label ?? ""),
+              scale:
+                q?.scale != null && q?.scale !== ""
+                  ? toSafeNumber(q.scale)
+                  : undefined,
+              required:
+                q?.required != null && q?.required !== ""
+                  ? String(q.required) === "1"
+                  : undefined,
+              placeholder:
+                q?.placeholder != null ? String(q.placeholder) : undefined,
+            }))
+          : [],
+      };
+    }),
     total: toSafeNumber(payload?.total),
     perPage: toSafeNumber(payload?.per_page),
     currentPage: toSafeNumber(payload?.current_page),
@@ -923,24 +951,27 @@ export async function getSurveyResponseByCountry(
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/survey/response-by-country?survey_id=${surveyId}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const raw: any[] = response?.data?.data ?? [];
-  return raw.map((entry) => ({
-    date: String(entry.date ?? ""),
-    day: String(entry.day ?? ""),
-    countries: Array.isArray(entry.countries)
-      ? entry.countries.map((c: any) => ({
-          name: String(c.name ?? ""),
-          value: toSafeNumber(c.value),
-        }))
-      : [],
-  }));
+  const raw: unknown[] = (response?.data as Record<string, unknown>)?.data as unknown[] ?? [];
+  return raw.map((entry) => {
+    const e = entry as Record<string, unknown>;
+    return {
+      date: String(e.date ?? ""),
+      day: String(e.day ?? ""),
+      countries: Array.isArray(e.countries)
+        ? e.countries.map((c: Record<string, unknown>) => ({
+            name: String(c.name ?? ""),
+            value: toSafeNumber(c.value),
+          }))
+        : [],
+    };
+  });
 }
 
 // Dashboard Mentions Card
@@ -995,10 +1026,10 @@ export async function getDashboardSentiment(): Promise<DashboardSentimentCard> {
 // =======================
 
 // GET /demography/options
-export async function getDemographyOptions(): Promise<any> {
+export async function getDemographyOptions(): Promise<unknown> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
-  return fetchJson<any>({
+  return fetchJson<unknown>({
     baseUrl: getBaseUrl(),
     path: "/v1/demography/options",
     method: "GET",
@@ -1043,7 +1074,7 @@ const toStringArray = (value: unknown): string[] => {
   return value.map((v) => String(v ?? "")).filter((v) => v.length > 0);
 };
 
-const mapSurveyDemography = (raw: any): SurveyDemographyRecord => ({
+const mapSurveyDemography = (raw: Record<string, unknown>): SurveyDemographyRecord => ({
   survey_id: toSafeNumber(raw?.survey_id),
   gender: toStringArray(raw?.gender),
   age_range_min:
@@ -1074,7 +1105,7 @@ export async function postSurveyDemography(
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: "/v1/channel/survey-demography",
     method: "POST",
@@ -1083,10 +1114,10 @@ export async function postSurveyDemography(
   });
 
   const raw =
-    response?.data?.demography ??
-    response?.data?.survey_demography ??
+    ((response?.data as Record<string, unknown>)?.demography ??
+    (response?.data as Record<string, unknown>)?.survey_demography ??
     response?.data ??
-    payload;
+    payload) as Record<string, unknown>;
   return mapSurveyDemography(raw);
 }
 
@@ -1097,7 +1128,7 @@ export async function getSurveyDemographyBySurvey(
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/channel/survey-demography/by-survey/${surveyId}`,
     method: "GET",
@@ -1105,7 +1136,7 @@ export async function getSurveyDemographyBySurvey(
   });
 
   const raw =
-    response?.data?.demography ?? response?.data?.survey_demography ?? {};
+    ((response?.data as Record<string, unknown>)?.demography ?? (response?.data as Record<string, unknown>)?.survey_demography ?? {}) as Record<string, unknown>;
   return mapSurveyDemography({ ...raw, survey_id: raw?.survey_id ?? surveyId });
 }
 
@@ -1117,7 +1148,7 @@ export async function patchSurveyDemographyBySurvey(
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
 
-  const response = await fetchJson<any>({
+  const response = await fetchJson<Record<string, unknown>>({
     baseUrl: getBaseUrl(),
     path: `/v1/channel/survey-demography/by-survey/${surveyId}`,
     method: "PATCH",
@@ -1126,10 +1157,10 @@ export async function patchSurveyDemographyBySurvey(
   });
 
   const raw =
-    response?.data?.demography ??
-    response?.data?.survey_demography ??
+    ((response?.data as Record<string, unknown>)?.demography ??
+    (response?.data as Record<string, unknown>)?.survey_demography ??
     response?.data ??
-    payload;
+    payload) as Record<string, unknown>;
   return mapSurveyDemography({ ...raw, survey_id: raw?.survey_id ?? surveyId });
 }
 
@@ -1432,18 +1463,20 @@ export async function getSocialListenings(): Promise<SocialListening[]> {
 
   // Check if it's an object with a data property
   if (typeof response === "object" && response !== null) {
-    const anyResponse = response as any;
+    const anyResponse = response as Record<string, unknown>;
 
     // Handle nested structure: response.data.survey.data
+    const respData = anyResponse.data as Record<string, unknown> | undefined;
     if (
-      anyResponse.data?.survey?.data &&
-      Array.isArray(anyResponse.data.survey.data)
+      respData?.survey &&
+      Array.isArray((respData.survey as Record<string, unknown>)?.data)
     ) {
+      const nested = (respData.survey as Record<string, unknown>).data as SocialListening[];
       console.log(
         "getSocialListenings: Found nested data.survey.data array with length:",
-        anyResponse.data.survey.data.length,
+        nested.length,
       );
-      return anyResponse.data.survey.data;
+      return nested;
     }
 
     // Handle standard wrapped response: response.data
@@ -1452,7 +1485,7 @@ export async function getSocialListenings(): Promise<SocialListening[]> {
         "getSocialListenings: Response has data array with length:",
         anyResponse.data.length,
       );
-      return anyResponse.data;
+      return anyResponse.data as SocialListening[];
     }
 
     // Log the full response structure for debugging
@@ -1508,21 +1541,23 @@ export async function createSocialListening(
 
     // Handle both wrapped and unwrapped responses
     let data: SocialListening | undefined;
-    const anyResponse = response as any;
+    const anyResponse = response as Record<string, unknown>;
+    const respData = anyResponse.data as Record<string, unknown> | undefined;
 
     // Check for nested structure: response.data.survey.data or response.data
-    if (anyResponse.data?.survey?.data && anyResponse.data.survey.data.id) {
+    const surveyData = respData?.survey as Record<string, unknown> | undefined;
+    if (surveyData?.data && (surveyData.data as Record<string, unknown>)?.id) {
       console.log(
         "createSocialListening: Found nested data.survey.data:",
-        anyResponse.data.survey.data,
+        surveyData.data,
       );
-      data = anyResponse.data.survey.data;
-    } else if (anyResponse.data?.id) {
+      data = surveyData.data as SocialListening;
+    } else if (respData?.id) {
       console.log(
         "createSocialListening: Found wrapped data:",
-        anyResponse.data,
+        respData,
       );
-      data = anyResponse.data;
+      data = respData as SocialListening;
     } else if ((response as SocialListening).id) {
       console.log("createSocialListening: Found direct response with id");
       data = response as SocialListening;
@@ -1532,11 +1567,11 @@ export async function createSocialListening(
     if (!data) {
       console.log("createSocialListening: Checking alternative structures...");
       if (anyResponse.project) {
-        data = anyResponse.project;
+        data = anyResponse.project as SocialListening;
       } else if (anyResponse.item) {
-        data = anyResponse.item;
+        data = anyResponse.item as SocialListening;
       } else if (anyResponse.result) {
-        data = anyResponse.result;
+        data = anyResponse.result as SocialListening;
       }
     }
 
@@ -1607,14 +1642,16 @@ export async function editSocialListening(
 
     // Handle nested response structure like create
     let data: SocialListening | undefined;
-    const anyResponse = response as any;
+    const anyResponse = response as Record<string, unknown>;
+    const respData = anyResponse.data as Record<string, unknown> | undefined;
 
-    if (anyResponse.data?.survey?.data && anyResponse.data.survey.data.id) {
+    const surveyData = respData?.survey as Record<string, unknown> | undefined;
+    if (surveyData?.data && (surveyData.data as Record<string, unknown>)?.id) {
       console.log("editSocialListening: Found nested data.survey.data");
-      data = anyResponse.data.survey.data;
-    } else if (anyResponse.data?.id) {
+      data = surveyData.data as SocialListening;
+    } else if (respData?.id) {
       console.log("editSocialListening: Found wrapped data");
-      data = anyResponse.data;
+      data = respData as SocialListening;
     } else if ((response as SocialListening).id) {
       console.log("editSocialListening: Found direct response");
       data = response as SocialListening;

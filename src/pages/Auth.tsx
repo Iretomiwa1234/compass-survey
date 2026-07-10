@@ -14,6 +14,7 @@ import { loginUser, registerUser } from "@/lib/auth";
 import { setAuthSession } from "@/lib/session";
 import maaLogo from "/assets/MAA-Logo.png?url";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { ApiError } from "@/lib/api";
 
 function capitalizeNamePart(value: string) {
   const cleaned = value.trim().replace(/\s+/g, " ").toLowerCase();
@@ -22,12 +23,115 @@ function capitalizeNamePart(value: string) {
 
   return cleaned
     .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) =>
+      word
+        .split("-")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join("-"),
+    )
     .join(" ");
 }
 
 function normalizePhone(value: string) {
   return value.replace(/[\s()-]/g, "");
+}
+
+// Strip anything that isn't a letter, hyphen, or space, so numbers/special chars
+// can't be typed into name fields. Spaces are kept so the spaced-out
+// "did you mean?" suggestion still works.
+// Also prevents consecutive hyphens and more than one hyphen total.
+function sanitizeNameInput(value: string) {
+  const cleaned = value.replace(/[^A-Za-z\s-]/g, "");
+  // Remove consecutive hyphens (replace "---" with "")
+  const noConsecutive = cleaned.replace(/--+/g, "");
+  // If there's already a hyphen, remove any subsequent hyphens
+  const parts = noConsecutive.split("-");
+  if (parts.length > 2) {
+    return parts[0] + "-" + parts.slice(1).join("");
+  }
+  return noConsecutive;
+}
+
+type NameAnalysis = { valid: boolean; message: string };
+
+// Names accept alphabets and hyphens only. A space inside the value is treated as the
+// "spaced-out letters" case and produces a "did you mean?" suggestion.
+// Only a single hyphen is allowed (e.g. "John-Stone") — multiple hyphens or
+// consecutive hyphens are rejected to prevent abuse like "John---stone".
+function analyzeName(raw: string): NameAnalysis {
+  const value = raw.trim();
+  if (!value) return { valid: false, message: "This field is required" };
+
+  // Space(s) inside the name -> suggest the joined version.
+  if (/\s/.test(value)) {
+    const joined = value.replace(/\s+/g, "");
+    if (/^[A-Za-z-]+$/.test(joined)) {
+      return {
+        valid: false,
+        message: `Invalid name format. Did you mean "${joined}"?`,
+      };
+    }
+    return { valid: false, message: "Name can only contain letters and hyphens" };
+  }
+
+  if (!/^[A-Za-z-]+$/.test(value)) {
+    return { valid: false, message: "Name can only contain letters and hyphens" };
+  }
+
+  // Reject multiple consecutive hyphens (e.g. "John---stone")
+  if (/--/.test(value)) {
+    return { valid: false, message: "Name cannot contain consecutive hyphens" };
+  }
+
+  // Reject more than one hyphen total (e.g. "John-Stone-Austin")
+  if ((value.match(/-/g) || []).length > 1) {
+    return { valid: false, message: "Name can only contain one hyphen" };
+  }
+
+  return { valid: true, message: "" };
+}
+
+type PasswordStrength = {
+  metCount: number;
+  level: "poor" | "fair" | "good" | "strong";
+  color: string;
+  message: string;
+  percent: number;
+};
+
+// Ordered list of requirements. The live message always points at the first
+// unmet requirement so the user knows the single next thing to add.
+const passwordChecks: { label: string; test: (v: string) => boolean }[] = [
+  { label: "a lowercase letter", test: (v) => /[a-z]/.test(v) },
+  { label: "an uppercase letter", test: (v) => /[A-Z]/.test(v) },
+  { label: "a number", test: (v) => /\d/.test(v) },
+  { label: "a special character", test: (v) => /[^A-Za-z0-9]/.test(v) },
+  { label: "at least 8 characters", test: (v) => v.length >= 8 },
+];
+
+function getPasswordStrength(value: string): PasswordStrength {
+  const metCount = passwordChecks.filter((c) => c.test(value)).length;
+  const next = passwordChecks.find((c) => !c.test(value));
+
+  let level: PasswordStrength["level"] = "poor";
+  let color = "bg-red-500";
+
+  if (metCount >= 5) {
+    level = "strong";
+    color = "bg-green-500";
+  } else if (metCount >= 4) {
+    level = "fair";
+    color = "bg-blue-500";
+  } else if (metCount >= 2) {
+    level = "fair";
+    color = "bg-amber-500";
+  }
+
+  const message =
+    metCount >= 5 ? "Strong password" : `Must include ${next?.label}`;
+  const percent = (metCount / passwordChecks.length) * 100;
+
+  return { metCount, level, color, message, percent };
 }
 
 type RegisterFormValues = {
@@ -42,15 +146,31 @@ type RegisterFormValues = {
 const registerSchema = z.object({
   fname: z
     .string()
-    .trim()
     .min(1, "First name is required")
     .max(80, "First name is too long")
+    .superRefine((val, ctx) => {
+      const result = analyzeName(val);
+      if (!result.valid) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: result.message,
+        });
+      }
+    })
     .transform(capitalizeNamePart),
   sname: z
     .string()
-    .trim()
     .min(1, "Surname is required")
     .max(80, "Surname is too long")
+    .superRefine((val, ctx) => {
+      const result = analyzeName(val);
+      if (!result.valid) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: result.message,
+        });
+      }
+    })
     .transform(capitalizeNamePart),
   email: z
     .string()
@@ -82,6 +202,9 @@ const registerSchema = z.object({
     })
     .refine((v) => /\d/.test(v), {
       message: "Password must include a number",
+    })
+    .refine((v) => /[^A-Za-z0-9]/.test(v), {
+      message: "Password must include a special character",
     }),
   agreeTerms: z.boolean().refine((v) => v === true, {
     message: "Please agree to the terms of service and privacy policy",
@@ -137,7 +260,23 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [shakeFields, setShakeFields] = useState<Record<string, boolean>>({});
+  const [shakeRightFields, setShakeRightFields] = useState<Record<string, boolean>>({});
   const { refetch } = useCurrentUser();
+
+  const triggerShake = (field: string) => {
+    setShakeFields((prev) => ({ ...prev, [field]: true }));
+    window.setTimeout(() => {
+      setShakeFields((prev) => ({ ...prev, [field]: false }));
+    }, 500);
+  };
+
+  const triggerShakeRight = (field: string) => {
+    setShakeRightFields((prev) => ({ ...prev, [field]: true }));
+    window.setTimeout(() => {
+      setShakeRightFields((prev) => ({ ...prev, [field]: false }));
+    }, 700);
+  };
 
   useEffect(() => {
     const modeParam = searchParams.get("mode");
@@ -159,6 +298,8 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
       }
     }
   }, [mode, navigate, searchParams, setSearchParams, useSeparateRoutes]);
+
+
 
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -182,6 +323,9 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
     mode: "onBlur",
   });
 
+  const watchedPassword = registerForm.watch("password");
+  const passwordStrength = getPasswordStrength(watchedPassword ?? "");
+
   const registerMutation = useMutation({
     mutationFn: async (values: RegisterFormValues) => {
       return registerUser({
@@ -194,12 +338,13 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
       });
     },
     onSuccess: (response) => {
+      const email = registerForm.getValues("email");
       toast({
         title: "Welcome aboard!",
         description:
           "Your account has been created successfully. Please check your email to verify your account.",
       });
-      navigate("/verification");
+      navigate("/verification", { state: { email } });
     },
     onError: (error: unknown) => {
       toast({
@@ -252,8 +397,17 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
       navigate("/");
     },
     onError: (error: unknown) => {
+      // Check for pending verification (code V0001)
+      if (error instanceof ApiError) {
+        const data = error.data as Record<string, unknown> | null;
+        if (data?.code === "V0001") {
+          const email = loginForm.getValues("email");
+          navigate("/verification", { state: { email } });
+          return;
+        }
+      }
       toast({
-        title: "Couldn't sign you in",
+        title: "Account not found",
         description: friendlyAuthErrorMessage(error),
         variant: "destructive",
       });
@@ -302,12 +456,13 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
                 anywhere—even offline—and instantly turn feedback into real-time
                 insights with smart analytics
               </p>
-              <a
-                href="#"
-                className="text-[#206AB5] font-medium text-sm px-3 sm:p-4 hover:underline"
+              <button
+                type="button"
+                onClick={() => triggerShakeRight(isLogin ? "email" : "fname")}
+                className="text-[#206AB5] font-medium text-sm px-3 sm:p-4 hover:underline text-left cursor-pointer"
               >
                 Fill the form to get started
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -343,14 +498,24 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
                         type="text"
                         placeholder="John"
                         {...fnameField}
+                        onChange={(e) => {
+                          const sanitized = sanitizeNameInput(e.target.value);
+                          if (sanitized !== e.target.value) {
+                            e.target.value = sanitized;
+                          }
+                          fnameField.onChange(e);
+                        }}
                         onBlur={(e) => {
                           fnameField.onBlur(e);
                           const formatted = capitalizeNamePart(e.target.value);
                           registerForm.setValue("fname", formatted, {
                             shouldValidate: true,
                           });
+                          if (!analyzeName(e.target.value).valid) {
+                            triggerShake("fname");
+                          }
                         }}
-                        className="h-11 pr-10 bg-white border-gray-200 focus:border-[#206AB5] focus:ring-[#206AB5]"
+                        className={`h-11 pr-10 bg-white border-gray-200 focus:border-[#206AB5] focus:ring-[#206AB5] ${shakeFields.fname ? "animate-shake" : ""} ${shakeRightFields.fname ? "shake-right" : ""}`}
                       />
                       <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     </div>
@@ -370,14 +535,24 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
                         type="text"
                         placeholder="Doe"
                         {...snameField}
+                        onChange={(e) => {
+                          const sanitized = sanitizeNameInput(e.target.value);
+                          if (sanitized !== e.target.value) {
+                            e.target.value = sanitized;
+                          }
+                          snameField.onChange(e);
+                        }}
                         onBlur={(e) => {
                           snameField.onBlur(e);
                           const formatted = capitalizeNamePart(e.target.value);
                           registerForm.setValue("sname", formatted, {
                             shouldValidate: true,
                           });
+                          if (!analyzeName(e.target.value).valid) {
+                            triggerShake("sname");
+                          }
                         }}
-                        className="h-11 pr-10 bg-white border-gray-200 focus:border-[#206AB5] focus:ring-[#206AB5]"
+                        className={`h-11 pr-10 bg-white border-gray-200 focus:border-[#206AB5] focus:ring-[#206AB5] ${shakeFields.sname ? "animate-shake" : ""}`}
                       />
                       <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     </div>
@@ -444,7 +619,7 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
                     type="email"
                     placeholder="you@example.com"
                     {...loginForm.register("email")}
-                    className="h-11 pr-10 bg-white border-gray-200 focus:border-[#206AB5] focus:ring-[#206AB5]"
+                    className={`h-11 pr-10 bg-white border-gray-200 focus:border-[#206AB5] focus:ring-[#206AB5] ${shakeRightFields.email ? "shake-right" : ""}`}
                   />
                   <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 </div>
@@ -483,6 +658,27 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
                   )}
                 </button>
               </div>
+
+              {!isLogin && (
+                <div className="mt-2">
+                  <div className="h-1.5 w-full rounded-full bg-gray-200 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${passwordStrength.color}`}
+                      style={{ width: `${passwordStrength.percent}%` }}
+                    />
+                  </div>
+                  <p
+                    className={`text-xs mt-1 ${
+                      passwordStrength.metCount >= 5
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {watchedPassword ? passwordStrength.message : ""}
+                  </p>
+                </div>
+              )}
+
               {!isLogin && registerForm.formState.errors.password?.message && (
                 <p className="text-xs text-red-600 mt-1">
                   {registerForm.formState.errors.password?.message}

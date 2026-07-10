@@ -25,6 +25,7 @@ import SocialInsights from "./pages/SocialInsights";
 import Contacts from "./pages/Contacts";
 import AudienceInsights from "./pages/AudienceInsights";
 // import Settings from "./pages/Settings";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import { QuickActions } from "./components/QuickActions";
 import { SessionExpiredModal } from "./components/SessionExpiredModal";
@@ -171,6 +172,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AudienceInsights />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
                 </ProtectedRoute>
               }
             />

@@ -87,7 +87,7 @@ const Campaigns = () => {
         while (true) {
           const res = await getSurveys(page);
           const items: SurveyListItemApi[] =
-            (res as any)?.data?.survey?.data ?? [];
+            res.data?.survey?.data ?? [];
           if (!items.length) break;
           all.push(...items);
           if (items.length < 10) break;
@@ -212,10 +212,10 @@ const Campaigns = () => {
                     )}
                   </div>
                   <Select
-                    value={
-                      selectedSurveyId ? String(selectedSurveyId) : undefined
-                    }
-                    onValueChange={(v) => handleSelectSurvey(Number(v))}
+                    value={selectedSurveyId ? String(selectedSurveyId) : ""}
+                    onValueChange={(v) => {
+                      if (v) handleSelectSurvey(Number(v));
+                    }}
                   >
                     <SelectTrigger className="w-[160px] h-9 bg-white border border-border">
                       <SelectValue placeholder="Select Survey" />

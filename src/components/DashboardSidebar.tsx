@@ -70,7 +70,6 @@ const enabledPaths = [
   "/",
   "/survey-research",
   "/channels",
-  "/campaigns",
   "/survey-analysis",
 ];
 

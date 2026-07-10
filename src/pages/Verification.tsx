@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
 import { toast } from "@/hooks/use-toast";
-import { verifyUser } from "@/lib/auth";
+import { verifyUser, resendVerification } from "@/lib/auth";
 import maaLogo from "/assets/MAA-Logo.png?url";
 
 const Verification = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const emailFromState = (location.state as { email?: string } | null)?.email;
+
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
 
   useEffect(() => {
@@ -52,9 +56,27 @@ const Verification = () => {
     }
   };
 
-  const handleResend = () => {
-    if (resendTimer === 0) {
+  const handleResend = async () => {
+    if (resendTimer > 0 || !emailFromState) return;
+
+    setIsResending(true);
+    try {
+      await resendVerification(emailFromState);
+      toast({
+        title: "Code resent",
+        description: `A new verification code has been sent to ${emailFromState}.`,
+      });
       setResendTimer(30);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to resend code";
+      toast({
+        title: "Resend failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -132,18 +154,27 @@ const Verification = () => {
               </div>
             </div>
 
+            {emailFromState && (
+              <p className="text-center text-sm text-gray-500">
+                Verification code sent to{" "}
+                <span className="font-medium text-gray-700">
+                  {emailFromState}
+                </span>
+              </p>
+            )}
+
             <p className="text-center text-sm text-gray-600">
               Didn't get code?{" "}
               <button
                 onClick={handleResend}
-                disabled={resendTimer > 0}
+                disabled={resendTimer > 0 || isResending || !emailFromState}
                 className={`font-medium ${
-                  resendTimer > 0
+                  resendTimer > 0 || !emailFromState
                     ? "text-gray-400 cursor-not-allowed"
                     : "text-[#206AB5] hover:underline cursor-pointer"
                 }`}
               >
-                Resend
+                {isResending ? "Resending..." : "Resend"}
               </button>
               {resendTimer > 0 && (
                 <span className="text-gray-500"> ({resendTimer}s)</span>

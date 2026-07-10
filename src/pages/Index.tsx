@@ -71,8 +71,9 @@ const Index = () => {
 
     getDashboardResponseTrend(start, end)
       .then((res) => {
-        const rows: { date: string; day: string; value: number }[] =
-          res?.data?.data ?? [];
+        const resData = res?.data as Record<string, unknown> | undefined;
+        const raw = resData?.data as { date: string; day: string; value: number }[] | undefined;
+        const rows: { date: string; day: string; value: number }[] = raw ?? [];
         setTrendData(rows.map(({ day, value }) => ({ day, value })));
       })
       .catch(() => {

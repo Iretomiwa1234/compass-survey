@@ -1,4 +1,4 @@
-import { Search, Bell, ChevronDown, LogOut, AlertTriangle } from "lucide-react";
+import { Search, ChevronDown, LogOut, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { clearAuthSession } from "@/lib/session";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
 
 function getInitials(fname: string, sname: string): string {
   return `${fname.charAt(0)}${sname.charAt(0)}`.toUpperCase();
@@ -85,10 +86,7 @@ export function DashboardHeader({
         </div>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[#206AB5] rounded-full"></span>
-          </Button>
+          <NotificationDropdown />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -573,13 +573,17 @@ const SurveyAnalysis = () => {
           });
 
         if (trendRes.status === "fulfilled") {
-          const raw = trendRes.value?.data?.data;
+          const trendValue = trendRes.value as Record<string, unknown>;
+          const raw = (trendValue?.data as Record<string, unknown>)?.data;
           if (Array.isArray(raw) && raw.length > 0) {
             setTrendData(
-              raw.map((item: any) => ({
-                day: item.day ?? item.date ?? "",
-                value: Number(item.value ?? 0),
-              })),
+              raw.map((item: unknown) => {
+                const i = item as Record<string, unknown>;
+                return {
+                  day: (i.day ?? i.date ?? "") as string,
+                  value: Number(i.value ?? 0),
+                };
+              }),
             );
           }
         }
