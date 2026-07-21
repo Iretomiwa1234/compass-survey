@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -152,6 +153,26 @@ const Contacts = () => {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Register contacts for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = contacts.map((contact) => ({
+      id: `contact-${contact.email}`,
+      title: contact.name,
+      description: `${contact.email} • ${contact.group}`,
+      page: "Contacts",
+      pagePath: "/contacts",
+      section: "Contacts",
+      keywords: ["contact", contact.name.toLowerCase(), contact.email.toLowerCase(), contact.group.toLowerCase()],
+    }));
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [contacts, registerSearchItems, unregisterSearchItems]);
 
   return (
     <SidebarProvider>

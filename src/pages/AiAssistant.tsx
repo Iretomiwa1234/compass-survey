@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import {
   SidebarProvider,
@@ -104,6 +105,26 @@ const AIAssistant = () => {
       ]);
     }, 1000);
   };
+
+  // Register quick questions for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = quickQuestions.map((q) => ({
+      id: `ai-question-${q.tag}`,
+      title: q.text,
+      description: `AI Assistant • ${q.tag}`,
+      page: "AI Assistant",
+      pagePath: "/ai-assistant",
+      section: "Quick Questions",
+      keywords: ["ai", "question", q.tag.toLowerCase(), q.text.toLowerCase()],
+    }));
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [quickQuestions, registerSearchItems, unregisterSearchItems]);
 
   return (
     <SidebarProvider>

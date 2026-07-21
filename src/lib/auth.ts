@@ -1026,10 +1026,24 @@ export async function getDashboardSentiment(): Promise<DashboardSentimentCard> {
 // =======================
 
 // GET /demography/options
-export async function getDemographyOptions(): Promise<unknown> {
+export type DemographyOptionsResponse = {
+  data?: {
+    platform?: Record<string, string>;
+    gender?: Record<string, string>;
+    marital_status?: Record<string, string>;
+    language?: Record<string, string>;
+    highest_education_level?: Record<string, string>;
+    employment_status?: Record<string, string>;
+    occupation?: Record<string, string>;
+    industry?: Record<string, string>;
+    device_type?: Record<string, string>;
+  };
+};
+
+export async function getDemographyOptions(): Promise<DemographyOptionsResponse> {
   const token = getAuthToken();
   if (!token) throw new Error("Not authenticated");
-  return fetchJson<unknown>({
+  return fetchJson<DemographyOptionsResponse>({
     baseUrl: getBaseUrl(),
     path: "/v1/demography/options",
     method: "GET",

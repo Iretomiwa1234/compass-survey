@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { UserProvider } from "@/contexts/UserContext";
+import { SearchProvider } from "@/contexts/SearchContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { UniversalSearchModal } from "@/components/UniversalSearchModal";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Login from "./pages/Login";
@@ -60,9 +62,11 @@ const App = () => (
       <Toaster />
       <Sonner />
       <UserProvider>
-        <BrowserRouter>
-          <SessionExpiredModal />
-          <Routes>
+        <SearchProvider>
+          <BrowserRouter>
+            <SessionExpiredModal />
+            <UniversalSearchModal />
+            <Routes>
             {/* Public routes */}
             <Route path="/auth" element={<Auth />} />
             <Route path="/login" element={<Login />} />
@@ -189,6 +193,7 @@ const App = () => (
           </Routes>
           <QuickActions />
         </BrowserRouter>
+        </SearchProvider>
       </UserProvider>
     </TooltipProvider>
   </QueryClientProvider>

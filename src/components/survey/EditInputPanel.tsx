@@ -196,9 +196,15 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
           </Card>
 
           <div>
-            <label className="text-xs text-muted-foreground">Label</label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">Label</label>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {label.length}/200
+              </span>
+            </div>
             <input
               value={label}
+              maxLength={200}
               onChange={(e) => {
                 setLabel(e.target.value);
                 onUpdate?.({ label: e.target.value });

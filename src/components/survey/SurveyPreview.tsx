@@ -155,20 +155,20 @@ const SurveyPreview = ({
       ref={previewScrollRef}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className="min-w-[500px] flex-1 p-6 overflow-y-auto bg-white rounded-lg md:w-[35%] w-full h-full"
+      className="min-w-0 flex-1 p-6 overflow-y-auto overflow-x-hidden bg-white rounded-lg md:w-[35%] w-full h-full"
     >
-      <Card className="w-full mx-auto border-accent/50">
-        <div className="rounded-lg border border-[#B5CDE6] overflow-hidden">
+      <Card className="w-full max-w-full mx-auto overflow-hidden border-accent/50">
+        <div className="rounded-lg border border-[#B5CDE6] overflow-hidden max-w-full">
           <div className="mb-1 border-b border-[#B5CDE6]">
-            <h2 className="text-lg font-normal mb-2 px-6 py-2 text-foreground text-[#3C4759] bg-[#E4EDFF]">
+            <h2 className="w-full min-w-0 break-all text-lg font-normal mb-2 px-6 py-2 text-foreground text-[#3C4759] bg-[#E4EDFF]">
               {title || "Survey Title"}
             </h2>
-            <div className="px-6 py-3 min-h-[116px] text-sm text-muted-foreground whitespace-pre-wrap">
+            <div className="w-full min-w-0 px-6 py-3 min-h-[116px] max-h-[200px] overflow-y-auto overflow-x-hidden text-sm text-muted-foreground whitespace-pre-wrap break-all">
               {description || "Description will go in here"}
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 py-4 px-6">
+          <div className="flex min-w-0 flex-col gap-2 py-4 px-6">
             {questions.length === 0 ? (
               <div className="flex flex-col gap-2 items-center justify-center py-8 border-b border-1 border-[#B5CDE6] border-border bg-card">
                 <div className="flex gap-1">

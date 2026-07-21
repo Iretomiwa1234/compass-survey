@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Users, UserPlus, Star, MessageCircle } from "lucide-react";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 
 const panelMembers = [
   {
@@ -59,6 +61,26 @@ const panelMembers = [
 ];
 
 const CommunityPanel = () => {
+  // Register panel members for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = panelMembers.map((member) => ({
+      id: `panel-${member.email}`,
+      title: member.name,
+      description: `${member.email} • ${member.responses} responses • ${member.rating} rating`,
+      page: "Community Panel",
+      pagePath: "/community-panel",
+      section: "Members",
+      keywords: ["member", member.name.toLowerCase(), member.email.toLowerCase()],
+    }));
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [panelMembers, registerSearchItems, unregisterSearchItems]);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">

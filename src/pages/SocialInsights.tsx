@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 
 import {
   Dialog,
@@ -175,6 +176,26 @@ const SocialInsights = () => {
       status: "Active",
     },
   ];
+
+  // Register insights for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = insights.map((insight) => ({
+      id: `social-insight-${insight.date}-${insight.respondent}`,
+      title: insight.respondent,
+      description: `${insight.channel} • ${insight.status}`,
+      page: "Social Insights",
+      pagePath: "/social-insights",
+      section: "Insights",
+      keywords: ["respondent", insight.respondent.toLowerCase(), insight.channel.toLowerCase()],
+    }));
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [insights, registerSearchItems, unregisterSearchItems]);
 
   return (
     <SidebarProvider>

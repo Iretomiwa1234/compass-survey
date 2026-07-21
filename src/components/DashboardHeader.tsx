@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { clearAuthSession } from "@/lib/session";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { useSearch } from "@/contexts/SearchContext";
 
 function getInitials(fname: string, sname: string): string {
   return `${fname.charAt(0)}${sname.charAt(0)}`.toUpperCase();
@@ -35,6 +36,7 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   const navigate = useNavigate();
   const { user, error, refetch } = useCurrentUser();
+  const { openSearch } = useSearch();
 
   const handleLogout = () => {
     clearAuthSession();
@@ -77,7 +79,9 @@ export function DashboardHeader({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search anything"
-              className="pl-10 pr-24 bg-white border-border"
+              className="pl-10 pr-24 bg-white border-border cursor-pointer"
+              onClick={openSearch}
+              readOnly
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
               Cmd/Ctrl + K

@@ -64,6 +64,7 @@ import type {
 import { Loader } from "@/components/ui/loader";
 import { EmptyState } from "@/components/survey/EmptyState";
 import { toast } from "@/hooks/use-toast";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 const SurveyResearch = () => {
   const [open, setOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -79,6 +80,7 @@ const SurveyResearch = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const [surveyToClose, setSurveyToClose] = useState<Survey | null>(null);
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
 
   const [surveyCards, setSurveyCards] = useState<SurveyCardsData | null>(null);
   const [completionRate, setCompletionRate] =
@@ -302,6 +304,27 @@ const SurveyResearch = () => {
       isActive = false;
     };
   }, []);
+
+  // Register surveys for search
+  useEffect(() => {
+    if (surveys.length === 0) return;
+
+    const surveySearchItems: SearchItem[] = surveys.map((survey) => ({
+      id: `research-survey-${survey.id}`,
+      title: survey.title,
+      description: `Status: ${survey.status} • ${survey.totalResponse} responses`,
+      page: "Survey Research",
+      pagePath: "/survey-research",
+      section: "Surveys",
+      keywords: ["survey", "response", survey.title.toLowerCase()],
+    }));
+
+    registerSearchItems(surveySearchItems);
+
+    return () => {
+      unregisterSearchItems(surveySearchItems.map((item) => item.id));
+    };
+  }, [surveys, registerSearchItems, unregisterSearchItems]);
 
   const filteredSurveys = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();

@@ -3,8 +3,10 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Search, UserPlus, Upload, Download, Users, Plus } from "lucide-react";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 import {
   Dialog,
   DialogContent,
@@ -202,6 +204,26 @@ const AudienceInsights = () => {
       setImportFile(null);
     }
   }
+
+  // Register insights for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = insights.map((insight) => ({
+      id: `insight-${insight.date}-${insight.respondent}`,
+      title: insight.respondent,
+      description: `${insight.channel} • ${insight.status}`,
+      page: "Audience Insights",
+      pagePath: "/audience-insights",
+      section: "Insights",
+      keywords: ["respondent", insight.respondent.toLowerCase(), insight.channel.toLowerCase()],
+    }));
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [insights, registerSearchItems, unregisterSearchItems]);
 
   return (
     <SidebarProvider>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import {
@@ -11,6 +12,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileText, Calendar, Plus } from "lucide-react";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 
 const reports = [
   {
@@ -51,6 +53,26 @@ const reports = [
 ];
 
 const Report = () => {
+  // Register reports for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = reports.map((report) => ({
+      id: `report-${report.title}`,
+      title: report.title,
+      description: `${report.type} • ${report.date} • ${report.size}`,
+      page: "Reports",
+      pagePath: "/reports",
+      section: "Reports",
+      keywords: ["report", report.title.toLowerCase(), report.type.toLowerCase()],
+    }));
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [reports, registerSearchItems, unregisterSearchItems]);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">

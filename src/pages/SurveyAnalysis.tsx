@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   Globe2,
 } from "lucide-react";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 import {
   AreaChart,
   Area,
@@ -684,6 +685,49 @@ const SurveyAnalysis = () => {
       isActive = false;
     };
   }, [selectedSurveyId, countryDateOffset]);
+
+  // Register surveys and respondents for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = [];
+
+    // Register surveys
+    surveys.forEach((survey) => {
+      searchItems.push({
+        id: `survey-${survey.survey_id}`,
+        title: survey.title,
+        description: `Status: ${survey.status}`,
+        page: "Survey Analysis",
+        pagePath: "/survey-analysis",
+        section: "Surveys",
+        keywords: ["survey", "analysis", survey.title.toLowerCase()],
+        action: () => {
+          handleSelectSurvey(survey);
+        },
+      });
+    });
+
+    // Register respondents when survey is selected
+    if (selectedSurveyId && respondentData.length > 0) {
+      respondentData.forEach((respondent) => {
+        searchItems.push({
+          id: `respondent-${respondent.customerId}`,
+          title: `${respondent.fname} ${respondent.sname}`.trim(),
+          description: `${respondent.totalResponses} responses`,
+          page: "Survey Analysis",
+          pagePath: "/survey-analysis",
+          section: "Respondents",
+          keywords: ["respondent", respondent.fname.toLowerCase(), respondent.sname.toLowerCase()],
+        });
+      });
+    }
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [surveys, selectedSurveyId, respondentData, registerSearchItems, unregisterSearchItems]);
 
   const sortedSurveys = useMemo(() => {
     return [...surveys].sort(

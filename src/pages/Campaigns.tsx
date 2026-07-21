@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getSurveys, SurveyListItemApi } from "@/lib/auth";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 
 const isPublishedSurvey = (survey: SurveyListItemApi) =>
   Number(survey.is_published ?? 0) === 1;
@@ -122,6 +123,29 @@ const Campaigns = () => {
     () => surveys.filter(isPublishedSurvey),
     [surveys],
   );
+
+  // Register surveys for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = publishedSurveys.map((survey) => ({
+      id: `campaign-survey-${survey.survey_id}`,
+      title: survey.title,
+      description: `${survey.total_responses ?? 0} responses`,
+      page: "Campaigns",
+      pagePath: "/campaigns",
+      section: "Surveys",
+      keywords: ["survey", "campaign", survey.title.toLowerCase()],
+      action: () => {
+        handleSelectSurvey(survey.survey_id);
+      },
+    }));
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [publishedSurveys, registerSearchItems, unregisterSearchItems]);
 
   const filteredSurveys = useMemo(() => {
     if (!searchTerm.trim()) return publishedSurveys;

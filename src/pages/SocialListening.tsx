@@ -6,6 +6,7 @@ import {
   deleteSocialListening,
   type SocialListening as SocialListeningType,
 } from "@/lib/auth";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -160,6 +161,26 @@ const SocialListening = () => {
       }
     }
   };
+
+  // Register social listening items for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = monitorItems.map((item) => ({
+      id: `social-${item.id}`,
+      title: item.title,
+      description: `${item.mentions} mentions`,
+      page: "Social Listening",
+      pagePath: "/social-listening",
+      section: "Monitors",
+      keywords: ["social", "listening", "monitor", item.title.toLowerCase()],
+    }));
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [monitorItems, registerSearchItems, unregisterSearchItems]);
 
   return (
     <SidebarProvider>

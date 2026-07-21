@@ -35,6 +35,7 @@ import {
   Users,
   Loader2,
 } from "lucide-react";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -714,8 +715,29 @@ const Channels = () => {
     setSearchTerm(survey?.title ?? "");
     setShowSuggestions(false);
   };
-  // 3cfee3b6b751e45df312fd38ca959d3fb9a4486c
-  // ceb85b5f25d274aaabaa34dbbaa5278cd950404a;
+
+  // Register surveys for universal search
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
+  useEffect(() => {
+    const searchItems: SearchItem[] = surveys.map((survey) => ({
+      id: `survey-${survey.survey_id}`,
+      title: survey.title,
+      description: `Status: ${survey.status}`,
+      page: "Channels",
+      pagePath: "/channels",
+      section: "Surveys",
+      keywords: ["survey", "channels", survey.title.toLowerCase()],
+      action: () => {
+        handleSelectSurvey(toSurveyId(survey.survey_id) ?? 0);
+      },
+    }));
+
+    registerSearchItems(searchItems);
+    return () => {
+      const idsToUnregister = searchItems.map((item) => item.id);
+      unregisterSearchItems(idsToUnregister);
+    };
+  }, [surveys, registerSearchItems, unregisterSearchItems]);
 
   const resetQrCodeState = useCallback(() => {
     setQrCodeHash("");
@@ -1999,7 +2021,7 @@ Thank you!`}
                             >
                               {isSavingDemography
                                 ? "Applying Filters..."
-                                : "Apply Filters"}
+                                : "Save Demography"}
                             </Button>
                           </CardContent>
                         </Card>

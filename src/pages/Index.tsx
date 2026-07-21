@@ -20,6 +20,7 @@ import {
   DashboardSentimentCard,
 } from "@/lib/auth";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { useSearch, SearchItem } from "@/contexts/SearchContext";
 
 type TrendRange = "this-week" | "last-week" | "last-2-weeks";
 
@@ -56,6 +57,7 @@ function getTrendDateRange(range: TrendRange) {
 const Index = () => {
   const [surveys, setSurveys] = useState<SurveyListItemApi[]>([]);
   const [surveyCards, setSurveyCards] = useState<SurveyCardsData | null>(null);
+  const { registerSearchItems, unregisterSearchItems } = useSearch();
   const [trendData, setTrendData] = useState<{ day: string; value: number }[]>(
     [],
   );
@@ -149,6 +151,27 @@ const Index = () => {
       isActive = false;
     };
   }, []);
+
+  // Register surveys for search
+  useEffect(() => {
+    if (surveys.length === 0) return;
+
+    const surveySearchItems: SearchItem[] = surveys.map((survey) => ({
+      id: `survey-${survey.survey_id}`,
+      title: survey.title,
+      description: `Status: ${survey.status} • ${survey.total_responses} responses`,
+      page: "Dashboard",
+      pagePath: "/",
+      section: "Surveys",
+      keywords: ["survey", "response", survey.title.toLowerCase()],
+    }));
+
+    registerSearchItems(surveySearchItems);
+
+    return () => {
+      unregisterSearchItems(surveySearchItems.map((item) => item.id));
+    };
+  }, [surveys, registerSearchItems, unregisterSearchItems]);
 
   const surveyStats = useMemo(() => {
     return surveys.reduce(

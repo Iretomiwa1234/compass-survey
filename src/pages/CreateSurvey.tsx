@@ -90,6 +90,9 @@ const CreateSurvey = () => {
   const [showEditBanner, setShowEditBanner] = useState(true);
   const [invalidQuestionIds, setInvalidQuestionIds] = useState<number[]>([]);
   const [isPublishedSurvey, setIsPublishedSurvey] = useState(false);
+  const [persistedSurveyId, setPersistedSurveyId] = useState<number | null>(
+    parsedSurveyId,
+  );
   const [baselineSnapshot, setBaselineSnapshot] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
@@ -897,6 +900,24 @@ const CreateSurvey = () => {
     });
   };
 
+  const extractSurveyId = useCallback(
+    (response: unknown): number | null => {
+      if (!response || typeof response !== "object") return null;
+      const record = response as Record<string, unknown>;
+      const data = record.data;
+      const candidate =
+        record.survey_id ??
+        record.id ??
+        (data && typeof data === "object"
+          ? (data as Record<string, unknown>).survey_id ??
+            (data as Record<string, unknown>).id
+          : undefined);
+      const parsed = Number(candidate);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    },
+    [],
+  );
+
   const buildPayload = (
     status: CreateSurveyPayload["status"],
     isPublished: 0 | 1,
@@ -1006,16 +1027,21 @@ const CreateSurvey = () => {
 
     try {
       const payload = buildPayload(status, isPublished);
-      if (isEditing && parsedSurveyId) {
-        await editSurvey(parsedSurveyId, payload);
+      const effectiveId = persistedSurveyId ?? parsedSurveyId;
+      if (effectiveId) {
+        await editSurvey(effectiveId, payload);
       } else {
-        await createSurvey(payload);
+        const created = await createSurvey(payload);
+        const createdId = extractSurveyId(created);
+        if (createdId) {
+          setPersistedSurveyId(createdId);
+        }
       }
       setInvalidQuestionIds([]);
       setBaselineSnapshot(currentSnapshot);
       setLastSavedAt(Date.now());
       if (!isAutoSave) {
-        clearDraft(parsedSurveyId);
+        clearDraft(effectiveId ?? parsedSurveyId);
       }
 
       if (!options?.silent) {
@@ -1336,22 +1362,32 @@ const CreateSurvey = () => {
                 >
                   <div className="flex flex-wrap items-center gap-6 px-6 py-2">
                     <div className="flex-1 min-w-[200px]">
-                      <Input
-                        value={surveyTitle}
-                        onChange={(e) => setSurveyTitle(e.target.value)}
-                        placeholder="Survey Title"
-                        className="border-none bg-transparent h-8 p-0 focus-visible:ring-0 text-base font-medium text-slate-800 placeholder:text-slate-300"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={surveyTitle}
+                          onChange={(e) => setSurveyTitle(e.target.value)}
+                          placeholder="Survey Title"
+                          maxLength={60}
+                          className="border-none bg-transparent h-8 p-0 focus-visible:ring-0 text-base font-medium text-slate-800 placeholder:text-slate-300 flex-1 min-w-0"
+                        />
+                        <span className="shrink-0 text-xs tabular-nums text-slate-400">
+                          {surveyTitle.length}/60
+                        </span>
+                      </div>
                     </div>
                     <div className="h-4 w-[1px] bg-slate-200 hidden md:block" />
                     <div className="flex-[2] min-w-[300px] flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-slate-400 italic" />
+                      <FileText className="h-4 w-4 text-slate-400 italic shrink-0" />
                       <Input
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Add survey description..."
-                        className="border-none bg-transparent h-8 p-0 focus-visible:ring-0 text-sm text-slate-600 placeholder:text-slate-300"
+                        maxLength={300}
+                        className="border-none bg-transparent h-8 p-0 focus-visible:ring-0 text-sm text-slate-600 placeholder:text-slate-300 flex-1 min-w-0"
                       />
+                      <span className="shrink-0 text-xs tabular-nums text-slate-400">
+                        {description.length}/300
+                      </span>
                     </div>
                     <div className="h-4 w-[1px] bg-slate-200 hidden md:block" />
                     <div className="w-[160px] flex items-center gap-2">
@@ -1381,15 +1417,17 @@ const CreateSurvey = () => {
                           <Settings className="h-4 w-4" />
                         </Button>
                       </CollapsibleTrigger>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setCloseConfirmOpen(true)}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                        Close
-                      </Button>
+                      {persistedSurveyId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => setCloseConfirmOpen(true)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          Close
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -1504,7 +1542,7 @@ const CreateSurvey = () => {
                 <Button
                   key={choice.key}
                   variant="outline"
-                  className="w-full justify-start"
+                  className="h-auto w-full justify-start whitespace-normal break-all py-3 text-left"
                   onClick={() => handleResumeNewChoice(choice.surveyId)}
                 >
                   {choice.label}
@@ -1513,12 +1551,15 @@ const CreateSurvey = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              <Button className="w-full" onClick={handleContinueEditDraft}>
+              <Button
+                className="h-auto w-full whitespace-normal py-3 text-left"
+                onClick={handleContinueEditDraft}
+              >
                 Continue local draft
               </Button>
               <Button
                 variant="outline"
-                className="w-full"
+                className="h-auto w-full whitespace-normal py-3 text-left"
                 onClick={handleLoadServerVersion}
               >
                 Load server version instead
