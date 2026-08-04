@@ -15,6 +15,7 @@ import { setAuthSession } from "@/lib/session";
 import maaLogo from "/assets/MAA-Logo.png?url";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ApiError } from "@/lib/api";
+import { setPendingVerificationLogin } from "@/lib/pendingVerification";
 
 function capitalizeNamePart(value: string) {
   const cleaned = value.trim().replace(/\s+/g, " ").toLowerCase();
@@ -337,8 +338,12 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
         user_type: "business",
       });
     },
-    onSuccess: (response) => {
-      const email = registerForm.getValues("email");
+    onSuccess: (_response, values) => {
+      const email = values.email;
+      setPendingVerificationLogin({
+        email: values.email,
+        password: values.password,
+      });
       toast({
         title: "Welcome aboard!",
         description:
@@ -346,7 +351,7 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
       });
       navigate("/verification", { state: { email } });
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, values) => {
       toast({
         title: "Couldn't create account",
         description: friendlyAuthErrorMessage(error),
@@ -396,12 +401,13 @@ const Auth = ({ mode, useSeparateRoutes = false }: AuthProps) => {
 
       navigate("/");
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, values) => {
       // Check for pending verification (code V0001)
       if (error instanceof ApiError) {
         const data = error.data as Record<string, unknown> | null;
         if (data?.code === "V0001") {
-          const email = loginForm.getValues("email");
+          const email = values.email;
+          setPendingVerificationLogin(values);
           navigate("/verification", { state: { email } });
           return;
         }

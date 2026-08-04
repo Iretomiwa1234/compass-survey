@@ -210,7 +210,7 @@ const SurveyPreview = ({
                     >
                       <div className="px-4 py-2">
                         <div className="flex items-center justify-between">
-                          <div className="text-sm font-medium text-[#314155]">
+                          <div className="min-w-0 break-all text-sm font-medium text-[#314155]">
                             {q.label || `Question ${idx + 1}`}
                             {q.required ? (
                               <span className="text-rose-600">*</span>

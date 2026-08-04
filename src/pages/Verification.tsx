@@ -4,13 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
 import { toast } from "@/hooks/use-toast";
-import { verifyUser, resendVerification } from "@/lib/auth";
+import { loginUser, verifyUser } from "@/lib/auth";
+import { ApiError } from "@/lib/api";
+import {
+  clearPendingVerificationLogin,
+  getPendingVerificationLogin,
+} from "@/lib/pendingVerification";
 import maaLogo from "/assets/MAA-Logo.png?url";
 
 const Verification = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const emailFromState = (location.state as { email?: string } | null)?.email;
+  const pendingLogin = getPendingVerificationLogin(emailFromState);
 
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -38,6 +44,7 @@ const Verification = () => {
     setIsVerifying(true);
     try {
       await verifyUser(code);
+      clearPendingVerificationLogin(emailFromState);
       toast({
         title: "Account verified",
         description: "You can now log in with your credentials.",
@@ -57,17 +64,28 @@ const Verification = () => {
   };
 
   const handleResend = async () => {
-    if (resendTimer > 0 || !emailFromState) return;
+    if (resendTimer > 0 || !pendingLogin) return;
 
     setIsResending(true);
     try {
-      await resendVerification(emailFromState);
+      await loginUser(pendingLogin);
       toast({
         title: "Code resent",
-        description: `A new verification code has been sent to ${emailFromState}.`,
+        description: `A new verification code has been sent to ${pendingLogin.email}.`,
       });
       setResendTimer(30);
     } catch (error) {
+      if (error instanceof ApiError) {
+        const data = error.data as Record<string, unknown> | null;
+        if (data?.code === "V0001") {
+          toast({
+            title: "Code resent",
+            description: `A new verification code has been sent to ${pendingLogin.email}.`,
+          });
+          setResendTimer(30);
+          return;
+        }
+      }
       const message =
         error instanceof Error ? error.message : "Failed to resend code";
       toast({
@@ -167,9 +185,9 @@ const Verification = () => {
               Didn't get code?{" "}
               <button
                 onClick={handleResend}
-                disabled={resendTimer > 0 || isResending || !emailFromState}
+                disabled={resendTimer > 0 || isResending || !pendingLogin}
                 className={`font-medium ${
-                  resendTimer > 0 || !emailFromState
+                  resendTimer > 0 || !pendingLogin
                     ? "text-gray-400 cursor-not-allowed"
                     : "text-[#206AB5] hover:underline cursor-pointer"
                 }`}

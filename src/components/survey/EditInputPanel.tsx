@@ -180,7 +180,8 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
   };
 
   return (
-    <div className="min-w-[300px] md:max-w-[350px] rounded-lg bg-card p-4 overflow-y-auto h-full md:w-[35%] w-full">
+    <div className="min-w-0 md:max-w-[350px] rounded-lg bg-card p-4 overflow-y-auto overflow-x-hidden h-full md:w-[35%] w-full">
+      <div className="min-w-[300px]">
       <h2 className="text-lg font-semibold mb-4">Edit Input</h2>
 
       {!selected ? (
@@ -192,10 +193,12 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
       ) : (
         <div className="space-y-4">
           <Card className="p-4 bg-muted/50 border-0">
-            <h3 className="text-sm font-semibold">{selected?.label}</h3>
+            <h3 className="min-w-0 break-all text-sm font-semibold">
+              {selected?.label}
+            </h3>
           </Card>
 
-          <div>
+          <div className="overflow-hidden">
             <div className="flex items-center justify-between">
               <label className="text-xs text-muted-foreground">Label</label>
               <span className="text-xs tabular-nums text-muted-foreground">
@@ -210,8 +213,18 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
                 onUpdate?.({ label: e.target.value });
               }}
               placeholder="Question1"
-              className="mt-1 block w-full rounded-md border border-input px-3 py-2 text-sm bg-transparent"
+              className="mt-1 block w-full min-w-0 rounded-md border border-input px-3 py-2 text-sm bg-transparent truncate"
             />
+            {label.length >= 200 && (
+              <p className="mt-1 text-xs text-destructive">
+                Maximum character limit reached.
+              </p>
+            )}
+            {label.length > 0 && label.length < 200 && label.length >= 190 && (
+              <p className="mt-1 text-xs text-amber-500">
+                Approaching maximum character limit.
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between">
@@ -918,6 +931,7 @@ const EditInputPanel = ({ selected, onUpdate }: EditInputPanelProps) => {
         </div>
       )}
     </div>
+  </div>
   );
 };
 
